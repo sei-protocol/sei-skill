@@ -158,16 +158,6 @@ Every answer from this skill applies these Sei-specific facts:
 
 This skill complements [docs.sei.io](https://docs.sei.io). The official docs are authoritative for the latest protocol changes. This skill is optimized for AI coding assistant consumption — structured for progressive disclosure, with code-first examples and decision trees rather than narrative prose.
 
-## Proposed Website SKILL.md Files
-
-The `proposed/` directory contains what should live at each Sei domain:
-
-| File | Audience | Focus |
-|---|---|---|
-| `proposed/sei.io/SKILL.md` | End users | SEI token, wallets, staking, ecosystem |
-| `proposed/docs.sei.io/SKILL.md` | Developers | Full dev reference, critical facts, MCP server |
-| `proposed/seilabs.io/SKILL.md` | Researchers | Protocol internals, Twin Turbo, OCC, SeiDB, Sei Giga |
-
 ## Content Sources
 
 Built from:

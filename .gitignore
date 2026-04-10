@@ -1,0 +1,9 @@
+.DS_Store
+*.swp
+*.swo
+.tmp
+.claude
+.agents
+SETUP.md
+proposed/
+node_modules/

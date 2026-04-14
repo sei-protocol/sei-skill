@@ -121,7 +121,7 @@ const balance = await contract.balanceOf(userAddress);
 
 // Write transaction — use gasPrice (not EIP-1559 fields)
 const tx = await contract.connect(signer).transfer(recipient, amount, {
-  gasPrice: ethers.parseUnits("10", "gwei"),  // minimum 10 gwei
+  gasPrice: ethers.parseUnits("50", "gwei"),  // minimum 50 gwei
 });
 const receipt = await tx.wait(1);  // 1 confirmation = finality on Sei
 ```
@@ -230,7 +230,7 @@ const txHash = await writeContractAsync({
   functionName: 'myFunction',
   args: [arg1, arg2],
   gas: 200_000n,
-  gasPrice: parseUnits("10", "gwei"),  // minimum 10 gwei
+  gasPrice: parseUnits("50", "gwei"),  // minimum 50 gwei
   chainId: 1328,  // always specify chainId to prevent wrong-network submissions
 });
 ```

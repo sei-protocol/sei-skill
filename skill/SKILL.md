@@ -108,7 +108,7 @@ Once connected, use MCP tools for: wallet queries, balance checks, transaction d
 ### 2. Apply Sei-specific correctness
 Always be explicit about:
 - **Network** (testnet atlantic-2 vs mainnet pacific-1) and chain ID (1328 vs 1329)
-- **Gas price**: minimum 10 gwei for legacy txs; use `gasPrice` not EIP-1559 fields
+- **Gas price**: minimum 50 gwei for legacy txs; use `gasPrice` not EIP-1559 fields
 - **Address format** expected (bech32 `sei1...` vs EVM `0x...`) and whether association is required
 - **SSTORE implications** for contracts with many storage writes
 - **Parallel execution implications** for contracts with shared mutable state (hot globals)

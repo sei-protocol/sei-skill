@@ -104,7 +104,7 @@ Queries current network gas price.
 
 ```typescript
 const gasPrice = await provider.getGasPrice();
-// Minimum on Sei: 10 gwei (10_000_000_000n wei)
+// Minimum on Sei: 50 gwei (50_000_000_000n wei)
 // Always use gasPrice — NOT maxFeePerGas/maxPriorityFeePerGas
 ```
 

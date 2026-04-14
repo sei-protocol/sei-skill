@@ -193,14 +193,14 @@ async function safeContractCall(contract, method, args, options = {}) {
   // 2. Present to user
   console.log(`Action: ${method}(${args.join(', ')})`);
   console.log(`Estimated gas: ${gasEstimate.toString()}`);
-  console.log(`Gas price: 10 gwei minimum`);
-  console.log(`Estimated cost: ${ethers.formatEther(gasEstimate * 10_000_000_000n)} SEI`);
+  console.log(`Gas price: 50 gwei minimum`);
+  console.log(`Estimated cost: ${ethers.formatEther(gasEstimate * 50_000_000_000n)} SEI`);
 
   // 3. Execute with buffer
   const tx = await contract[method](...args, {
     ...options,
     gasLimit: gasEstimate * 120n / 100n,  // 20% buffer
-    gasPrice: ethers.parseUnits("10", "gwei"),
+    gasPrice: ethers.parseUnits("50", "gwei"),
   });
 
   return tx.wait(1); // instant finality

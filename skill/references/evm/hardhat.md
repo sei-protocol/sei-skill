@@ -194,7 +194,7 @@ npx hardhat verify --network seiTestnet 0x1234...abcd "My Token" "MTK"
 ```typescript
 // In scripts: use gasPrice, not EIP-1559 fields
 const tx = await contract.someFunction({
-  gasPrice: ethers.parseUnits("10", "gwei"),  // minimum 10 gwei
+  gasPrice: ethers.parseUnits("50", "gwei"),  // minimum 50 gwei
   gasLimit: 300_000n,  // add buffer for OCC
 });
 await tx.wait(1);  // 1 confirmation = finality on Sei

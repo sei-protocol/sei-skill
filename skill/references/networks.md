@@ -110,14 +110,14 @@ Get testnet SEI for development:
 ## Gas Configuration
 
 ```bash
-# Minimum gas price for legacy (type-0) transactions: 10 gwei
+# Minimum gas price: 50 gwei
 # Use gasPrice, NOT maxFeePerGas/maxPriorityFeePerGas
 
 # Example with ethers.js v6
 const tx = await signer.sendTransaction({
   to: recipient,
   value: parseEther("1.0"),
-  gasPrice: parseUnits("10", "gwei"),  // minimum; set higher under load
+  gasPrice: parseUnits("50", "gwei"),  // minimum; set higher under load
 });
 ```
 

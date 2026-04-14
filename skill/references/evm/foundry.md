@@ -188,7 +188,7 @@ cast call <CONTRACT> "balanceOf(address)(uint256)" <ADDRESS> \
 cast send <CONTRACT> "transfer(address,uint256)" <TO> 1000000000000000000 \
   --rpc-url https://evm-rpc-testnet.sei-apis.com \
   --private-key $PRIVATE_KEY \
-  --gas-price 10000000000  # 10 gwei minimum
+  --gas-price 50000000000  # 50 gwei minimum
 
 # Get transaction receipt
 cast receipt <TX_HASH> --rpc-url https://evm-rpc-testnet.sei-apis.com

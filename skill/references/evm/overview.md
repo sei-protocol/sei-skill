@@ -31,7 +31,7 @@ description: How Sei's EVM differs from Ethereum — opcodes, gas model, finalit
 | `PREVRANDAO` | Value derived from block time | RANDAO mix (EIP-4399) | **NOT random** — use oracle VRF |
 | `DIFFICULTY` | Alias of PREVRANDAO | Alias of PREVRANDAO | Same as above |
 | `COINBASE` | Always the global fee collector address | Block proposer (miner) address | Do not assume it's the validator |
-| `BASEFEE` | Returns base fee; no burn | Returns base fee; portion burned | Legacy txs must specify ≥ 10 gwei |
+| `BASEFEE` | Returns base fee; no burn | Returns base fee; portion burned | Legacy txs must specify ≥ 50 gwei |
 | `BLOCKHASH` | Hash of Tendermint header | Keccak of Ethereum block header | Different encoding; usable for recent blocks |
 | `GASLIMIT` | 12,500,000 | 60,000,000 | Block gas limit |
 | `TIMESTAMP` | Tendermint block time | Proposer-chosen block time | Do not use as randomness source |
@@ -55,7 +55,7 @@ const receipt = await txResponse.wait(1);
 const tx = {
   to: recipient,
   value: parseEther("1.0"),
-  gasPrice: parseUnits("10", "gwei"),   // minimum 10 gwei
+  gasPrice: parseUnits("50", "gwei"),   // minimum 50 gwei
   gasLimit: 200_000n,                   // add buffer — OCC can slightly vary estimates
 };
 

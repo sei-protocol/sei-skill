@@ -38,7 +38,7 @@ const tx = await contract.myFunction({
 
 // ✅ Sei style — legacy gasPrice
 const tx = await contract.myFunction({
-  gasPrice: parseUnits("10", "gwei"),  // minimum 10 gwei
+  gasPrice: parseUnits("50", "gwei"),  // minimum 50 gwei
 });
 ```
 
@@ -160,7 +160,7 @@ const txHash = await writeContractAsync({
 // After (Sei)
 const txHash = await writeContractAsync({
   ...contractArgs,
-  gasPrice: parseUnits("10", "gwei"),  // minimum 10 gwei
+  gasPrice: parseUnits("50", "gwei"),  // minimum 50 gwei
   chainId: 1329,  // always specify to prevent wrong-network submissions
 });
 ```

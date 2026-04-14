@@ -144,7 +144,7 @@ Every answer from this skill applies these Sei-specific facts:
 1. 400ms block time, **instant finality** → use `tx.wait(1)`
 2. **SSTORE costs 72,000 gas** (vs 20,000 on Ethereum)
 3. **Use `gasPrice`** (legacy) — Sei does not support EIP-1559 `maxFeePerGas`
-4. **Minimum gas price: 10 gwei**
+4. **Minimum gas price: 50 gwei**
 5. **Block gas limit: 12.5 M** per block
 6. `PREVRANDAO` is NOT random — use Pyth VRF or Chainlink VRF
 7. `COINBASE` = global fee collector, not block proposer

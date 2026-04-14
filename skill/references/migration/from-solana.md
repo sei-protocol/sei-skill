@@ -280,7 +280,7 @@ const rentExempt = await connection.getMinimumBalanceForRentExemption(accountSiz
 
 // Sei EVM fee estimation
 const gasLimit = 200_000n;
-const gasPrice = parseUnits("10", "gwei");   // minimum on Sei
+const gasPrice = parseUnits("50", "gwei");   // minimum on Sei
 const fee = gasLimit * gasPrice;              // no rent
 ```
 
@@ -322,7 +322,7 @@ import { ethers } from 'ethers';
 const provider = new ethers.JsonRpcProvider('https://evm-rpc.sei-apis.com');
 const contract = new ethers.Contract(contractAddress, abi, signer);
 const value = await contract.value();
-const tx = await contract.increment({ gasPrice: ethers.parseUnits("10", "gwei") });
+const tx = await contract.increment({ gasPrice: ethers.parseUnits("50", "gwei") });
 await tx.wait(1);  // instant finality
 ```
 
@@ -342,7 +342,7 @@ await tx.wait(1);  // instant finality
 □ Remove account declarations from functions (not needed)
 □ Update frontend: @solana/web3.js → ethers.js or viem
 □ Update wallet: wallet-adapter → wagmi + @sei-js/sei-global-wallet
-□ Use gasPrice (not EIP-1559 fields): minimum 10 gwei
+□ Use gasPrice (not EIP-1559 fields): minimum 50 gwei
 □ Use tx.wait(1) — instant finality
 □ Test on atlantic-2 testnet first
 □ Get testnet SEI at https://atlantic-2.app.sei.io/faucet

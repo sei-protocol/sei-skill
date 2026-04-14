@@ -17,18 +17,18 @@ const gasLimit = gasEstimate * 120n / 100n;  // 20% buffer
 
 ### `max fee per gas less than block base fee`
 **Cause**: Sending an EIP-1559 transaction (`maxFeePerGas`) on Sei. Sei uses legacy gas pricing.  
-**Fix**: Use `gasPrice` instead of EIP-1559 fields. Minimum 10 gwei.
+**Fix**: Use `gasPrice` instead of EIP-1559 fields. Minimum 50 gwei.
 ```typescript
 // Wrong
 { maxFeePerGas: parseUnits("20", "gwei"), maxPriorityFeePerGas: parseUnits("1", "gwei") }
 
 // Correct
-{ gasPrice: parseUnits("10", "gwei") }
+{ gasPrice: parseUnits("50", "gwei") }
 ```
 
 ### `transaction underpriced`
-**Cause**: `gasPrice` is below the network minimum (10 gwei).  
-**Fix**: Set `gasPrice` to at least `parseUnits("10", "gwei")`.
+**Cause**: `gasPrice` is below the network minimum (50 gwei).  
+**Fix**: Set `gasPrice` to at least `parseUnits("50", "gwei")`.
 
 ### `nonce too low`
 **Cause**: Transaction nonce already used; another transaction from the same account was included first.  

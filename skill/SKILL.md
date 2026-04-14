@@ -144,6 +144,7 @@ When implementing changes, provide:
 - Validators: [validators.md](references/validators.md) — key management, HSM, slashing, monitoring
 - Staking & governance: [staking-governance.md](references/staking-governance.md) — delegation, proposals
 - AI tooling: [ai-tooling.md](references/ai-tooling.md) — Sei MCP Server, Cambrian Agent Kit
+- RPC agent skills: [rpc-agent-skills.md](references/rpc-agent-skills.md) — 17 canonical skills, safety protocols, retry logic, response shapes
 - Common errors & fixes: [common-errors.md](references/common-errors.md)
 - Security checklist: [security.md](references/security.md) — Sei-specific + standard Solidity
 - Reference links: [resources.md](references/resources.md)

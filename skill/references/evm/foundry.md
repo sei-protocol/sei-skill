@@ -239,6 +239,6 @@ seid tx evm register-evm-pointer CW20 <CW20_CONTRACT_ADDRESS> \
 
 **Precompile calls fail in unit tests** — precompile addresses (`0x1005`, etc.) are not available in local Foundry EVM; use `--fork-url sei_testnet` for tests involving precompiles
 
-**`REVERT` with no message** — check SSTORE budget (72k gas per write); add `--gas-report` to identify expensive operations
+**`REVERT` with no message** — check SSTORE budget (72k per write on testnet, 20k on mainnet); add `--gas-report` to identify expensive operations
 
 **Deployment fails with `replacement transaction underpriced`** — increase `gasPrice` or wait for pending txs to clear

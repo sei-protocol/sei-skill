@@ -50,11 +50,11 @@ These facts must inform every answer involving Sei code or configuration:
 
 1. **400ms block time, instant finality** — use `txResponse.wait(1)` for confirmations; there is no "safe" or "finalized" block distinction
 2. **Parallel execution (OCC)** — minimize shared storage writes; partition state by user/asset/id; avoid hot globals written by many users
-3. **SSTORE costs 72,000 gas** (not 20,000 like on Ethereum) — restructure contracts with many small writes; this is governance-adjustable
+3. **SSTORE gas cost differs by network** — testnet (atlantic-2) charges 72,000 gas per write (governance proposal #240); mainnet (pacific-1) is currently 20,000 gas (standard EVM cost). Always verify with `forge test --gas-report` against the target network; this param is governance-adjustable
 4. **Dual address system** — every account has both a `sei1...` bech32 address and a `0x...` EVM address derived from the same public key; they must be **associated** before cross-VM token transfers work
 5. **PREVRANDAO is NOT random** — it returns a block-time-derived value; always use oracle VRF (Pyth VRF or Chainlink VRF) for on-chain randomness
 6. **COINBASE = fee collector** — always returns the global fee collector address, not the block proposer; do not use it for proposer identity
-7. **No base fee burn** — all fees go to validators; use `gasPrice` (legacy transactions), not `maxFeePerGas`/`maxPriorityFeePerGas` (EIP-1559)
+7. **No base fee burn** — all fees go to validators; prefer `gasPrice` (legacy transactions); `maxFeePerGas`/`maxPriorityFeePerGas` can be omitted as EIP-1559 priority fee mechanics don't apply
 8. **CosmWasm is deprecated** (SIP-3) — focus on EVM; CosmWasm precompiles are retained for legacy support only; new contracts should be EVM-only
 9. **Chain IDs:** Mainnet `pacific-1` / EVM `1329`; Testnet `atlantic-2` / EVM `1328`
 10. **Block gas limit:** ~10M gas per block (not 30M like Ethereum)

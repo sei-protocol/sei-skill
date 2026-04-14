@@ -13,7 +13,7 @@ Sei executes non-conflicting transactions in parallel. Your contract design dire
 2. **Partition state by user/asset/id** — independent users should write to independent keys
 3. **Prefer pull over push** — let users claim funds; don't mass-push in loops
 4. **Batch in memory, write once** — compute intermediate values in memory, commit minimal final writes
-5. **SSTORE costs 72,000 gas** — every unnecessary write is expensive; measure with `forge test --gas-report`
+5. **SSTORE gas varies by network** — testnet charges 72,000 gas per write; mainnet is 20,000 gas (governance-adjustable); measure with `forge test --gas-report`
 
 ## Storage Design Patterns
 
@@ -35,7 +35,7 @@ function updatePosition(uint256 id, int256 delta) external {
 uint256 public totalVolume;   // ← every swap writes here → all swaps serialize
 
 function swap(uint256 amount) external {
-    totalVolume += amount;   // 72k gas + serializes all swap transactions
+    totalVolume += amount;   // expensive SSTORE + serializes all swap transactions
     // ...
 }
 
@@ -76,10 +76,10 @@ function withdraw() external {
 ### Avoid storage writes in loops
 
 ```solidity
-// BAD: 10 writes = 720,000 gas (10 × 72k)
+// BAD: 10 writes = expensive storage costs (10 × cold SSTORE cost)
 function batchUpdate(address[] calldata users, uint256[] calldata scores) external {
     for (uint i = 0; i < users.length; i++) {
-        playerScores[users[i]] = scores[i];  // 72k each
+        playerScores[users[i]] = scores[i];  // cold SSTORE each
     }
 }
 
@@ -89,9 +89,13 @@ function batchUpdate(address[] calldata users, uint256[] calldata scores) extern
 
 ## SSTORE Gas Awareness
 
-SSTORE on Sei costs **72,000 gas** (governance-adjustable, vs 20,000 on Ethereum).
+SSTORE costs differ by network:
+- **Testnet (atlantic-2)**: 72,000 gas per cold write (governance proposal #240, activated v6.3.0)
+- **Mainnet (pacific-1)**: 20,000 gas (standard EVM; v6.3.1 reverted before proposal #108 activated)
 
-**Budget impact:**
+Both values are governance-adjustable. Always verify with `forge test --gas-report` targeting the correct network.
+
+**Testnet budget impact (72k):**
 - A simple 3-slot write transaction: 3 × 72k = 216k gas just for storage
 - Block gas limit is 12.5M — a write-heavy transaction uses a large fraction of a block
 

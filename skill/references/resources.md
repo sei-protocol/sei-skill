@@ -160,6 +160,6 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 | IBC precompile | `0x0000000000000000000000000000000000001009` | same |
 | Multicall3 | `0xcA11bde05977b3631167028862bE2a173976CA11` | same |
 | Permit2 | `0xB952578f3520EE8Ea45b7914994dcf4702cEe578` | same |
-| USDC | `0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F` | `0xace91bFb5c09C1B2EE5cc9aB23F6EBF2F5dde23` |
+| USDC | `0xe15fC38F6D8c56aF07bbCBe3BAf5708A2Bf42392` | `0x4fCF1784B31630811181f670Aea7A7bEF803eaED` |
 
 Full precompile table: [`precompiles/overview.md`](./precompiles/overview.md)

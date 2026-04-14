@@ -18,7 +18,7 @@ description: How Sei's EVM differs from Ethereum — opcodes, gas model, finalit
 | Per-Tx gas cap | 12.5M (block limit) | ~16.7M (EIP-7825) |
 | Byte size limit | 21MB | None |
 | State storage | AVL-tree (global root) | Merkle Patricia Trie (per-account root) |
-| SSTORE gas cost | 72,000 (governance-adjustable) | 20,000 (fixed) |
+| SSTORE gas cost | Testnet: 72,000 / Mainnet: 20,000 (governance-adjustable) | 20,000 (fixed) |
 | Address system | Dual (sei1... bech32 + 0x... EVM) | Single (0x...) |
 | Fee burn | No — all fees to validators | Yes (EIP-1559 base fee burn) |
 | Pending state | None | Yes (proposer-execute-then-broadcast) |
@@ -65,21 +65,20 @@ const tx = {
 
 ### SSTORE and Storage Writes
 ```solidity
-// WARNING: SSTORE costs 72,000 gas on Sei (not 20,000)
-// This per-slot write budget constraint matters for:
-// - Token contracts with many users (each write costs 72k)
-// - Auction contracts with per-bid storage
-// - Any loop that writes to storage
+// SSTORE costs differ by network:
+// - Testnet (atlantic-2): 72,000 gas per cold write (governance proposal #240)
+// - Mainnet (pacific-1): 20,000 gas (standard EVM; governance-adjustable)
+// Always verify with `forge test --gas-report` against your target network.
 
-// BAD: 10 writes = 720,000 gas just for storage
+// BAD: 10 writes = potentially expensive in either case
 for (uint i = 0; i < 10; i++) {
-    scores[users[i]] = newScores[i]; // 72k each
+    scores[users[i]] = newScores[i]; // minimize writes regardless
 }
 
 // BETTER: batch reads into memory, compute, write once
 uint[] memory newScores = computeNewScores(users);
 for (uint i = 0; i < newScores.length; i++) {
-    scores[users[i]] = newScores[i]; // still 72k each, but minimize unnecessary writes
+    scores[users[i]] = newScores[i]; // still writes each, but minimize unnecessary ones
 }
 ```
 
@@ -123,7 +122,7 @@ const balance = await provider.getBalance(address); // always accurate
 - ✅ Remove EIP-1559 fee UI; use single `gasPrice` input
 - ✅ Remove "safe"/"finalized" confirmation logic; treat all confirmed blocks as final
 - ✅ Replace PREVRANDAO/DIFFICULTY randomness with oracle VRF
-- ✅ Audit SSTORE usage — 72k gas per write vs 20k; restructure if needed
+- ✅ Audit SSTORE usage — testnet charges 72k gas per write; mainnet is 20k (governance-adjustable); restructure if needed
 - ✅ Do not assume COINBASE is the validator/proposer
 - ✅ Remove blob-related code (EIP-4844 not supported)
 - ✅ Size gasLimit with buffer (OCC can slightly vary estimates vs single-threaded chains)

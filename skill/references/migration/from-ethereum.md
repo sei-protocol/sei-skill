@@ -25,18 +25,18 @@ Sei is fully EVM bytecode-compatible. Most contracts deploy unchanged. The work 
 
 These are not optional edge cases — they **will** break your app if ignored.
 
-### 1. Gas Price: Use `gasPrice`, Not EIP-1559 Fields
+### 1. Gas Price: Prefer `gasPrice` Over EIP-1559 Fields
 
-Sei does not support `maxFeePerGas` / `maxPriorityFeePerGas`. Always use legacy `gasPrice`.
+Sei's fee model does not burn a base fee, so EIP-1559 priority fee mechanics don't apply. `maxFeePerGas`/`maxPriorityFeePerGas` can be omitted — use legacy `gasPrice` instead.
 
 ```typescript
-// ❌ Ethereum EIP-1559 style — will fail on Sei
+// ⚠️ EIP-1559 style — may not behave as expected on Sei (no base fee burn)
 const tx = await contract.myFunction({
   maxFeePerGas: parseUnits("20", "gwei"),
   maxPriorityFeePerGas: parseUnits("1", "gwei"),
 });
 
-// ✅ Sei style — legacy gasPrice
+// ✅ Preferred: legacy gasPrice
 const tx = await contract.myFunction({
   gasPrice: parseUnits("50", "gwei"),  // minimum 50 gwei
 });
@@ -77,15 +77,19 @@ address proposer = block.coinbase;
 
 Sei runs Pectra EVM but without blob transactions (`BLOBHASH` / `BLOBBASEFEE`). If your contract uses blobs, you need to refactor.
 
-### 6. SSTORE Costs 72,000 Gas (Not 20,000)
+### 6. SSTORE Costs Differ by Network
 
-Storage writes are significantly more expensive on Sei:
+Storage write costs are network-dependent on Sei:
+- **Testnet (atlantic-2)**: 72,000 gas per cold SSTORE (governance proposal #240)
+- **Mainnet (pacific-1)**: 20,000 gas (standard EVM cost)
+
+Best practice: minimize storage writes regardless of network.
 
 ```solidity
-// ❌ Bad: multiple storage writes in a loop
+// ❌ Bad: multiple storage writes in a loop (expensive on either network)
 function updateAll(address[] calldata users, uint256[] calldata amounts) external {
     for (uint i = 0; i < users.length; i++) {
-        balances[users[i]] = amounts[i];   // 72,000 gas each!
+        balances[users[i]] = amounts[i];   // cold SSTORE each
     }
 }
 
@@ -239,8 +243,8 @@ See [`precompiles/overview.md`](../precompiles/overview.md) and [`pointers/overv
 | Multicall3 | `0xcA11bde05977b3631167028862bE2a173976CA11` |
 | Permit2 | `0xB952578f3520EE8Ea45b7914994dcf4702cEe578` |
 | CREATE2 Factory | `0x0000000000FFe8B47B3e2130213B802212439497` |
-| USDC (mainnet) | `0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F` |
-| USDC (testnet) | `0xace91bFb5c09C1B2EE5cc9aB23F6EBF2F5dde23` |
+| USDC (mainnet) | `0xe15fC38F6D8c56aF07bbCBe3BAf5708A2Bf42392` |
+| USDC (testnet) | `0x4fCF1784B31630811181f670Aea7A7bEF803eaED` |
 
 ---
 

@@ -81,7 +81,7 @@ Once installed, Claude Code automatically uses this skill when you ask about Sei
 ### Smart Contracts
 ```
 "Deploy a Solidity contract on Sei testnet"
-"Why is my SSTORE costing 72,000 gas?"
+"Why is SSTORE so expensive on Sei testnet?"
 "Set up Foundry for Sei"
 "Fork test with the Sei testnet"
 ```
@@ -142,7 +142,7 @@ Once installed, Claude Code automatically uses this skill when you ask about Sei
 Every answer from this skill applies these Sei-specific facts:
 
 1. 400ms block time, **instant finality** → use `tx.wait(1)`
-2. **SSTORE costs 72,000 gas** (vs 20,000 on Ethereum)
+2. **SSTORE gas varies by network**: testnet (atlantic-2) = 72,000 gas; mainnet (pacific-1) = 20,000 gas (governance-adjustable)
 3. **Use `gasPrice`** (legacy) — Sei does not support EIP-1559 `maxFeePerGas`
 4. **Minimum gas price: 50 gwei**
 5. **Block gas limit: 12.5 M** per block

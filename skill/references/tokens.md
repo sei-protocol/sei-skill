@@ -44,7 +44,7 @@ contract SeiToken is ERC20, ERC20Burnable, Ownable {
 }
 ```
 
-**SSTORE note**: ERC20 `transfer()` writes to 2 storage slots (sender and recipient balances) = 144,000 gas in storage alone on Sei. Budget accordingly.
+**SSTORE note**: ERC20 `transfer()` writes to 2 storage slots (sender and recipient balances). On testnet (atlantic-2) this costs 144,000 gas in storage alone (2 × 72,000); on mainnet (pacific-1) it costs 40,000 gas (2 × 20,000). Always verify gas costs against your target network.
 
 ### ERC721 (NFTs)
 
@@ -84,8 +84,8 @@ USDC (Circle) is available on both testnet and mainnet:
 
 | Network | Address |
 |---|---|
-| Mainnet | `0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F` |
-| Testnet (atlantic-2) | `0xace91bFb5c09C1B2EE5cc9aB23F6EBF2F5dde23` |
+| Mainnet | `0xe15fC38F6D8c56aF07bbCBe3BAf5708A2Bf42392` |
+| Testnet (atlantic-2) | `0x4fCF1784B31630811181f670Aea7A7bEF803eaED` |
 
 USDC on Sei is a native ERC20 — no pointer or bridging step needed.
 

@@ -16,8 +16,8 @@ const gasLimit = gasEstimate * 120n / 100n;  // 20% buffer
 ```
 
 ### `max fee per gas less than block base fee`
-**Cause**: Sending an EIP-1559 transaction (`maxFeePerGas`) on Sei. Sei uses legacy gas pricing.  
-**Fix**: Use `gasPrice` instead of EIP-1559 fields. Minimum 50 gwei.
+**Cause**: Using `maxFeePerGas`/`maxPriorityFeePerGas` (EIP-1559 fields) on Sei. Sei's fee model does not burn a base fee, so EIP-1559 priority mechanics don't apply.  
+**Fix**: Use `gasPrice` instead. Minimum 50 gwei.
 ```typescript
 // Wrong
 { maxFeePerGas: parseUnits("20", "gwei"), maxPriorityFeePerGas: parseUnits("1", "gwei") }
@@ -50,7 +50,7 @@ try {
 
 ### `out of gas`
 **Cause**: Gas limit exhausted before execution completed.  
-**Fix**: Check SSTORE patterns — Sei charges 72,000 gas per storage write (not 20,000). Cache in memory before writing.
+**Fix**: Check SSTORE patterns. Testnet (atlantic-2) charges 72,000 gas per cold storage write; mainnet (pacific-1) charges 20,000. Cache in memory and minimize writes regardless of network.
 
 ### `transaction gas limit exceeds block gas limit`
 **Cause**: Single transaction gas limit > 12.5 M (Sei block gas cap).  
@@ -155,10 +155,11 @@ curl http://localhost:26657/net_info | jq '.result.n_peers'
 ## Solidity / Contract Development
 
 ### SSTORE gas unexpectedly high
-**Cause**: Sei charges 72,000 gas per cold SSTORE (vs 20,000 on Ethereum). Multiple storage writes in a function compound quickly.  
-**Fix**: Cache in memory, minimize storage writes.
+**Cause**: Cold SSTORE costs differ by network — testnet (atlantic-2) charges 72,000 gas per write (governance proposal #240); mainnet (pacific-1) charges 20,000 gas. Multiple storage writes in a function compound quickly on either network.  
+**Fix**: Cache in memory, minimize storage writes. Use `forge test --gas-report` against the target network.
 ```solidity
-// Bad: 3 × 72,000 = 216,000 gas
+// Testnet (atlantic-2): 3 × 72,000 = 216,000 gas just for storage
+// Mainnet (pacific-1): 3 × 20,000 = 60,000 gas
 balances[a] = x;
 balances[b] = y;
 balances[c] = z;

@@ -22,8 +22,10 @@ Precompiles are fixed-address contracts deployed by the Sei protocol that expose
 | IBC | `0x0000000000000000000000000000000000001009` | IBC transfers from EVM (legacy) |
 | PointerView | `0x000000000000000000000000000000000000100A` | Query pointer registrations |
 | Pointer | `0x000000000000000000000000000000000000100B` | Register pointer contracts |
+| Solo | `0x000000000000000000000000000000000000100C` | Claim/migrate legacy CW20 and CW721 tokens to EVM |
+| P256Verify | `0x0000000000000000000000000000000000001011` | Verify P-256 (secp256r1) signatures on-chain |
 
-> Note: CosmWasm, Bank (for CW use), and IBC precompiles are marked legacy because CosmWasm is deprecated per SIP-3. They remain functional for existing integrations.
+> Note: CosmWasm, CosmWasm bridge (Bank, IBC), and Solo precompiles are marked legacy because CosmWasm is deprecated per SIP-3. They remain functional for existing integrations.
 
 ## Setup: @sei-js/evm
 

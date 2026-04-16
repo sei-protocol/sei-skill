@@ -57,7 +57,7 @@ These facts must inform every answer involving Sei code or configuration:
 7. **No base fee burn** — all fees go to validators; prefer `gasPrice` (legacy transactions); `maxFeePerGas`/`maxPriorityFeePerGas` can be omitted as EIP-1559 priority fee mechanics don't apply
 8. **CosmWasm is deprecated** (SIP-3) — focus on EVM; CosmWasm precompiles are retained for legacy support only; new contracts should be EVM-only
 9. **Chain IDs:** Mainnet `pacific-1` / EVM `1329`; Testnet `atlantic-2` / EVM `1328`
-10. **Block gas limit:** ~10M gas per block (not 30M like Ethereum)
+10. **Block gas limit:** 12.5M gas per block (not 60M like Ethereum)
 
 ## Default stack decisions (opinionated)
 

@@ -23,7 +23,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ── Config ────────────────────────────────────────────────────────────
 const MODEL = "claude-haiku-4-5-20251001";
-const TARGET_SKILL = "sei-dev";
+const TARGET_SKILL = "sei";
 
 // ── Helpers ───────────────────────────────────────────────────────────
 interface SkillEntry {
@@ -38,7 +38,19 @@ function loadSkillDescription(path: string): SkillEntry | null {
     if (!match) return null;
     const frontmatter = match[1];
     const name = frontmatter.match(/^name:\s*(.+)$/m)?.[1]?.trim();
-    const description = frontmatter.match(/^description:\s*(.+)$/m)?.[1]?.trim();
+
+    // Handle both single-line `description: foo` and YAML folded `description: >\n  ...`
+    let description: string | undefined;
+    const firstLine = frontmatter.match(/^description:\s*(.*)$/m)?.[1]?.trim();
+    if (firstLine && firstLine !== ">" && firstLine !== "|") {
+      description = firstLine;
+    } else if (firstLine === ">" || firstLine === "|") {
+      const folded = frontmatter.match(/^description:\s*[>|]\s*\n((?:[ \t]+.*\n?)+)/m);
+      if (folded) {
+        description = folded[1].split("\n").map(l => l.trim()).filter(Boolean).join(" ");
+      }
+    }
+
     if (!name || !description) return null;
     return { name, description };
   } catch {
@@ -155,7 +167,7 @@ Rules:
 - Respond ONLY with the JSON object, no other text.`;
 
 const triggerCases: TestCase[] = [
-  // ✅ Should trigger
+  // ─── Dev (smart contracts + tooling) ──────────────────────────────
   { prompt: "Build me a Sei dapp", expected: true },
   { prompt: "Deploy a Solidity contract on Sei testnet", expected: true },
   { prompt: "How do I use the Staking precompile on Sei?", expected: true },
@@ -165,20 +177,41 @@ const triggerCases: TestCase[] = [
   { prompt: "Set up the Sei MCP server in Claude Code", expected: true },
   { prompt: "Migrate my Ethereum contract to Sei", expected: true },
   { prompt: "Set up Foundry for Sei Network", expected: true },
-  { prompt: "Connect a wallet to Sei using Wagmi", expected: true },
   { prompt: "Create an ERC20 token on Sei", expected: true },
-  { prompt: "How do I bridge tokens to Sei with LayerZero?", expected: true },
-  { prompt: "Set up a Sei full node", expected: true },
-  { prompt: "How do I delegate SEI to a validator?", expected: true },
-  { prompt: "Submit a governance proposal on Sei", expected: true },
   { prompt: "How do I use the IBC precompile on Sei?", expected: true },
   { prompt: "What is the dual address system on Sei?", expected: true },
   { prompt: "I'm coming from Solana, how does Sei work?", expected: true },
-  { prompt: "How do I use Pyth oracles on Sei?", expected: true },
-  { prompt: "Set up The Graph subgraph for my Sei contract", expected: true },
   { prompt: "How do I use the TokenFactory on Sei?", expected: true },
   { prompt: "Debug my Sei transaction — it keeps reverting", expected: true },
-  // ❌ Should NOT trigger
+  { prompt: "How do I verify my contract on Seitrace?", expected: true },
+  { prompt: "Load test my Sei contract against the OCC scheduler", expected: true },
+  { prompt: "How should I design a Sei contract for parallel execution?", expected: true },
+  { prompt: "Optimize gas for my Sei contract — what's different from Ethereum?", expected: true },
+  { prompt: "How do I use ERC-4337 account abstraction on Sei?", expected: true },
+  { prompt: "Make my Sei contract upgradeable with UUPS proxy", expected: true },
+  // ─── Website (frontend dev + site awareness) ──────────────────────
+  { prompt: "Connect a wallet to Sei using Wagmi", expected: true },
+  { prompt: "How do I use Sei Global Wallet for social login?", expected: true },
+  { prompt: "Display both EVM and Cosmos addresses for a Sei user", expected: true },
+  { prompt: "How do I contribute a page to docs.sei.io?", expected: true },
+  { prompt: "Where do I find the Sei brand kit?", expected: true },
+  { prompt: "Where on the Sei docs site can I find precompile docs?", expected: true },
+  { prompt: "How do I add Sei to my multichain dApp with RainbowKit?", expected: true },
+  // ─── Ecosystem (apps + integration + participation) ───────────────
+  { prompt: "What dApps are live on Sei mainnet?", expected: true },
+  { prompt: "How do I integrate with a Sei DEX?", expected: true },
+  { prompt: "How do I bridge tokens to Sei with LayerZero?", expected: true },
+  { prompt: "What bridges work with Sei?", expected: true },
+  { prompt: "What are good RPC endpoints for Sei?", expected: true },
+  { prompt: "Set up a Sei full node", expected: true },
+  { prompt: "How do I delegate SEI to a validator?", expected: true },
+  { prompt: "How do I become a Sei validator?", expected: true },
+  { prompt: "Submit a governance proposal on Sei", expected: true },
+  { prompt: "How do I use Pyth oracles on Sei?", expected: true },
+  { prompt: "Set up The Graph subgraph for my Sei contract", expected: true },
+  { prompt: "Apply for a Sei Foundation grant", expected: true },
+  { prompt: "Run an indexer for Sei", expected: true },
+  // ─── Should NOT trigger ───────────────────────────────────────────
   { prompt: "Build me a React app", expected: false },
   { prompt: "Help with my Solana program", expected: false },
   { prompt: "Deploy to Arbitrum", expected: false },

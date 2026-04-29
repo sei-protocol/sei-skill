@@ -1,49 +1,68 @@
-# Sei Development Skill for Claude Code
+# Sei Skill for Claude Code
 
-A comprehensive Claude Code skill for building on the Sei Network — covering EVM contracts, precompiles, pointer contracts, frontend, wallets, oracles, indexers, node operations, and migration from other chains.
+A comprehensive Claude Code skill for the Sei Network, covering three domains: **dev** (smart contracts and tooling), **website** (frontend stack and Sei site awareness), and **ecosystem** (apps, integrations, participation roles).
 
 ## Overview
 
-This skill provides Claude Code with deep knowledge of the Sei development ecosystem:
+This skill provides Claude Code with deep knowledge of the Sei ecosystem across three domains:
 
-- **EVM Contracts**: Foundry + Hardhat setup, deployment, verification, fork testing
+### Dev — smart contracts and tooling
+- **EVM Contracts**: Foundry + Hardhat setup, deployment, fork testing
 - **Precompiles**: All 11 Sei precompiles (Staking, Governance, Bank, Addr, Oracle, IBC, Pointer, P256, etc.)
 - **Pointer Contracts**: Cross-VM asset bridging between EVM and Cosmos
-- **Frontend**: Wagmi + Viem (React), Ethers.js v6, `@sei-js/evm`, `@sei-js/sei-global-wallet`
+- **Verification**: Seitrace verification flows for Foundry and Hardhat
+- **Performance**: Load testing, OCC-aware design, Sei-specific gas optimization
+- **Account abstraction (ERC-4337)**: Pimlico, Particle, smart-account flows
+- **Upgradeability**: UUPS, Transparent, Beacon, Diamond
+- **Migration**: From Ethereum/other EVMs and from Solana
+
+### Website — frontend stack and site awareness
+- **Frontend stack**: Wagmi + Viem default, Ethers.js v6 alternative, RainbowKit
+- **Wallets**: Sei Global Wallet, MetaMask, Compass, Ledger; EIP-6963 detection
+- **Dual-address UX**: surfacing `sei1...` ↔ `0x...` cleanly
+- **sei.io / docs.sei.io map**: pointing users to the right page
+- **Docs contribution**: Nextra MDX, `_meta.js`, build flow
+- **Brand assets**: logos, media kit, press contacts
+
+### Ecosystem — apps, integration, participation
+- **dApps directory**: DEX, lending, perps, RWA, NFT, gaming, infra
+- **DeFi integrations**: DragonSwap, Yei, Takara, Saphyre, Pyth oracles, USDC
+- **Bridges**: LayerZero V2 (OFT), Wormhole, Axelar, IBC, CCTP, ThirdWeb
+- **RPC endpoints**: public, community, paid SaaS providers with failover patterns
 - **Oracles**: Chainlink, Pyth (+ VRF), API3, RedStone, native oracle precompile
 - **Indexers**: The Graph, Goldsky, Dune Analytics, Moralis, Goldrush
-- **Bridging**: IBC, LayerZero OFT, ThirdWeb Bridge
-- **AI Tooling**: Sei MCP Server, Cambrian Agent Kit
-- **Node Operations**: Full node setup, state sync, SeiDB configuration
-- **Migration**: From Ethereum/other EVMs and from Solana
+- **Participation roles**: validator, RPC provider, indexer operator, oracle relayer, IBC relayer
+- **Grants**: Sei Foundation Grants, Ecosystem Fund, Creator Fund
+- **AI Tooling**: Sei MCP Server, Cambrian Agent Kit, x402
 
 ## Installation
 
 ### Quick Install
 
 ```bash
-npx skills add sei-dev
+npx skills add sei
 ```
 
 ### Manual Install
 
 ```bash
-git clone https://github.com/sei-protocol/sei-dev-skill
-cd sei-dev-skill
+git clone https://github.com/sei-protocol/sei-skill
+cd sei-skill
 ./install.sh
 ```
+
+> **Upgrading from `sei-dev`?** This skill was renamed from `sei-dev` to `sei` to reflect its broader scope (now covering website, ecosystem, and dev). Remove the old install at `~/.claude/skills/sei-dev` before installing the new version.
 
 ## Skill Structure
 
 ```
 skill/
-├── SKILL.md                              # Main skill definition
+├── SKILL.md                              # Main skill definition (3-domain index)
 └── references/
     ├── architecture.md                   # Twin Turbo, OCC, SeiDB, Sei Giga
     ├── networks.md                       # Chain IDs, RPC URLs, explorers, faucet
     ├── addresses-wallets.md              # Dual address system, wallets, HD paths
     ├── tokens.md                         # SEI denominations, ERC standards, TokenFactory
-    ├── frontend.md                       # Ethers.js, Viem, Wagmi, @sei-js SDK
     ├── ibc-bridging.md                   # IBC, LayerZero, ThirdWeb bridge
     ├── oracles.md                        # Chainlink, Pyth, API3, RedStone, VRF
     ├── indexers.md                       # The Graph, Dune, Goldsky, Moralis, Goldrush
@@ -51,42 +70,65 @@ skill/
     ├── validators.md                     # Key management, HSM, jailing, monitoring
     ├── staking-governance.md             # Delegation, unbonding, proposals
     ├── ai-tooling.md                     # Sei MCP Server, Cambrian Agent Kit
+    ├── rpc-agent-skills.md               # 17 canonical RPC skills, retry, response shapes
     ├── common-errors.md                  # Error → cause → solution
     ├── security.md                       # Sei-specific + standard Solidity checklist
     ├── resources.md                      # Curated reference links
-    ├── evm/
-    │   ├── overview.md                   # Sei vs Ethereum: opcodes, gas, finality
-    │   ├── hardhat.md                    # Hardhat config, deployment, verification
-    │   ├── foundry.md                    # Foundry config, forge/cast, verification
-    │   ├── testing.md                    # Unit, fork, parallelization-aware testing
-    │   └── best-practices.md             # Parallelization patterns, SSTORE, gas
-    ├── precompiles/
-    │   ├── overview.md                   # Full address table, @sei-js/evm setup
-    │   ├── staking-distribution.md       # 0x1005 + 0x1007
-    │   ├── governance.md                 # 0x1006, proposals, voting
-    │   ├── json-p256.md                  # 0x1003 + 0x1011
-    │   └── cosmwasm-bridge.md            # Addr, Bank, CW, IBC, Pointer, PointerView
-    ├── pointers/
-    │   ├── overview.md                   # Cross-VM asset bridging + registration
-    │   └── token-factory.md              # Creating native denoms + pointer workflow
-    └── migration/
-        ├── from-ethereum.md              # Chain comparison, gotchas, frontend updates
-        └── from-solana.md                # Concept mapping, toolchain translation
+    ├── dev/                              # ── Domain: Dev ─────────────────────────
+    │   ├── contract-verification.md      # Seitrace verification (Foundry + Hardhat)
+    │   ├── performance-testing.md        # Load testing, OCC scheduler benchmarking
+    │   ├── occ-aware-design.md           # Parallelization-friendly storage layouts
+    │   ├── gas-optimization-sei.md       # SSTORE costs, calldata, multicall
+    │   ├── account-abstraction.md        # ERC-4337 with Pimlico, Particle
+    │   └── upgradeability.md             # UUPS, Transparent, Beacon, Diamond
+    ├── evm/                              # EVM smart contracts
+    │   ├── overview.md
+    │   ├── hardhat.md
+    │   ├── foundry.md
+    │   ├── testing.md
+    │   └── best-practices.md
+    ├── precompiles/                      # Sei precompiles
+    │   ├── overview.md
+    │   ├── staking-distribution.md
+    │   ├── governance.md
+    │   ├── json-p256.md
+    │   └── cosmwasm-bridge.md
+    ├── pointers/                         # Cross-VM bridging
+    │   ├── overview.md
+    │   └── token-factory.md
+    ├── migration/                        # Migration guides
+    │   ├── from-ethereum.md
+    │   └── from-solana.md
+    ├── website/                          # ── Domain: Website ────────────────────
+    │   ├── frontend-stack.md             # Wagmi/Viem, sei-js, EIP-6963, dual-address UX
+    │   ├── sites-map.md                  # sei.io / docs.sei.io page index
+    │   ├── docs-contributing.md          # Nextra + MDX contribution guide
+    │   └── branding-media.md             # Brand kit, logos, press
+    └── ecosystem/                        # ── Domain: Ecosystem ──────────────────
+        ├── apps-directory.md             # dApps grouped by category
+        ├── integration-defi.md           # DEX/lending integration patterns
+        ├── bridges.md                    # LayerZero, Wormhole, Axelar, IBC, CCTP
+        ├── rpc-providers.md              # Public + paid RPC endpoints
+        └── participation-roles.md        # Validator, RPC, indexer, oracle, grants
 ```
 
 ## Usage
 
 Once installed, Claude Code automatically uses this skill when you ask about Sei development. Example prompts:
 
-### Smart Contracts
+### Dev — Smart Contracts
 ```
 "Deploy a Solidity contract on Sei testnet"
 "Why is SSTORE so expensive on Sei testnet?"
 "Set up Foundry for Sei"
-"Fork test with the Sei testnet"
+"How do I verify my contract on Seitrace?"
+"Load test my contract against the OCC scheduler"
+"Optimize gas for my Sei contract"
+"Use ERC-4337 account abstraction on Sei"
+"Make my contract upgradeable with UUPS proxy"
 ```
 
-### Precompiles and Cross-VM
+### Dev — Precompiles and Cross-VM
 ```
 "How do I stake SEI from a Solidity contract?"
 "Use the governance precompile to vote on a proposal"
@@ -94,12 +136,29 @@ Once installed, Claude Code automatically uses this skill when you ask about Sei
 "How does the dual address system work?"
 ```
 
-### Frontend
+### Website — Frontend and Site Awareness
 ```
 "Set up Wagmi with Sei mainnet and testnet"
 "How do I use Sei Global Wallet for social login?"
 "Why do I need gasPrice instead of maxFeePerGas on Sei?"
 "Display both EVM and Cosmos addresses for a user"
+"Where on docs.sei.io is the precompile reference?"
+"How do I contribute a page to docs.sei.io?"
+"Where is the Sei brand kit?"
+```
+
+### Ecosystem — Apps, Integration, Participation
+```
+"What dApps are live on Sei mainnet?"
+"How do I integrate with a Sei DEX?"
+"What bridges work with Sei?"
+"What are good RPC endpoints for Sei?"
+"How do I become a Sei validator?"
+"Apply for a Sei Foundation grant"
+"Set up a Sei full node with state sync"
+"How do I create and register a validator?"
+"Submit a governance proposal via CLI"
+"Set up the Sei MCP server in Claude Code"
 ```
 
 ### Architecture
@@ -115,14 +174,6 @@ Once installed, Claude Code automatically uses this skill when you ask about Sei
 "I'm migrating my Ethereum dApp to Sei — what do I need to change?"
 "Coming from Solana — how do programs map to Solidity contracts?"
 "What are the differences between Sei and Ethereum?"
-```
-
-### Infrastructure
-```
-"Set up a Sei full node with state sync"
-"How do I create and register a validator?"
-"Submit a governance proposal via CLI"
-"Set up the Sei MCP server in Claude Code"
 ```
 
 ## Stack Decisions
@@ -162,8 +213,10 @@ This skill complements [docs.sei.io](https://docs.sei.io). The official docs are
 
 Built from:
 - [sei-chain](https://github.com/sei-protocol/sei-chain) — core protocol
-- [sei-docs](https://github.com/sei-protocol/sei-docs) — official documentation
+- [sei-docs](https://github.com/sei-protocol/sei-docs) — official documentation (Nextra + MDX)
 - [seid](https://github.com/sei-protocol/seid) — CLI tooling
+- [sei.io](https://www.sei.io) — ecosystem directory and brand assets
+- [docs.sei.io/llms.txt](https://docs.sei.io/llms.txt) — LLM-friendly site nav
 
 ## Contributing
 

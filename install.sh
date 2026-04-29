@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Sei Dev Skill Installer for Claude Code
+# Sei Skill Installer for Claude Code
 # Usage: ./install.sh [--project | --path <path>]
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_NAME="sei-dev"
+SKILL_NAME="sei"
 SOURCE_DIR="$SCRIPT_DIR/skill"
 
 # Default to personal installation
@@ -24,7 +24,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -h|--help)
-            echo "Sei Dev Skill Installer"
+            echo "Sei Skill Installer"
             echo ""
             echo "Usage: ./install.sh [OPTIONS]"
             echo ""
@@ -72,7 +72,7 @@ if [ -d "$INSTALL_PATH" ]; then
 fi
 
 # Copy skill files
-echo "Installing Sei Dev Skill..."
+echo "Installing Sei Skill..."
 cp -r "$SOURCE_DIR" "$INSTALL_PATH"
 
 echo ""

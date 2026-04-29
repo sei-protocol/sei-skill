@@ -1,21 +1,24 @@
 #!/bin/bash
 
 # Sei Skill Installer for Claude Code
-# Usage: ./install.sh [--variant <name>] [--project | --path <path>]
+# Defaults to the full skill when no --variant / --name is given.
+# Usage: ./install.sh [--variant <name>|--name <name>] [--project | --path <path>]
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_DIR="$SCRIPT_DIR/skill"
 
-# Variant config — full|dev|website|ecosystem
-VARIANT="full"
+# Variant config — full (default) | dev | website | ecosystem
+# Aliases also accepted for the actual skill names: sei, sei-dev, sei-website, sei-ecosystem
+VARIANT=""        # empty = use default; resolved to "full" below
 INSTALL_PATH=""
+INSTALL_PATH_TYPE=""
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --variant)
+        --variant|--name)
             VARIANT="$2"
             shift 2
             ;;
@@ -34,25 +37,29 @@ Sei Skill Installer
 Usage: ./install.sh [OPTIONS]
 
 Options:
-  --variant NAME    Which skill variant to install (default: full)
-                    Choices:
-                      full       Full Sei skill (covers dev, website, ecosystem)
-                                 → installs as ~/.claude/skills/sei
-                      dev        Dev-only variant (smart contracts, tooling)
-                                 → installs as ~/.claude/skills/sei-dev
-                      website    Website variant (frontend stack + site awareness)
-                                 → installs as ~/.claude/skills/sei-website
-                      ecosystem  Ecosystem variant (apps, integrations, infra)
-                                 → installs as ~/.claude/skills/sei-ecosystem
+  --variant NAME    Which skill variant to install. Default: full.
+  --name NAME       Alias for --variant. Accepts the actual skill name.
+
+                    Accepted values (short and full names are interchangeable):
+                      full       | sei            → ~/.claude/skills/sei
+                                 (covers dev, website, ecosystem)
+                      dev        | sei-dev        → ~/.claude/skills/sei-dev
+                                 (smart contracts, tooling)
+                      website    | sei-website    → ~/.claude/skills/sei-website
+                                 (frontend stack + site awareness)
+                      ecosystem  | sei-ecosystem  → ~/.claude/skills/sei-ecosystem
+                                 (apps, integrations, infra)
+
   --project         Install to current project (.claude/skills/<name>)
                     instead of user-level (~/.claude/skills/<name>)
   --path PATH       Install to a custom path (overrides --variant naming)
   -h, --help        Show this help
 
 Examples:
-  ./install.sh                          # full skill, user-level
+  ./install.sh                          # full skill (default)
   ./install.sh --variant dev            # dev-only variant
-  ./install.sh --variant website --project   # website variant in this project
+  ./install.sh --name sei-website       # website variant by skill name
+  ./install.sh --variant ecosystem --project   # in current project's .claude/
   ./install.sh --path /tmp/sei-test     # custom location
 EOF
             exit 0
@@ -65,26 +72,38 @@ EOF
     esac
 done
 
-# Determine SKILL.md source + skill name based on variant
+# Default to full when nothing was specified
+if [ -z "$VARIANT" ]; then
+    VARIANT="full"
+    USING_DEFAULT="yes"
+fi
+
+# Normalise variant input (accept both short alias and full skill name)
 case "$VARIANT" in
-    full)
+    full|sei)
+        VARIANT="full"
         SKILL_NAME="sei"
         VARIANT_FILE="SKILL.md"
         ;;
-    dev)
+    dev|sei-dev)
+        VARIANT="dev"
         SKILL_NAME="sei-dev"
         VARIANT_FILE="SKILL-DEV.md"
         ;;
-    website)
+    website|sei-website)
+        VARIANT="website"
         SKILL_NAME="sei-website"
         VARIANT_FILE="SKILL-WEBSITE.md"
         ;;
-    ecosystem)
+    ecosystem|sei-ecosystem)
+        VARIANT="ecosystem"
         SKILL_NAME="sei-ecosystem"
         VARIANT_FILE="SKILL-ECOSYSTEM.md"
         ;;
     *)
-        echo "Error: unknown variant '$VARIANT' — must be one of: full, dev, website, ecosystem"
+        echo "Error: unknown variant/name '$VARIANT'"
+        echo "Accepted values: full|sei, dev|sei-dev, website|sei-website, ecosystem|sei-ecosystem"
+        echo "Run with --help for details."
         exit 1
         ;;
 esac
@@ -125,7 +144,11 @@ if [ -d "$INSTALL_PATH" ]; then
 fi
 
 # Copy skill files (whole tree, then swap in variant SKILL.md if needed)
-echo "Installing Sei Skill ($VARIANT variant) → $INSTALL_PATH"
+if [ "$USING_DEFAULT" = "yes" ]; then
+    echo "Installing Sei Skill (full — default) → $INSTALL_PATH"
+else
+    echo "Installing Sei Skill ($VARIANT variant) → $INSTALL_PATH"
+fi
 cp -r "$SOURCE_DIR" "$INSTALL_PATH"
 
 # Replace SKILL.md with the variant if not the full install

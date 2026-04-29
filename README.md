@@ -37,42 +37,50 @@ This skill provides Claude Code with deep knowledge of the Sei ecosystem across 
 
 ## Installation
 
-### Quick Install
+The skill ships in four flavours. **Running `./install.sh` with no arguments installs the full skill** — the recommended default that covers all three domains.
+
+### Quick Install (full skill)
 
 ```bash
 npx skills add sei
 ```
 
-### Manual Install
+### Manual Install (full skill — default)
 
 ```bash
 git clone https://github.com/sei-protocol/sei-skill
 cd sei-skill
-./install.sh                          # full skill (default)
+./install.sh
 ```
+
+That installs the full skill to `~/.claude/skills/sei`. No flags needed.
 
 ### Variants
 
-The skill ships in four flavours. Install only the one(s) you need:
+Install one of the focused variants when you only need a subset of Sei's coverage. The full reference tree ships with every install — variants only swap the entry-point `SKILL.md` to scope the skill's description, operating procedure, and progressive-disclosure links to one domain.
 
 | Variant | Skill name | Install path | Best for |
 |---|---|---|---|
 | **full** (default) | `sei` | `~/.claude/skills/sei` | Comprehensive coverage; one skill triggers across all three domains |
-| `dev` | `sei-dev` | `~/.claude/skills/sei-dev` | Smart-contract teams — skips website/ecosystem trigger surface |
-| `website` | `sei-website` | `~/.claude/skills/sei-website` | Frontend / web teams |
-| `ecosystem` | `sei-ecosystem` | `~/.claude/skills/sei-ecosystem` | Integration / infra / participation focus |
+| `dev` / `sei-dev` | `sei-dev` | `~/.claude/skills/sei-dev` | Smart-contract teams — skips website/ecosystem trigger surface |
+| `website` / `sei-website` | `sei-website` | `~/.claude/skills/sei-website` | Frontend / web teams |
+| `ecosystem` / `sei-ecosystem` | `sei-ecosystem` | `~/.claude/skills/sei-ecosystem` | Integration / infra / participation focus |
 
 ```bash
-./install.sh --variant dev            # dev-only
-./install.sh --variant website        # website-only
-./install.sh --variant ecosystem      # ecosystem-only
-./install.sh --variant dev --project  # dev variant in current project's .claude/
-./install.sh --path /tmp/sei-test     # custom path (overrides naming)
+./install.sh                              # full (default)
+./install.sh --variant dev                # dev-only — short alias
+./install.sh --name sei-dev               # dev-only — by skill name (alias of --variant)
+./install.sh --variant website            # website-only
+./install.sh --variant ecosystem          # ecosystem-only
+./install.sh --variant dev --project      # dev variant in current project's .claude/
+./install.sh --path /tmp/sei-test         # custom path (overrides naming)
 ```
 
-Each variant ships with its own `SKILL.md` that scopes the skill's description, operating procedure, and progressive-disclosure links to its domain. The full reference tree is included in every install — variants only differ in the entry-point `SKILL.md`. You can install several variants simultaneously without conflict; they have distinct `name:` fields.
+Both `--variant` and `--name` accept either the short alias (`dev`, `website`, `ecosystem`) or the actual skill name (`sei-dev`, `sei-website`, `sei-ecosystem`). The two flags are interchangeable.
 
-> **Upgrading from `sei-dev` (the old single-skill name)?** This skill was renamed `sei-dev` → `sei` to reflect its broader scope. The new `sei-dev` *variant* installs under the same path the old skill used, but its content is dev-only — install the `full` skill or the dedicated variants for the other domains. Remove `~/.claude/skills/sei-dev` before installing if you previously had the legacy single-skill version.
+You can install several variants simultaneously — they have distinct `name:` fields and live under different install paths.
+
+> **Upgrading from `sei-dev` (the old single-skill name)?** This skill was renamed `sei-dev` → `sei` to reflect its broader scope. The new `sei-dev` *variant* installs under the same path the old skill used, but its content is dev-only — install the `full` skill (or the dedicated variants for other domains) for the broader coverage you used to get from the legacy single skill. Remove `~/.claude/skills/sei-dev` before installing if you previously had the legacy version.
 
 ## Skill Structure
 

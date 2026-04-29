@@ -14,7 +14,7 @@ description: >
   infrastructure question on Sei. Ecosystem-focused variant — apps directory,
   DeFi integrations, bridges, RPC, validators, oracles, indexers, grants. For
   smart-contract or frontend-only topics, install the full `sei` skill or the
-  dedicated `sei-dev` / `sei-website` variants.
+  dedicated `sei-contracts` / `sei-frontend` variants.
 user-invocable: true
 license: MIT
 compatibility: Requires Node.js 18+

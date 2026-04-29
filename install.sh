@@ -9,8 +9,8 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_DIR="$SCRIPT_DIR/skill"
 
-# Variant config — full (default) | dev | website | ecosystem
-# Aliases also accepted for the actual skill names: sei, sei-dev, sei-website, sei-ecosystem
+# Variant config — full (default) | contracts | frontend | ecosystem
+# Aliases also accepted for the actual skill names: sei, sei-contracts, sei-frontend, sei-ecosystem
 VARIANT=""        # empty = use default; resolved to "full" below
 INSTALL_PATH=""
 INSTALL_PATH_TYPE=""
@@ -41,13 +41,13 @@ Options:
   --name NAME       Alias for --variant. Accepts the actual skill name.
 
                     Accepted values (short and full names are interchangeable):
-                      full       | sei            → ~/.claude/skills/sei
-                                 (covers dev, website, ecosystem)
-                      dev        | sei-dev        → ~/.claude/skills/sei-dev
+                      full       | sei              → ~/.claude/skills/sei
+                                 (covers contracts, frontend, ecosystem)
+                      contracts  | sei-contracts    → ~/.claude/skills/sei-contracts
                                  (smart contracts, tooling)
-                      website    | sei-website    → ~/.claude/skills/sei-website
-                                 (frontend stack + site awareness)
-                      ecosystem  | sei-ecosystem  → ~/.claude/skills/sei-ecosystem
+                      frontend   | sei-frontend     → ~/.claude/skills/sei-frontend
+                                 (UI stack + site awareness)
+                      ecosystem  | sei-ecosystem    → ~/.claude/skills/sei-ecosystem
                                  (apps, integrations, infra)
 
   --project         Install to current project (.claude/skills/<name>)
@@ -57,8 +57,8 @@ Options:
 
 Examples:
   ./install.sh                          # full skill (default)
-  ./install.sh --variant dev            # dev-only variant
-  ./install.sh --name sei-website       # website variant by skill name
+  ./install.sh --variant contracts      # contracts-only variant
+  ./install.sh --name sei-frontend      # frontend variant by skill name
   ./install.sh --variant ecosystem --project   # in current project's .claude/
   ./install.sh --path /tmp/sei-test     # custom location
 EOF
@@ -85,15 +85,15 @@ case "$VARIANT" in
         SKILL_NAME="sei"
         VARIANT_FILE="SKILL.md"
         ;;
-    dev|sei-dev)
-        VARIANT="dev"
-        SKILL_NAME="sei-dev"
-        VARIANT_FILE="SKILL-DEV.md"
+    contracts|sei-contracts)
+        VARIANT="contracts"
+        SKILL_NAME="sei-contracts"
+        VARIANT_FILE="SKILL-CONTRACTS.md"
         ;;
-    website|sei-website)
-        VARIANT="website"
-        SKILL_NAME="sei-website"
-        VARIANT_FILE="SKILL-WEBSITE.md"
+    frontend|sei-frontend)
+        VARIANT="frontend"
+        SKILL_NAME="sei-frontend"
+        VARIANT_FILE="SKILL-FRONTEND.md"
         ;;
     ecosystem|sei-ecosystem)
         VARIANT="ecosystem"
@@ -102,7 +102,7 @@ case "$VARIANT" in
         ;;
     *)
         echo "Error: unknown variant/name '$VARIANT'"
-        echo "Accepted values: full|sei, dev|sei-dev, website|sei-website, ecosystem|sei-ecosystem"
+        echo "Accepted values: full|sei, contracts|sei-contracts, frontend|sei-frontend, ecosystem|sei-ecosystem"
         echo "Run with --help for details."
         exit 1
         ;;

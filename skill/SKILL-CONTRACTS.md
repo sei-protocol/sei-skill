@@ -1,5 +1,5 @@
 ---
-name: sei-dev
+name: sei-contracts
 description: >
   Use when user asks to "build a Sei dapp", "deploy a smart contract on Sei",
   "write a Solidity contract for Sei", "use Sei precompiles", "set up Hardhat or
@@ -9,23 +9,23 @@ description: >
   "optimize gas on Sei", "use ERC-4337 / account abstraction on Sei", "make my
   contract upgradeable on Sei", "use the Staking or Governance precompile",
   "create a native token with TokenFactory", "debug a Sei transaction", or "why
-  is my contract behaving differently on Sei than on Ethereum". Dev-focused
+  is my contract behaving differently on Sei than on Ethereum". Contracts-focused
   variant — smart contracts, tooling, performance, gas, security, upgradeability.
-  For website/frontend or ecosystem/apps questions, install the full `sei` skill
-  or the dedicated `sei-website` / `sei-ecosystem` variants.
+  For UI/frontend or ecosystem/apps questions, install the full `sei` skill
+  or the dedicated `sei-frontend` / `sei-ecosystem` variants.
 user-invocable: true
 license: MIT
 compatibility: Requires Node.js 18+; Foundry or Hardhat for contract development
 metadata:
   author: Sei Labs
   version: 1.0.0
-  variant: dev
+  variant: contracts
   parent: https://github.com/sei-protocol/sei-skill
 ---
 
-# Sei Dev Skill (variant)
+# Sei Contracts Skill (variant)
 
-A focused variant of the Sei skill scoped to **smart-contract development and tooling**. For full coverage including website/frontend and ecosystem topics, install the global `sei` skill from https://github.com/sei-protocol/sei-skill.
+A focused variant of the Sei skill scoped to **smart-contract development and tooling**. For full coverage including frontend and ecosystem topics, install the global `sei` skill from https://github.com/sei-protocol/sei-skill.
 
 ## What this Skill is for
 
@@ -139,15 +139,15 @@ When implementing changes, provide:
 - **Foundry for Sei:** [evm/foundry.md](references/evm/foundry.md)
 - **Testing strategy:** [evm/testing.md](references/evm/testing.md)
 - **Parallelization & gas best practices:** [evm/best-practices.md](references/evm/best-practices.md)
-- **Contract verification (Seitrace):** [dev/contract-verification.md](references/dev/contract-verification.md)
-- **Performance & load testing:** [dev/performance-testing.md](references/dev/performance-testing.md)
-- **OCC-aware contract design:** [dev/occ-aware-design.md](references/dev/occ-aware-design.md)
-- **Sei-specific gas optimization:** [dev/gas-optimization-sei.md](references/dev/gas-optimization-sei.md)
-- **Account abstraction (ERC-4337):** [dev/account-abstraction.md](references/dev/account-abstraction.md)
-- **Upgradeable contracts:** [dev/upgradeability.md](references/dev/upgradeability.md)
-- **Tokens (ERC standards, TokenFactory):** [dev/tokens.md](references/dev/tokens.md)
-- **Security checklist:** [dev/security.md](references/dev/security.md)
-- **Common errors & fixes:** [dev/common-errors.md](references/dev/common-errors.md)
+- **Contract verification (Seitrace):** [contracts/contract-verification.md](references/contracts/contract-verification.md)
+- **Performance & load testing:** [contracts/performance-testing.md](references/contracts/performance-testing.md)
+- **OCC-aware contract design:** [contracts/occ-aware-design.md](references/contracts/occ-aware-design.md)
+- **Sei-specific gas optimization:** [contracts/gas-optimization-sei.md](references/contracts/gas-optimization-sei.md)
+- **Account abstraction (ERC-4337):** [contracts/account-abstraction.md](references/contracts/account-abstraction.md)
+- **Upgradeable contracts:** [contracts/upgradeability.md](references/contracts/upgradeability.md)
+- **Tokens (ERC standards, TokenFactory):** [contracts/tokens.md](references/contracts/tokens.md)
+- **Security checklist:** [contracts/security.md](references/contracts/security.md)
+- **Common errors & fixes:** [contracts/common-errors.md](references/contracts/common-errors.md)
 - **Precompile quick start (full address table):** [precompiles/overview.md](references/precompiles/overview.md)
 - **Staking + Distribution precompiles:** [precompiles/staking-distribution.md](references/precompiles/staking-distribution.md)
 - **Governance precompile:** [precompiles/governance.md](references/precompiles/governance.md)
@@ -158,11 +158,11 @@ When implementing changes, provide:
 - **Migrate from Ethereum:** [migration/from-ethereum.md](references/migration/from-ethereum.md)
 - **Migrate from Solana:** [migration/from-solana.md](references/migration/from-solana.md)
 
-### When the user crosses into website or ecosystem territory
-This dev-focused skill keeps frontend and ecosystem references reachable for cross-cutting questions:
-- Frontend stack (when wiring contracts to a UI): [website/frontend-stack.md](references/website/frontend-stack.md)
+### When the user crosses into frontend or ecosystem territory
+This contracts-focused skill keeps frontend and ecosystem references reachable for cross-cutting questions:
+- Frontend stack (when wiring contracts to a UI): [frontend/frontend-stack.md](references/frontend/frontend-stack.md)
 - RPC endpoints: [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
 - Oracles: [ecosystem/oracles.md](references/ecosystem/oracles.md)
 - Indexers: [ecosystem/indexers.md](references/ecosystem/indexers.md)
 
-For deeper website or ecosystem coverage, recommend installing the full `sei` skill (see https://github.com/sei-protocol/sei-skill).
+For deeper frontend or ecosystem coverage, recommend installing the full `sei` skill (see https://github.com/sei-protocol/sei-skill).

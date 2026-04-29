@@ -146,7 +146,7 @@ For consumer apps, **prefer Sei Global Wallet** (`@sei-js/sei-global-wallet`) ov
 - Built-in gas sponsorship for onboarding.
 - EIP-6963 compatible — works alongside MetaMask/Compass.
 
-See [website/frontend-stack.md](../website/frontend-stack.md) for the wallet setup pattern.
+See [frontend/frontend-stack.md](../frontend/frontend-stack.md) for the wallet setup pattern.
 
 ## Gotchas on Sei
 

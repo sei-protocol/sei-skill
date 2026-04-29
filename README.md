@@ -1,12 +1,12 @@
 # Sei Skill for Claude Code
 
-A comprehensive Claude Code skill for the Sei Network, covering three domains: **dev** (smart contracts and tooling), **website** (frontend stack and Sei site awareness), and **ecosystem** (apps, integrations, participation roles).
+A comprehensive Claude Code skill for the Sei Network, covering three domains: **contracts** (smart contracts and tooling), **frontend** (UI stack and Sei site awareness), and **ecosystem** (apps, integrations, participation roles).
 
 ## Overview
 
 This skill provides Claude Code with deep knowledge of the Sei ecosystem across three domains:
 
-### Dev — smart contracts and tooling
+### Contracts — smart contracts and tooling
 - **EVM Contracts**: Foundry + Hardhat setup, deployment, fork testing
 - **Precompiles**: All 11 Sei precompiles (Staking, Governance, Bank, Addr, Oracle, IBC, Pointer, P256, etc.)
 - **Pointer Contracts**: Cross-VM asset bridging between EVM and Cosmos
@@ -16,7 +16,7 @@ This skill provides Claude Code with deep knowledge of the Sei ecosystem across 
 - **Upgradeability**: UUPS, Transparent, Beacon, Diamond
 - **Migration**: From Ethereum/other EVMs and from Solana
 
-### Website — frontend stack and site awareness
+### Frontend — UI stack and site awareness
 - **Frontend stack**: Wagmi + Viem default, Ethers.js v6 alternative, RainbowKit
 - **Wallets**: Sei Global Wallet, MetaMask, Compass, Ledger; EIP-6963 detection
 - **Dual-address UX**: surfacing `sei1...` ↔ `0x...` cleanly
@@ -62,40 +62,43 @@ Install one of the focused variants when you only need a subset of Sei's coverag
 | Variant | Skill name | Install path | Best for |
 |---|---|---|---|
 | **full** (default) | `sei` | `~/.claude/skills/sei` | Comprehensive coverage; one skill triggers across all three domains |
-| `dev` / `sei-dev` | `sei-dev` | `~/.claude/skills/sei-dev` | Smart-contract teams — skips website/ecosystem trigger surface |
-| `website` / `sei-website` | `sei-website` | `~/.claude/skills/sei-website` | Frontend / web teams |
+| `contracts` / `sei-contracts` | `sei-contracts` | `~/.claude/skills/sei-contracts` | Smart-contract teams — skips frontend/ecosystem trigger surface |
+| `frontend` / `sei-frontend` | `sei-frontend` | `~/.claude/skills/sei-frontend` | Frontend / UI teams (incl. Sei web-property awareness) |
 | `ecosystem` / `sei-ecosystem` | `sei-ecosystem` | `~/.claude/skills/sei-ecosystem` | Integration / infra / participation focus |
 
 ```bash
-./install.sh                              # full (default)
-./install.sh --variant dev                # dev-only — short alias
-./install.sh --name sei-dev               # dev-only — by skill name (alias of --variant)
-./install.sh --variant website            # website-only
-./install.sh --variant ecosystem          # ecosystem-only
-./install.sh --variant dev --project      # dev variant in current project's .claude/
-./install.sh --path /tmp/sei-test         # custom path (overrides naming)
+./install.sh                                   # full (default)
+./install.sh --variant contracts               # contracts-only — short alias
+./install.sh --name sei-contracts              # contracts-only — by skill name
+./install.sh --variant frontend                # frontend-only
+./install.sh --variant ecosystem               # ecosystem-only
+./install.sh --variant contracts --project     # contracts variant in current project's .claude/
+./install.sh --path /tmp/sei-test              # custom path (overrides naming)
 ```
 
-Both `--variant` and `--name` accept either the short alias (`dev`, `website`, `ecosystem`) or the actual skill name (`sei-dev`, `sei-website`, `sei-ecosystem`). The two flags are interchangeable.
+Both `--variant` and `--name` accept either the short alias (`contracts`, `frontend`, `ecosystem`) or the actual skill name (`sei-contracts`, `sei-frontend`, `sei-ecosystem`). The two flags are interchangeable.
 
 You can install several variants simultaneously — they have distinct `name:` fields and live under different install paths.
 
-> **Upgrading from `sei-dev` (the old single-skill name)?** This skill was renamed `sei-dev` → `sei` to reflect its broader scope. The new `sei-dev` *variant* installs under the same path the old skill used, but its content is dev-only — install the `full` skill (or the dedicated variants for other domains) for the broader coverage you used to get from the legacy single skill. Remove `~/.claude/skills/sei-dev` before installing if you previously had the legacy version.
+> **Upgrading from `sei-dev` (the old single-skill name)?** This skill was renamed `sei-dev` → `sei` to reflect its broader scope. The dev-focused variant is now `sei-contracts` (formerly `sei-dev`) and the UI-focused variant is `sei-frontend` (formerly `sei-website`). Install the `full` skill for broader coverage, or pick one of the variants. Remove `~/.claude/skills/sei-dev` before installing if you previously had the legacy version.
 
 ## Skill Structure
 
-References are organised into three domain folders (`dev/`, `website/`, `ecosystem/`) plus a small set of cross-cutting foundational files at the references root.
+References are organised into three domain folders (`contracts/`, `frontend/`, `ecosystem/`) plus a small set of cross-cutting foundational files at the references root.
 
 ```
 skill/
 ├── SKILL.md                              # Main skill definition (3-domain index)
+├── SKILL-CONTRACTS.md                    # Contracts variant entry point
+├── SKILL-FRONTEND.md                     # Frontend variant entry point
+├── SKILL-ECOSYSTEM.md                    # Ecosystem variant entry point
 └── references/
     ├── architecture.md                   # Twin Turbo, OCC, SeiDB, Sei Giga
     ├── networks.md                       # Chain IDs, RPC URLs, explorers, faucet
     ├── addresses-wallets.md              # Dual address system, wallets, HD paths
     ├── resources.md                      # Curated reference links
     │
-    ├── dev/                              # ── Domain: Dev ─────────────────────────
+    ├── contracts/                        # ── Domain: Contracts ──────────────────
     │   ├── contract-verification.md      # Seitrace verification (Foundry + Hardhat)
     │   ├── performance-testing.md        # Load testing, OCC scheduler benchmarking
     │   ├── occ-aware-design.md           # Parallelization-friendly storage layouts
@@ -106,29 +109,29 @@ skill/
     │   ├── security.md                   # Sei-specific + standard Solidity checklist
     │   └── common-errors.md              # Error → cause → solution
     │
-    ├── evm/                              # EVM smart contracts (dev-domain)
+    ├── evm/                              # EVM smart contracts (contracts-domain)
     │   ├── overview.md
     │   ├── hardhat.md
     │   ├── foundry.md
     │   ├── testing.md
     │   └── best-practices.md
     │
-    ├── precompiles/                      # Sei precompiles (dev-domain)
+    ├── precompiles/                      # Sei precompiles (contracts-domain)
     │   ├── overview.md
     │   ├── staking-distribution.md
     │   ├── governance.md
     │   ├── json-p256.md
     │   └── cosmwasm-bridge.md
     │
-    ├── pointers/                         # Cross-VM bridging (dev-domain)
+    ├── pointers/                         # Cross-VM bridging (contracts-domain)
     │   ├── overview.md
     │   └── token-factory.md
     │
-    ├── migration/                        # Migration guides (dev-domain)
+    ├── migration/                        # Migration guides (contracts-domain)
     │   ├── from-ethereum.md
     │   └── from-solana.md
     │
-    ├── website/                          # ── Domain: Website ────────────────────
+    ├── frontend/                         # ── Domain: Frontend ───────────────────
     │   ├── frontend-stack.md             # Wagmi/Viem, sei-js, EIP-6963, dual-address UX
     │   ├── sites-map.md                  # sei.io / docs.sei.io page index
     │   ├── docs-contributing.md          # Nextra + MDX contribution guide
@@ -154,7 +157,7 @@ skill/
 
 Once installed, Claude Code automatically uses this skill when you ask about Sei development. Example prompts:
 
-### Dev — Smart Contracts
+### Contracts — Smart Contracts
 ```
 "Deploy a Solidity contract on Sei testnet"
 "Why is SSTORE so expensive on Sei testnet?"
@@ -166,7 +169,7 @@ Once installed, Claude Code automatically uses this skill when you ask about Sei
 "Make my contract upgradeable with UUPS proxy"
 ```
 
-### Dev — Precompiles and Cross-VM
+### Contracts — Precompiles and Cross-VM
 ```
 "How do I stake SEI from a Solidity contract?"
 "Use the governance precompile to vote on a proposal"
@@ -174,7 +177,7 @@ Once installed, Claude Code automatically uses this skill when you ask about Sei
 "How does the dual address system work?"
 ```
 
-### Website — Frontend and Site Awareness
+### Frontend — UI and Site Awareness
 ```
 "Set up Wagmi with Sei mainnet and testnet"
 "How do I use Sei Global Wallet for social login?"

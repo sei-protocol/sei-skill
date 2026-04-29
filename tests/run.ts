@@ -167,7 +167,7 @@ Rules:
 - Respond ONLY with the JSON object, no other text.`;
 
 const triggerCases: TestCase[] = [
-  // ─── Dev (smart contracts + tooling) ──────────────────────────────
+  // ─── Contracts (smart contracts + tooling) ──────────────────────────
   { prompt: "Build me a Sei dapp", expected: true },
   { prompt: "Deploy a Solidity contract on Sei testnet", expected: true },
   { prompt: "How do I use the Staking precompile on Sei?", expected: true },
@@ -189,7 +189,7 @@ const triggerCases: TestCase[] = [
   { prompt: "Optimize gas for my Sei contract — what's different from Ethereum?", expected: true },
   { prompt: "How do I use ERC-4337 account abstraction on Sei?", expected: true },
   { prompt: "Make my Sei contract upgradeable with UUPS proxy", expected: true },
-  // ─── Website (frontend dev + site awareness) ──────────────────────
+  // ─── Frontend (UI dev + site awareness) ─────────────────────────────
   { prompt: "Connect a wallet to Sei using Wagmi", expected: true },
   { prompt: "How do I use Sei Global Wallet for social login?", expected: true },
   { prompt: "Display both EVM and Cosmos addresses for a Sei user", expected: true },

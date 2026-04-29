@@ -17,13 +17,13 @@ description: >
   for a Sei grant", "contribute a page to docs.sei.io", "where do I find the Sei
   brand kit / logo", "where on sei.io / docs.sei.io is X", or "why is my contract
   behaving differently on Sei than on Ethereum". End-to-end playbook covering
-  three domains: **dev** (EVM smart contracts, Hardhat/Foundry, precompiles,
-  pointer contracts, verification, performance/load testing, OCC-aware design,
-  gas optimization, ERC-4337, upgradeability), **website** (frontend stack with
-  Wagmi/Viem/sei-js/Sei Global Wallet, dual-address UX, sei.io / docs.sei.io
-  navigation, docs contribution, brand assets), and **ecosystem** (dApps
-  directory, DeFi integrations, bridges, RPC providers, validator/indexer/oracle
-  participation, grants).
+  three domains: **contracts** (EVM smart contracts, Hardhat/Foundry,
+  precompiles, pointer contracts, verification, performance/load testing,
+  OCC-aware design, gas optimization, ERC-4337, upgradeability), **frontend**
+  (UI stack with Wagmi/Viem/sei-js/Sei Global Wallet, dual-address UX,
+  sei.io / docs.sei.io navigation, docs contribution, brand assets), and
+  **ecosystem** (dApps directory, DeFi integrations, bridges, RPC providers,
+  validator/indexer/oracle participation, grants).
 user-invocable: true
 license: MIT
 compatibility: Requires Node.js 18+; optional Foundry or Hardhat for contract development
@@ -38,7 +38,7 @@ metadata:
 
 This Skill covers three overlapping domains. Use it when the user asks for:
 
-### Dev (smart contracts + tooling)
+### Contracts (smart contracts + tooling)
 - EVM smart contract development on Sei (Solidity, Hardhat, Foundry)
 - Using Sei precompiles (Staking, Governance, Distribution, Oracle, JSON, P256)
 - CosmWasm bridge precompiles (Addr, Bank, CosmWasm, IBC, Pointer, PointerView)
@@ -53,7 +53,7 @@ This Skill covers three overlapping domains. Use it when the user asks for:
 - Migration from Ethereum or Solana to Sei
 - Transaction debugging and tracing
 
-### Website (site awareness + frontend dev)
+### Frontend (UI stack + site awareness)
 - Frontend dApp development (Wagmi/Viem default; Ethers.js v6 alternative)
 - Wallet connection (Sei Global Wallet, MetaMask, Compass, Ledger)
 - Wallet detection (EIP-6963), dual-address UX (`sei1...` ↔ `0x...`), fast-finality patterns
@@ -134,7 +134,7 @@ Once connected, use MCP tools for: wallet queries, balance checks, transaction d
 - **Contract layer** (Solidity, Hardhat/Foundry, gas, verification, upgradeability)
 - **Precompile/interop layer** (cross-VM, pointer contracts, CosmWasm bridge)
 - **Frontend/wallet layer** (React, Wagmi, sei-js, dual-address UX)
-- **Website / docs layer** (sei.io / docs.sei.io content, contributing, brand)
+- **Frontend / docs layer** (Wagmi/Viem/wallets; sei.io / docs.sei.io content; contributing; brand)
 - **Ecosystem-integration layer** (DEXes, lending, bridges, oracles, indexers)
 - **Ecosystem-participation layer** (validator, RPC provider, indexer operator, grants)
 - **Infrastructure layer** (node ops, validator setup)
@@ -173,21 +173,21 @@ When implementing changes, provide:
 - Dual address system: [addresses-wallets.md](references/addresses-wallets.md) — bech32/0x, association, HD paths
 - Reference links: [resources.md](references/resources.md)
 
-### Dev — smart contracts and tooling
+### Contracts — smart contracts and tooling
 - **EVM on Sei (vs Ethereum):** [evm/overview.md](references/evm/overview.md)
 - **Hardhat for Sei:** [evm/hardhat.md](references/evm/hardhat.md)
 - **Foundry for Sei:** [evm/foundry.md](references/evm/foundry.md)
 - **Testing strategy:** [evm/testing.md](references/evm/testing.md)
 - **Parallelization & gas best practices:** [evm/best-practices.md](references/evm/best-practices.md)
-- **Contract verification (Seitrace):** [dev/contract-verification.md](references/dev/contract-verification.md)
-- **Performance & load testing:** [dev/performance-testing.md](references/dev/performance-testing.md)
-- **OCC-aware contract design:** [dev/occ-aware-design.md](references/dev/occ-aware-design.md)
-- **Sei-specific gas optimization:** [dev/gas-optimization-sei.md](references/dev/gas-optimization-sei.md)
-- **Account abstraction (ERC-4337):** [dev/account-abstraction.md](references/dev/account-abstraction.md)
-- **Upgradeable contracts:** [dev/upgradeability.md](references/dev/upgradeability.md)
-- **Tokens (ERC standards, TokenFactory, denoms):** [dev/tokens.md](references/dev/tokens.md)
-- **Security checklist (Sei-specific + Solidity):** [dev/security.md](references/dev/security.md)
-- **Common errors & fixes:** [dev/common-errors.md](references/dev/common-errors.md)
+- **Contract verification (Seitrace):** [contracts/contract-verification.md](references/contracts/contract-verification.md)
+- **Performance & load testing:** [contracts/performance-testing.md](references/contracts/performance-testing.md)
+- **OCC-aware contract design:** [contracts/occ-aware-design.md](references/contracts/occ-aware-design.md)
+- **Sei-specific gas optimization:** [contracts/gas-optimization-sei.md](references/contracts/gas-optimization-sei.md)
+- **Account abstraction (ERC-4337):** [contracts/account-abstraction.md](references/contracts/account-abstraction.md)
+- **Upgradeable contracts:** [contracts/upgradeability.md](references/contracts/upgradeability.md)
+- **Tokens (ERC standards, TokenFactory, denoms):** [contracts/tokens.md](references/contracts/tokens.md)
+- **Security checklist (Sei-specific + Solidity):** [contracts/security.md](references/contracts/security.md)
+- **Common errors & fixes:** [contracts/common-errors.md](references/contracts/common-errors.md)
 - **Precompile quick start (full address table):** [precompiles/overview.md](references/precompiles/overview.md)
 - **Staking + Distribution precompiles:** [precompiles/staking-distribution.md](references/precompiles/staking-distribution.md)
 - **Governance precompile:** [precompiles/governance.md](references/precompiles/governance.md)
@@ -198,11 +198,11 @@ When implementing changes, provide:
 - **Migrate from Ethereum:** [migration/from-ethereum.md](references/migration/from-ethereum.md)
 - **Migrate from Solana:** [migration/from-solana.md](references/migration/from-solana.md)
 
-### Website — frontend stack and site awareness
-- **Frontend stack (Wagmi/Viem/sei-js, Sei Global Wallet, EIP-6963, dual-address UX):** [website/frontend-stack.md](references/website/frontend-stack.md)
-- **sei.io / docs.sei.io site map:** [website/sites-map.md](references/website/sites-map.md)
-- **Contributing to docs.sei.io (Nextra, MDX, _meta.js):** [website/docs-contributing.md](references/website/docs-contributing.md)
-- **Sei brand kit, logos, media:** [website/branding-media.md](references/website/branding-media.md)
+### Frontend — UI stack and site awareness
+- **Frontend stack (Wagmi/Viem/sei-js, Sei Global Wallet, EIP-6963, dual-address UX):** [frontend/frontend-stack.md](references/frontend/frontend-stack.md)
+- **sei.io / docs.sei.io site map:** [frontend/sites-map.md](references/frontend/sites-map.md)
+- **Contributing to docs.sei.io (Nextra, MDX, _meta.js):** [frontend/docs-contributing.md](references/frontend/docs-contributing.md)
+- **Sei brand kit, logos, media:** [frontend/branding-media.md](references/frontend/branding-media.md)
 
 ### Ecosystem — apps, integration, participation
 - **dApps directory by category:** [ecosystem/apps-directory.md](references/ecosystem/apps-directory.md)

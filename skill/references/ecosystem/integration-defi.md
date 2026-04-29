@@ -90,7 +90,7 @@ await wallet.writeContract({
 });
 ```
 
-> Concentrated-liquidity pools partition state by tick range — they're more parallelism-friendly under load than V2 pools. See [dev/occ-aware-design.md](../dev/occ-aware-design.md).
+> Concentrated-liquidity pools partition state by tick range — they're more parallelism-friendly under load than V2 pools. See [contracts/occ-aware-design.md](../contracts/occ-aware-design.md).
 
 ## Lending: deposit + borrow (Compound v3 / Aave v3 style)
 
@@ -242,5 +242,5 @@ Pointer addresses are deterministic from the underlying CW20 denom. See [pointer
 
 - **WSEI** (wrapped SEI) plays the role of WETH. Verify the canonical WSEI address via [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/reference/ecosystem-contracts).
 - **Native SEI** uses 18 decimals (not 6 like Cosmos-side `usei` micro-denom — that's a Cosmos-side concept; EVM sees 18 decimals).
-- **Atomic batching**: account abstraction (see [dev/account-abstraction.md](../dev/account-abstraction.md)) lets users do approve+swap in one user op without a separate approval tx.
+- **Atomic batching**: account abstraction (see [contracts/account-abstraction.md](../contracts/account-abstraction.md)) lets users do approve+swap in one user op without a separate approval tx.
 - **Liquidation latency**: 400ms blocks make liquidation MEV competitive; bots can react within 1-2 blocks.

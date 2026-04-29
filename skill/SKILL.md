@@ -167,16 +167,10 @@ When implementing changes, provide:
 
 ## Progressive disclosure (read when needed)
 
-### Core concepts
+### Core concepts (cross-cutting, foundational)
 - Core architecture: [architecture.md](references/architecture.md) — Twin Turbo, OCC, SeiDB, Sei Giga
 - Networks & endpoints: [networks.md](references/networks.md) — chain IDs, RPC URLs, explorers, faucet
 - Dual address system: [addresses-wallets.md](references/addresses-wallets.md) — bech32/0x, association, HD paths
-- Tokens: [tokens.md](references/tokens.md) — SEI denominations, ERC/CW standards, TokenFactory
-- IBC & bridging: [ibc-bridging.md](references/ibc-bridging.md) — IBC, LayerZero, ThirdWeb
-- AI tooling: [ai-tooling.md](references/ai-tooling.md) — Sei MCP Server, Cambrian Agent Kit
-- RPC agent skills: [rpc-agent-skills.md](references/rpc-agent-skills.md) — 17 canonical skills, safety, retry, response shapes
-- Common errors & fixes: [common-errors.md](references/common-errors.md)
-- Security checklist: [security.md](references/security.md) — Sei-specific + standard Solidity
 - Reference links: [resources.md](references/resources.md)
 
 ### Dev — smart contracts and tooling
@@ -191,6 +185,9 @@ When implementing changes, provide:
 - **Sei-specific gas optimization:** [dev/gas-optimization-sei.md](references/dev/gas-optimization-sei.md)
 - **Account abstraction (ERC-4337):** [dev/account-abstraction.md](references/dev/account-abstraction.md)
 - **Upgradeable contracts:** [dev/upgradeability.md](references/dev/upgradeability.md)
+- **Tokens (ERC standards, TokenFactory, denoms):** [dev/tokens.md](references/dev/tokens.md)
+- **Security checklist (Sei-specific + Solidity):** [dev/security.md](references/dev/security.md)
+- **Common errors & fixes:** [dev/common-errors.md](references/dev/common-errors.md)
 - **Precompile quick start (full address table):** [precompiles/overview.md](references/precompiles/overview.md)
 - **Staking + Distribution precompiles:** [precompiles/staking-distribution.md](references/precompiles/staking-distribution.md)
 - **Governance precompile:** [precompiles/governance.md](references/precompiles/governance.md)
@@ -211,10 +208,13 @@ When implementing changes, provide:
 - **dApps directory by category:** [ecosystem/apps-directory.md](references/ecosystem/apps-directory.md)
 - **DeFi integration patterns (DEXes, lending):** [ecosystem/integration-defi.md](references/ecosystem/integration-defi.md)
 - **Bridges (LayerZero, Wormhole, Axelar, IBC, CCTP):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
+- **IBC & legacy bridging deep dive:** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
 - **RPC endpoints — public, community, paid:** [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
+- **RPC agent skills (17 canonical patterns, retry, response shapes):** [ecosystem/rpc-agent-skills.md](references/ecosystem/rpc-agent-skills.md)
+- **Oracles:** [ecosystem/oracles.md](references/ecosystem/oracles.md) — Chainlink, Pyth, API3, RedStone, VRF
+- **Indexers:** [ecosystem/indexers.md](references/ecosystem/indexers.md) — The Graph, Goldsky, Dune, Moralis, Goldrush
+- **Node operations:** [ecosystem/node-operations.md](references/ecosystem/node-operations.md) — setup, sync, snapshots, seictl
+- **Validators:** [ecosystem/validators.md](references/ecosystem/validators.md) — key management, HSM, slashing, monitoring
+- **Staking & governance:** [ecosystem/staking-governance.md](references/ecosystem/staking-governance.md) — delegation, proposals
 - **Participation roles (validator, RPC, indexer, oracle, IBC relayer, grants):** [ecosystem/participation-roles.md](references/ecosystem/participation-roles.md)
-- **Oracles:** [oracles.md](references/oracles.md) — Chainlink, Pyth, API3, RedStone, VRF
-- **Indexers:** [indexers.md](references/indexers.md) — The Graph, Goldsky, Dune, Moralis, Goldrush
-- **Node operations:** [node-operations.md](references/node-operations.md) — setup, sync, snapshots, seictl
-- **Validators:** [validators.md](references/validators.md) — key management, HSM, slashing, monitoring
-- **Staking & governance:** [staking-governance.md](references/staking-governance.md) — delegation, proposals
+- **AI tooling:** [ecosystem/ai-tooling.md](references/ecosystem/ai-tooling.md) — Sei MCP Server, Cambrian Agent Kit

@@ -188,7 +188,7 @@ There's no first-class "conflict count" exposed by Foundry, but you can simulate
 3. Inspect block-level execution metadata via `debug_traceBlockByNumber` (if your RPC provider supports it).
 4. Compare `gas_used / theoretical_serial_gas` — values near 1.0 indicate full serialization (high conflict).
 
-Or use a Dune query to compute observed parallelism from your contract's transactions over a load period — see [indexers.md](../indexers.md).
+Or use a Dune query to compute observed parallelism from your contract's transactions over a load period — see [indexers.md](../ecosystem/indexers.md).
 
 ## Quick checklist
 

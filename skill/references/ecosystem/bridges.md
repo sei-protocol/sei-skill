@@ -172,7 +172,7 @@ seid tx ibc-transfer transfer \
 
 Channel IDs and counterparties: https://www.mintscan.io/sei/relayers.
 
-See [ibc-bridging.md](../ibc-bridging.md) for full IBC mechanics.
+See [ibc-bridging.md](ibc-bridging.md) for full IBC mechanics.
 
 ## ThirdWeb Bridge
 

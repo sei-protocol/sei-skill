@@ -107,7 +107,7 @@ const provider = new FallbackProvider([
 
 ## Self-hosted (recommended for serious backends)
 
-For indexers, high-volume APIs, or anyone who can't tolerate third-party rate limits, run your own Sei node. See [node-operations.md](../node-operations.md) for setup, snapshot sync, and configuration.
+For indexers, high-volume APIs, or anyone who can't tolerate third-party rate limits, run your own Sei node. See [node-operations.md](node-operations.md) for setup, snapshot sync, and configuration.
 
 ## RPC method coverage
 
@@ -150,7 +150,7 @@ Most paid providers offer WSS on their dedicated tier. Don't rely on a single WS
 
 For backfilling subgraphs or doing historical analytics, you need archive RPC (full state at any past block). Free public endpoints typically don't support this; use a paid archive provider or self-host.
 
-Self-hosting archive: see [node-operations.md](../node-operations.md). Disk requirements are 5-10× a pruned full node.
+Self-hosting archive: see [node-operations.md](node-operations.md). Disk requirements are 5-10× a pruned full node.
 
 ## Sei-specific notes
 
@@ -158,4 +158,4 @@ Self-hosting archive: see [node-operations.md](../node-operations.md). Disk requ
 - **Cosmos and EVM RPCs are separate.** A `sei1...`-targeted operation needs the Cosmos Tendermint RPC (`rpc.sei-apis.com`); a `0x...`-targeted call needs the EVM RPC (`evm-rpc.sei-apis.com`).
 - **Block tags**: `latest`, `pending`, `earliest` are supported; `safe` and `finalized` are not (Sei has instant finality, so `latest` is functionally equivalent to `finalized`).
 - **Endpoint freshness**: Sei is a fast-moving project — verify endpoints monthly against [docs.sei.io/learn/rpc-providers](https://docs.sei.io/learn/rpc-providers).
-- For agent-driven RPC usage, see [rpc-agent-skills.md](../rpc-agent-skills.md) for the canonical 17 RPC skills, retry/backoff patterns, and response-shape expectations.
+- For agent-driven RPC usage, see [rpc-agent-skills.md](rpc-agent-skills.md) for the canonical 17 RPC skills, retry/backoff patterns, and response-shape expectations.

@@ -102,7 +102,7 @@ seid tx distribution withdraw-rewards <VALIDATOR_ADDRESS> \
 
 ## Staking via EVM (Precompile)
 
-See [`precompiles/staking-distribution.md`](./precompiles/staking-distribution.md) for full examples. Quick reference:
+See [`precompiles/staking-distribution.md`](../precompiles/staking-distribution.md) for full examples. Quick reference:
 
 ```solidity
 import { STAKING_PRECOMPILE_ADDRESS, STAKING_PRECOMPILE_ABI } from '@sei-js/evm';
@@ -263,7 +263,7 @@ seid q gov votes 42 --node https://rpc.sei-apis.com
 
 ## Governance via EVM (Precompile)
 
-See [`precompiles/governance.md`](./precompiles/governance.md) for full examples.
+See [`precompiles/governance.md`](../precompiles/governance.md) for full examples.
 
 ```solidity
 // Vote on proposal ID 42

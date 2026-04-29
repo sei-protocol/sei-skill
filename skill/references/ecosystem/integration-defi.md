@@ -177,7 +177,7 @@ await wallet.writeContract({
 });
 ```
 
-See [oracles.md](../oracles.md) for full Pyth/Chainlink integration patterns.
+See [oracles.md](oracles.md) for full Pyth/Chainlink integration patterns.
 
 ## Stablecoin handling: USDC on Sei
 

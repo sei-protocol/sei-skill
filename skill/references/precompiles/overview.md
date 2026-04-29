@@ -135,7 +135,7 @@ contract LiquidStaking {
 - **Governance:** [governance.md](governance.md)
 - **JSON + P256:** [json-p256.md](json-p256.md)
 - **Addr, Bank, CosmWasm, IBC, Pointer, PointerView:** [cosmwasm-bridge.md](cosmwasm-bridge.md)
-- **Oracle:** See [oracles.md](../oracles.md#native-oracle-precompile)
+- **Oracle:** See [oracles.md](../ecosystem/oracles.md#native-oracle-precompile)
 
 ## Important Notes
 

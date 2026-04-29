@@ -105,7 +105,7 @@ After the test, query block traces and count how many transactions reverted from
 - For each block, ratio of `(actual_gas_used / theoretical_serial_gas)`.
 - A ratio > 0.6 means most txs are conflicting; < 0.3 means good parallelism.
 
-Use a community indexer (Goldsky, Dune) to aggregate this — see [indexers.md](../indexers.md).
+Use a community indexer (Goldsky, Dune) to aggregate this — see [indexers.md](../ecosystem/indexers.md).
 
 ## sei-chain loadtest harness
 

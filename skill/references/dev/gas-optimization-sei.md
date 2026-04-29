@@ -102,7 +102,7 @@ function process(uint256[] memory data) external { /* ... */ }
 
 ## Rule 6: Avoid PREVRANDAO and timestamp-based randomness
 
-`block.prevrandao` on Sei returns a block-time-derived value, **not** RANDAO output. Using it for randomness is a security bug. Use Pyth VRF or Chainlink VRF — see [oracles.md](../oracles.md).
+`block.prevrandao` on Sei returns a block-time-derived value, **not** RANDAO output. Using it for randomness is a security bug. Use Pyth VRF or Chainlink VRF — see [oracles.md](../ecosystem/oracles.md).
 
 ## Rule 7: COINBASE is the fee collector, not the proposer
 

@@ -80,7 +80,7 @@ Integration tip: see [integration-defi.md](integration-defi.md) for router/comet
 | **Aethir** | Decentralized GPU/cloud compute for AI | https://aethir.com | Major AI compute partner |
 | **AIOZ Network** | DePIN for storage + streaming | https://aioz.network | Web3 AI infra |
 | **Alchemy Pay** | Fiat on/off ramp | https://alchemypay.org | Fiat-to-crypto purchases |
-| **Pyth Network** | Price oracles | https://pyth.network | Live on Sei mainnet — see [oracles.md](../oracles.md) |
+| **Pyth Network** | Price oracles | https://pyth.network | Live on Sei mainnet — see [oracles.md](oracles.md) |
 | **Chainlink** | Price oracles + VRF | https://chain.link | Live on Sei mainnet |
 
 ## AI & Agent Tooling
@@ -91,7 +91,7 @@ Integration tip: see [integration-defi.md](integration-defi.md) for router/comet
 | **Cambrian Agent Kit** | LangGraph-style on-chain agents | https://cambrian.network | Sei-native |
 | **x402** | HTTP-402 micropayments protocol | https://docs.sei.io/evm/ai-tooling/x402 | Sei-supported |
 
-See [ai-tooling.md](../ai-tooling.md) for setup details.
+See [ai-tooling.md](ai-tooling.md) for setup details.
 
 ## Wallets
 
@@ -127,7 +127,7 @@ See [bridges.md](bridges.md) for integration details and addresses.
 | **Goldrush** (Covalent) | Multi-chain API | |
 | **Moralis** | Web3 API | |
 
-See [indexers.md](../indexers.md) for setup.
+See [indexers.md](indexers.md) for setup.
 
 ## Categories without significant projects (yet)
 

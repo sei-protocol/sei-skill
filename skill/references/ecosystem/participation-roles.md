@@ -28,8 +28,8 @@ Run a Sei validator: produce blocks, earn block rewards + commission from delega
 
 **Economic**: self-bond + delegation; commission rate is your competitive lever.
 
-→ Full operational guide: [validators.md](../validators.md)
-→ Node setup: [node-operations.md](../node-operations.md)
+→ Full operational guide: [validators.md](validators.md)
+→ Node setup: [node-operations.md](node-operations.md)
 
 Apply for validator slot info via:
 - https://docs.sei.io/node/validator-operations
@@ -48,7 +48,7 @@ Run public or paid RPC endpoints for Sei mainnet/testnet. Users (dApps, indexers
 
 **Software**: standard `seid` binary; tune RPC config for higher concurrent connection limits than a validator node.
 
-→ Setup: [node-operations.md](../node-operations.md)
+→ Setup: [node-operations.md](node-operations.md)
 → Endpoints reference: [rpc-providers.md](rpc-providers.md)
 → Apply to be listed: contact Sei Foundation via official channels.
 
@@ -63,7 +63,7 @@ Index Sei block data into a queryable form (subgraphs, SQL, REST APIs). Run alon
 
 **Revenue**: subscription/query-based fees.
 
-→ Setup details + provider selection: [indexers.md](../indexers.md)
+→ Setup details + provider selection: [indexers.md](indexers.md)
 
 ## Oracle relayer / data publisher
 
@@ -77,7 +77,7 @@ Publish off-chain data (prices, randomness, weather, etc.) on-chain via an oracl
 
 **Custom oracle** — deploy your own oracle contract + run a relayer that pushes data. See https://docs.sei.io/evm/oracles for examples.
 
-→ Oracle integration patterns: [oracles.md](../oracles.md)
+→ Oracle integration patterns: [oracles.md](oracles.md)
 
 ## IBC relayer
 
@@ -89,7 +89,7 @@ Run a relayer between Sei and another Cosmos chain (Osmosis, Stride, Noble, etc.
 
 **Why bother**: ecosystem service; some chains offer fee subsidies for major routes.
 
-→ See [ibc-bridging.md](../ibc-bridging.md) for relayer overview.
+→ See [ibc-bridging.md](ibc-bridging.md) for relayer overview.
 → Channel topology: https://www.mintscan.io/sei/relayers
 
 ## Grants and builder programs
@@ -111,17 +111,17 @@ Sei Foundation operates several funding programs:
 
 ## Cross-references
 
-- Validator deep-dive: [validators.md](../validators.md)
-- Node ops: [node-operations.md](../node-operations.md)
-- Indexer setup: [indexers.md](../indexers.md)
-- Oracles: [oracles.md](../oracles.md)
+- Validator deep-dive: [validators.md](validators.md)
+- Node ops: [node-operations.md](node-operations.md)
+- Indexer setup: [indexers.md](indexers.md)
+- Oracles: [oracles.md](oracles.md)
 - RPC endpoint list: [rpc-providers.md](rpc-providers.md)
-- IBC overview: [ibc-bridging.md](../ibc-bridging.md)
-- Staking from a wallet (delegators, not validators): [staking-governance.md](../staking-governance.md)
+- IBC overview: [ibc-bridging.md](ibc-bridging.md)
+- Staking from a wallet (delegators, not validators): [staking-governance.md](staking-governance.md)
 
 ## Sei-specific notes
 
 - **Validators** earn from block rewards + commission; **delegators** earn rewards minus the validator's commission.
 - **RPC providers serving paid SLAs** are increasingly important as the ecosystem scales — a free public endpoint can be eaten by a single noisy dApp.
 - **All operational roles** require running infrastructure that can keep up with 400ms blocks; underspec'd hardware causes drift, missed votes, or stale RPC reads.
-- **Sei MCP Server** (see [ai-tooling.md](../ai-tooling.md)) is a good starting point for AI-augmented operational tooling — agents can monitor and respond to chain events in real time.
+- **Sei MCP Server** (see [ai-tooling.md](ai-tooling.md)) is a good starting point for AI-augmented operational tooling — agents can monitor and respond to chain events in real time.

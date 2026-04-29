@@ -289,4 +289,4 @@ if (!/^[a-zA-Z0-9 \-_\.]{1,64}$/.test(tokenName)) {
 // ✅ Require explicit mainnet confirmation (default to testnet)
 ```
 
-See [`ai-tooling.md`](./ai-tooling.md) for complete agent safety patterns.
+See [`ai-tooling.md`](../ecosystem/ai-tooling.md) for complete agent safety patterns.

@@ -101,7 +101,7 @@ USDC on Sei is a native ERC20 — no pointer or bridging step needed.
 | CW721 NFT | ERC721 NFT + optional pointer |
 | Native denom | Native denom + ERC20 pointer (TokenFactory) |
 
-For existing CW20/CW721 tokens: register an ERC20/ERC721 pointer to make them accessible in EVM wallets while migrating. See [pointers/overview.md](pointers/overview.md).
+For existing CW20/CW721 tokens: register an ERC20/ERC721 pointer to make them accessible in EVM wallets while migrating. See [pointers/overview.md](../pointers/overview.md).
 
 ## Native Denoms
 

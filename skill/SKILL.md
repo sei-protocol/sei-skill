@@ -1,5 +1,5 @@
 ---
-name: sei-dev
+name: sei
 description: >
   Use when user asks to "build a Sei dapp", "deploy a smart contract on Sei",
   "write a Solidity contract for Sei", "use Sei precompiles", "set up Hardhat or
@@ -8,13 +8,22 @@ description: >
   server", "explain Sei architecture" (Twin Turbo Consensus, OCC parallelization,
   SeiDB, Sei Giga), "use pointer contracts", "build with sei-js", "set up a Sei
   validator", "bridge tokens on Sei", "debug a Sei transaction", "use the Staking
-  or Governance precompile", "create a native token with TokenFactory", or "why
-  is my contract behaving differently on Sei than on Ethereum". End-to-end Sei
-  Network development playbook covering EVM smart contracts (Hardhat/Foundry),
-  Sei-specific precompiles (Staking, Governance, Distribution, Oracle, JSON, P256,
-  CosmWasm bridge), pointer contracts for cross-VM asset bridging, frontend
-  development (Ethers.js/Viem/Wagmi/@sei-js), wallets, oracles, indexers, node
-  operations, and validator setup.
+  or Governance precompile", "create a native token with TokenFactory", "verify a
+  contract on Seitrace", "load-test my Sei contract", "design for OCC parallel
+  execution", "optimize gas on Sei", "use ERC-4337 / account abstraction on Sei",
+  "make my contract upgradeable on Sei", "what dapps are on Sei", "integrate with
+  a Sei DEX or lending protocol", "what bridges work with Sei", "find a Sei RPC
+  endpoint", "become a Sei validator / RPC provider / indexer operator", "apply
+  for a Sei grant", "contribute a page to docs.sei.io", "where do I find the Sei
+  brand kit / logo", "where on sei.io / docs.sei.io is X", or "why is my contract
+  behaving differently on Sei than on Ethereum". End-to-end playbook covering
+  three domains: **contracts** (EVM smart contracts, Hardhat/Foundry,
+  precompiles, pointer contracts, verification, performance/load testing,
+  OCC-aware design, gas optimization, ERC-4337, upgradeability), **frontend**
+  (UI stack with Wagmi/Viem/sei-js/Sei Global Wallet, dual-address UX,
+  sei.io / docs.sei.io navigation, docs contribution, brand assets), and
+  **ecosystem** (dApps directory, DeFi integrations, bridges, RPC providers,
+  validator/indexer/oracle participation, grants).
 user-invocable: true
 license: MIT
 compatibility: Requires Node.js 18+; optional Foundry or Hardhat for contract development
@@ -27,22 +36,45 @@ metadata:
 
 ## What this Skill is for
 
-Use this Skill when the user asks for:
+This Skill covers three overlapping domains. Use it when the user asks for:
+
+### Contracts (smart contracts + tooling)
 - EVM smart contract development on Sei (Solidity, Hardhat, Foundry)
-- Frontend dApp development (Ethers.js, Viem, Wagmi, @sei-js)
-- Wallet connection (Sei Global Wallet, MetaMask, Compass, Ledger)
 - Using Sei precompiles (Staking, Governance, Distribution, Oracle, JSON, P256)
 - CosmWasm bridge precompiles (Addr, Bank, CosmWasm, IBC, Pointer, PointerView)
 - Pointer contracts and cross-VM asset bridging (ERC20↔CW20, ERC721↔CW721, ERC20↔native)
 - Token creation (ERC20/721/1155, TokenFactory native denoms)
-- Oracle integration (Chainlink, Pyth, API3, RedStone, VRF)
-- Indexer setup (The Graph, Goldsky, Dune, Moralis, Goldrush)
-- Understanding Sei architecture (Twin Turbo Consensus, OCC parallelization, SeiDB, Sei Giga)
+- Contract verification on Seitrace
+- Performance / load testing against the OCC scheduler
+- OCC-aware contract design (parallelization-friendly storage layouts)
+- Sei-specific gas optimization (SSTORE costs, calldata, multicall)
+- Account abstraction (ERC-4337) on Sei
+- Upgradeable contracts (UUPS, Transparent, Beacon, Diamond)
 - Migration from Ethereum or Solana to Sei
-- AI tooling (Sei MCP Server, Cambrian Agent Kit)
-- Node operations and validator setup
 - Transaction debugging and tracing
+
+### Frontend (UI stack + site awareness)
+- Frontend dApp development (Wagmi/Viem default; Ethers.js v6 alternative)
+- Wallet connection (Sei Global Wallet, MetaMask, Compass, Ledger)
+- Wallet detection (EIP-6963), dual-address UX (`sei1...` ↔ `0x...`), fast-finality patterns
+- RainbowKit / ConnectKit integration
+- Navigating sei.io and docs.sei.io — pointing users to the right page
+- Contributing pages to docs.sei.io (Nextra MDX, _meta.js, build flow)
+- Sei brand kit, logos, media assets, press contacts
+
+### Ecosystem (apps + integration + participation)
+- Sei dApps directory by category (DEX, lending, perps, RWA, NFT, gaming, infra)
+- Integration patterns for DeFi protocols (DragonSwap, Yei, Takara, Saphyre)
+- Bridges (LayerZero V2, Wormhole, Axelar, IBC, ThirdWeb, CCTP)
+- RPC endpoints — public, community, and paid providers
+- Oracle integration (Chainlink, Pyth, API3, RedStone, native precompile, VRF)
+- Indexer setup (The Graph, Goldsky, Dune, Moralis, Goldrush)
+- Participation roles (validator, RPC provider, indexer operator, oracle relayer, IBC relayer)
+- Grants and builder programs (Sei Foundation, Ecosystem Fund, Creator Fund)
+- Node operations and validator setup
 - Staking, governance, and delegation
+- AI tooling (Sei MCP Server, Cambrian Agent Kit)
+- Understanding Sei architecture (Twin Turbo Consensus, OCC parallelization, SeiDB, Sei Giga)
 
 ## Key architectural facts (always apply)
 
@@ -99,11 +131,14 @@ Once connected, use MCP tools for: wallet queries, balance checks, transaction d
 ## Operating procedure (how to execute tasks)
 
 ### 1. Classify the task layer
-- Contract layer (Solidity, Hardhat/Foundry)
-- Precompile/interop layer (cross-VM, pointer contracts, CosmWasm bridge)
-- Frontend/wallet layer (React, Wagmi, sei-js)
-- Infrastructure layer (node, validator, indexer, oracle)
-- Architecture/concept question
+- **Contract layer** (Solidity, Hardhat/Foundry, gas, verification, upgradeability)
+- **Precompile/interop layer** (cross-VM, pointer contracts, CosmWasm bridge)
+- **Frontend/wallet layer** (React, Wagmi, sei-js, dual-address UX)
+- **Frontend / docs layer** (Wagmi/Viem/wallets; sei.io / docs.sei.io content; contributing; brand)
+- **Ecosystem-integration layer** (DEXes, lending, bridges, oracles, indexers)
+- **Ecosystem-participation layer** (validator, RPC provider, indexer operator, grants)
+- **Infrastructure layer** (node ops, validator setup)
+- **Architecture/concept question**
 
 ### 2. Apply Sei-specific correctness
 Always be explicit about:
@@ -132,27 +167,27 @@ When implementing changes, provide:
 
 ## Progressive disclosure (read when needed)
 
+### Core concepts (cross-cutting, foundational)
 - Core architecture: [architecture.md](references/architecture.md) — Twin Turbo, OCC, SeiDB, Sei Giga
 - Networks & endpoints: [networks.md](references/networks.md) — chain IDs, RPC URLs, explorers, faucet
 - Dual address system: [addresses-wallets.md](references/addresses-wallets.md) — bech32/0x, association, HD paths
-- Tokens: [tokens.md](references/tokens.md) — SEI denominations, ERC/CW standards, TokenFactory
-- Frontend development: [frontend.md](references/frontend.md) — Ethers.js, Viem, Wagmi, @sei-js
-- IBC & bridging: [ibc-bridging.md](references/ibc-bridging.md) — IBC, LayerZero, ThirdWeb
-- Oracles: [oracles.md](references/oracles.md) — Chainlink, Pyth, API3, RedStone, VRF
-- Indexers: [indexers.md](references/indexers.md) — The Graph, Goldsky, Dune, Moralis, Goldrush
-- Node operations: [node-operations.md](references/node-operations.md) — setup, sync, snapshots, seictl
-- Validators: [validators.md](references/validators.md) — key management, HSM, slashing, monitoring
-- Staking & governance: [staking-governance.md](references/staking-governance.md) — delegation, proposals
-- AI tooling: [ai-tooling.md](references/ai-tooling.md) — Sei MCP Server, Cambrian Agent Kit
-- RPC agent skills: [rpc-agent-skills.md](references/rpc-agent-skills.md) — 17 canonical skills, safety protocols, retry logic, response shapes
-- Common errors & fixes: [common-errors.md](references/common-errors.md)
-- Security checklist: [security.md](references/security.md) — Sei-specific + standard Solidity
 - Reference links: [resources.md](references/resources.md)
+
+### Contracts — smart contracts and tooling
 - **EVM on Sei (vs Ethereum):** [evm/overview.md](references/evm/overview.md)
 - **Hardhat for Sei:** [evm/hardhat.md](references/evm/hardhat.md)
 - **Foundry for Sei:** [evm/foundry.md](references/evm/foundry.md)
 - **Testing strategy:** [evm/testing.md](references/evm/testing.md)
 - **Parallelization & gas best practices:** [evm/best-practices.md](references/evm/best-practices.md)
+- **Contract verification (Seitrace):** [contracts/contract-verification.md](references/contracts/contract-verification.md)
+- **Performance & load testing:** [contracts/performance-testing.md](references/contracts/performance-testing.md)
+- **OCC-aware contract design:** [contracts/occ-aware-design.md](references/contracts/occ-aware-design.md)
+- **Sei-specific gas optimization:** [contracts/gas-optimization-sei.md](references/contracts/gas-optimization-sei.md)
+- **Account abstraction (ERC-4337):** [contracts/account-abstraction.md](references/contracts/account-abstraction.md)
+- **Upgradeable contracts:** [contracts/upgradeability.md](references/contracts/upgradeability.md)
+- **Tokens (ERC standards, TokenFactory, denoms):** [contracts/tokens.md](references/contracts/tokens.md)
+- **Security checklist (Sei-specific + Solidity):** [contracts/security.md](references/contracts/security.md)
+- **Common errors & fixes:** [contracts/common-errors.md](references/contracts/common-errors.md)
 - **Precompile quick start (full address table):** [precompiles/overview.md](references/precompiles/overview.md)
 - **Staking + Distribution precompiles:** [precompiles/staking-distribution.md](references/precompiles/staking-distribution.md)
 - **Governance precompile:** [precompiles/governance.md](references/precompiles/governance.md)
@@ -162,3 +197,24 @@ When implementing changes, provide:
 - **TokenFactory + native tokens:** [pointers/token-factory.md](references/pointers/token-factory.md)
 - **Migrate from Ethereum:** [migration/from-ethereum.md](references/migration/from-ethereum.md)
 - **Migrate from Solana:** [migration/from-solana.md](references/migration/from-solana.md)
+
+### Frontend — UI stack and site awareness
+- **Frontend stack (Wagmi/Viem/sei-js, Sei Global Wallet, EIP-6963, dual-address UX):** [frontend/frontend-stack.md](references/frontend/frontend-stack.md)
+- **sei.io / docs.sei.io site map:** [frontend/sites-map.md](references/frontend/sites-map.md)
+- **Contributing to docs.sei.io (Nextra, MDX, _meta.js):** [frontend/docs-contributing.md](references/frontend/docs-contributing.md)
+- **Sei brand kit, logos, media:** [frontend/branding-media.md](references/frontend/branding-media.md)
+
+### Ecosystem — apps, integration, participation
+- **dApps directory by category:** [ecosystem/apps-directory.md](references/ecosystem/apps-directory.md)
+- **DeFi integration patterns (DEXes, lending):** [ecosystem/integration-defi.md](references/ecosystem/integration-defi.md)
+- **Bridges (LayerZero, Wormhole, Axelar, IBC, CCTP):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
+- **IBC & legacy bridging deep dive:** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
+- **RPC endpoints — public, community, paid:** [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
+- **RPC agent skills (17 canonical patterns, retry, response shapes):** [ecosystem/rpc-agent-skills.md](references/ecosystem/rpc-agent-skills.md)
+- **Oracles:** [ecosystem/oracles.md](references/ecosystem/oracles.md) — Chainlink, Pyth, API3, RedStone, VRF
+- **Indexers:** [ecosystem/indexers.md](references/ecosystem/indexers.md) — The Graph, Goldsky, Dune, Moralis, Goldrush
+- **Node operations:** [ecosystem/node-operations.md](references/ecosystem/node-operations.md) — setup, sync, snapshots, seictl
+- **Validators:** [ecosystem/validators.md](references/ecosystem/validators.md) — key management, HSM, slashing, monitoring
+- **Staking & governance:** [ecosystem/staking-governance.md](references/ecosystem/staking-governance.md) — delegation, proposals
+- **Participation roles (validator, RPC, indexer, oracle, IBC relayer, grants):** [ecosystem/participation-roles.md](references/ecosystem/participation-roles.md)
+- **AI tooling:** [ecosystem/ai-tooling.md](references/ecosystem/ai-tooling.md) — Sei MCP Server, Cambrian Agent Kit

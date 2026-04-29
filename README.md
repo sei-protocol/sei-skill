@@ -48,12 +48,35 @@ npx skills add sei
 ```bash
 git clone https://github.com/sei-protocol/sei-skill
 cd sei-skill
-./install.sh
+./install.sh                          # full skill (default)
 ```
 
-> **Upgrading from `sei-dev`?** This skill was renamed from `sei-dev` to `sei` to reflect its broader scope (now covering website, ecosystem, and dev). Remove the old install at `~/.claude/skills/sei-dev` before installing the new version.
+### Variants
+
+The skill ships in four flavours. Install only the one(s) you need:
+
+| Variant | Skill name | Install path | Best for |
+|---|---|---|---|
+| **full** (default) | `sei` | `~/.claude/skills/sei` | Comprehensive coverage; one skill triggers across all three domains |
+| `dev` | `sei-dev` | `~/.claude/skills/sei-dev` | Smart-contract teams — skips website/ecosystem trigger surface |
+| `website` | `sei-website` | `~/.claude/skills/sei-website` | Frontend / web teams |
+| `ecosystem` | `sei-ecosystem` | `~/.claude/skills/sei-ecosystem` | Integration / infra / participation focus |
+
+```bash
+./install.sh --variant dev            # dev-only
+./install.sh --variant website        # website-only
+./install.sh --variant ecosystem      # ecosystem-only
+./install.sh --variant dev --project  # dev variant in current project's .claude/
+./install.sh --path /tmp/sei-test     # custom path (overrides naming)
+```
+
+Each variant ships with its own `SKILL.md` that scopes the skill's description, operating procedure, and progressive-disclosure links to its domain. The full reference tree is included in every install — variants only differ in the entry-point `SKILL.md`. You can install several variants simultaneously without conflict; they have distinct `name:` fields.
+
+> **Upgrading from `sei-dev` (the old single-skill name)?** This skill was renamed `sei-dev` → `sei` to reflect its broader scope. The new `sei-dev` *variant* installs under the same path the old skill used, but its content is dev-only — install the `full` skill or the dedicated variants for the other domains. Remove `~/.claude/skills/sei-dev` before installing if you previously had the legacy single-skill version.
 
 ## Skill Structure
+
+References are organised into three domain folders (`dev/`, `website/`, `ecosystem/`) plus a small set of cross-cutting foundational files at the references root.
 
 ```
 skill/
@@ -62,53 +85,60 @@ skill/
     ├── architecture.md                   # Twin Turbo, OCC, SeiDB, Sei Giga
     ├── networks.md                       # Chain IDs, RPC URLs, explorers, faucet
     ├── addresses-wallets.md              # Dual address system, wallets, HD paths
-    ├── tokens.md                         # SEI denominations, ERC standards, TokenFactory
-    ├── ibc-bridging.md                   # IBC, LayerZero, ThirdWeb bridge
-    ├── oracles.md                        # Chainlink, Pyth, API3, RedStone, VRF
-    ├── indexers.md                       # The Graph, Dune, Goldsky, Moralis, Goldrush
-    ├── node-operations.md                # Node setup, sync, snapshots, seictl
-    ├── validators.md                     # Key management, HSM, jailing, monitoring
-    ├── staking-governance.md             # Delegation, unbonding, proposals
-    ├── ai-tooling.md                     # Sei MCP Server, Cambrian Agent Kit
-    ├── rpc-agent-skills.md               # 17 canonical RPC skills, retry, response shapes
-    ├── common-errors.md                  # Error → cause → solution
-    ├── security.md                       # Sei-specific + standard Solidity checklist
     ├── resources.md                      # Curated reference links
+    │
     ├── dev/                              # ── Domain: Dev ─────────────────────────
     │   ├── contract-verification.md      # Seitrace verification (Foundry + Hardhat)
     │   ├── performance-testing.md        # Load testing, OCC scheduler benchmarking
     │   ├── occ-aware-design.md           # Parallelization-friendly storage layouts
     │   ├── gas-optimization-sei.md       # SSTORE costs, calldata, multicall
     │   ├── account-abstraction.md        # ERC-4337 with Pimlico, Particle
-    │   └── upgradeability.md             # UUPS, Transparent, Beacon, Diamond
-    ├── evm/                              # EVM smart contracts
+    │   ├── upgradeability.md             # UUPS, Transparent, Beacon, Diamond
+    │   ├── tokens.md                     # SEI denominations, ERC standards, TokenFactory
+    │   ├── security.md                   # Sei-specific + standard Solidity checklist
+    │   └── common-errors.md              # Error → cause → solution
+    │
+    ├── evm/                              # EVM smart contracts (dev-domain)
     │   ├── overview.md
     │   ├── hardhat.md
     │   ├── foundry.md
     │   ├── testing.md
     │   └── best-practices.md
-    ├── precompiles/                      # Sei precompiles
+    │
+    ├── precompiles/                      # Sei precompiles (dev-domain)
     │   ├── overview.md
     │   ├── staking-distribution.md
     │   ├── governance.md
     │   ├── json-p256.md
     │   └── cosmwasm-bridge.md
-    ├── pointers/                         # Cross-VM bridging
+    │
+    ├── pointers/                         # Cross-VM bridging (dev-domain)
     │   ├── overview.md
     │   └── token-factory.md
-    ├── migration/                        # Migration guides
+    │
+    ├── migration/                        # Migration guides (dev-domain)
     │   ├── from-ethereum.md
     │   └── from-solana.md
+    │
     ├── website/                          # ── Domain: Website ────────────────────
     │   ├── frontend-stack.md             # Wagmi/Viem, sei-js, EIP-6963, dual-address UX
     │   ├── sites-map.md                  # sei.io / docs.sei.io page index
     │   ├── docs-contributing.md          # Nextra + MDX contribution guide
     │   └── branding-media.md             # Brand kit, logos, press
+    │
     └── ecosystem/                        # ── Domain: Ecosystem ──────────────────
         ├── apps-directory.md             # dApps grouped by category
         ├── integration-defi.md           # DEX/lending integration patterns
         ├── bridges.md                    # LayerZero, Wormhole, Axelar, IBC, CCTP
+        ├── ibc-bridging.md               # IBC + legacy bridging deep dive
         ├── rpc-providers.md              # Public + paid RPC endpoints
+        ├── rpc-agent-skills.md           # 17 canonical RPC skills, retry, response shapes
+        ├── oracles.md                    # Chainlink, Pyth, API3, RedStone, VRF
+        ├── indexers.md                   # The Graph, Dune, Goldsky, Moralis, Goldrush
+        ├── node-operations.md            # Node setup, sync, snapshots, seictl
+        ├── validators.md                 # Key management, HSM, jailing, monitoring
+        ├── staking-governance.md         # Delegation, unbonding, proposals
+        ├── ai-tooling.md                 # Sei MCP Server, Cambrian Agent Kit
         └── participation-roles.md        # Validator, RPC, indexer, oracle, grants
 ```
 

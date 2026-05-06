@@ -265,7 +265,11 @@ Built from:
 2. Update the relevant reference file in `skill/references/`
 3. If adding a new file, add a link to `skill/SKILL.md` under "Reference Files"
 4. Run `./install.sh` to test locally
-5. Run `cd tests && npm install && npm test` to verify skill triggers correctly
+5. Run the trigger tests to verify skill triggers correctly:
+   ```bash
+   cd tests && npm install
+   ANTHROPIC_API_KEY=your_key npm test
+   ```
 6. Open a pull request
 
 ## License

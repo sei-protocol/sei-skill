@@ -1,10 +1,10 @@
-# Sei Skill for Claude Code
+# Sei Skill
 
-A comprehensive Claude Code skill for the Sei Network, covering three domains: **contracts** (smart contracts and tooling), **frontend** (UI stack and Sei site awareness), and **ecosystem** (apps, integrations, participation roles).
+A comprehensive AI skill for the Sei Network, covering three domains: **contracts** (smart contracts and tooling), **frontend** (UI stack and Sei site awareness), and **ecosystem** (apps, integrations, participation roles).
 
 ## Overview
 
-This skill provides Claude Code with deep knowledge of the Sei ecosystem across three domains:
+This skill provides AI coding assistants with deep knowledge of the Sei ecosystem across three domains:
 
 ### Contracts — smart contracts and tooling
 - **EVM Contracts**: Foundry + Hardhat setup, deployment, fork testing
@@ -155,7 +155,7 @@ skill/
 
 ## Usage
 
-Once installed, Claude Code automatically uses this skill when you ask about Sei development. Example prompts:
+Once installed, your AI assistant automatically uses this skill when you ask about Sei development. Example prompts:
 
 ### Contracts — Smart Contracts
 ```

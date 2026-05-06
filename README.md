@@ -37,15 +37,11 @@ This skill provides AI coding assistants with deep knowledge of the Sei ecosyste
 
 ## Installation
 
-The skill ships in four flavours. **Running `./install.sh` with no arguments installs the full skill** — the recommended default that covers all three domains.
+The installer supports two modes: a **directory install for Claude Code** (default) and a **flattened single-file output for all other AI agents**.
 
-### Quick Install (full skill)
+### Claude Code
 
-```bash
-npx skills add sei
-```
-
-### Manual Install (full skill — default)
+`install.sh` installs the skill into Claude Code's skill directory (`~/.claude/skills/`). Running it with no arguments installs the full skill — the recommended default.
 
 ```bash
 git clone https://github.com/sei-protocol/sei-skill
@@ -53,32 +49,63 @@ cd sei-skill
 ./install.sh
 ```
 
-That installs the full skill to `~/.claude/skills/sei`. No flags needed.
+That installs to `~/.claude/skills/sei`. No flags needed.
+
+```bash
+npx skills add sei
+```
+
+### Other AI Agents
+
+Use `--agent <name>` to install for a specific agent. The correct output path, directory structure, and any required formatting are handled automatically.
+
+```bash
+./install.sh --agent cursor      # → .cursor/rules/sei.mdc  (MDC frontmatter)
+./install.sh --agent copilot     # → .github/copilot-instructions.md
+./install.sh --agent windsurf    # → .windsurf/rules/sei.md
+./install.sh --agent aider       # → ~/.aider/sei.md  (+ config instructions printed)
+./install.sh --agent openhands   # → .openhands/SKILL.md  (YAML frontmatter)
+./install.sh --agent codex       # → AGENTS.md
+./install.sh --agent gemini      # → GEMINI.md
+```
+
+Use `--output` to override the default path for any agent:
+
+```bash
+./install.sh --agent codex --output ~/.codex/AGENTS.md
+```
+
+Use `--flatten` without `--agent` to generate a plain markdown file at any path:
+
+```bash
+./install.sh --flatten --output ./sei-context.md
+```
+
+> **Size limits:** Some agents cap total context size. Cursor recommends ≤500 lines for always-apply rules; Codex CLI caps at 32 KiB total. The installer warns when output exceeds known limits — use a focused `--variant` to reduce size.
 
 ### Variants
 
-Install one of the focused variants when you only need a subset of Sei's coverage. The full reference tree ships with every install — variants only swap the entry-point `SKILL.md` to scope the skill's description, operating procedure, and progressive-disclosure links to one domain.
+All install modes support the same four variants. Use a focused variant to reduce context size when you only need one domain.
 
-| Variant | Skill name | Install path | Best for |
-|---|---|---|---|
-| **full** (default) | `sei` | `~/.claude/skills/sei` | Comprehensive coverage; one skill triggers across all three domains |
-| `contracts` / `sei-contracts` | `sei-contracts` | `~/.claude/skills/sei-contracts` | Smart-contract teams — skips frontend/ecosystem trigger surface |
-| `frontend` / `sei-frontend` | `sei-frontend` | `~/.claude/skills/sei-frontend` | Frontend / UI teams (incl. Sei web-property awareness) |
-| `ecosystem` / `sei-ecosystem` | `sei-ecosystem` | `~/.claude/skills/sei-ecosystem` | Integration / infra / participation focus |
+| Variant | Scope | Best for |
+|---|---|---|
+| **full** (default) | All three domains | Comprehensive coverage across contracts, frontend, and ecosystem |
+| `contracts` / `sei-contracts` | Smart contracts + tooling | Contract development teams |
+| `frontend` / `sei-frontend` | UI stack + site awareness | Frontend / dApp teams |
+| `ecosystem` / `sei-ecosystem` | Apps, integrations, infra | Integration and infrastructure work |
+
+Both `--variant` and `--name` accept either the short alias (`contracts`, `frontend`, `ecosystem`) or the actual skill name (`sei-contracts`, `sei-frontend`, `sei-ecosystem`).
 
 ```bash
-./install.sh                                   # full (default)
-./install.sh --variant contracts               # contracts-only — short alias
-./install.sh --name sei-contracts              # contracts-only — by skill name
-./install.sh --variant frontend                # frontend-only
-./install.sh --variant ecosystem               # ecosystem-only
-./install.sh --variant contracts --project     # contracts variant in current project's .claude/
-./install.sh --path /tmp/sei-test              # custom path (overrides naming)
+# Claude Code variants
+./install.sh --variant contracts
+./install.sh --variant contracts --project     # install to current project's .claude/
+./install.sh --path /tmp/sei-test              # custom path
+
+# Flattened variants for other agents
+./install.sh --flatten --variant contracts
+./install.sh --flatten --variant frontend --output .cursorrules
 ```
-
-Both `--variant` and `--name` accept either the short alias (`contracts`, `frontend`, `ecosystem`) or the actual skill name (`sei-contracts`, `sei-frontend`, `sei-ecosystem`). The two flags are interchangeable.
-
-You can install several variants simultaneously — they have distinct `name:` fields and live under different install paths.
 
 > **Upgrading from `sei-dev` (the old single-skill name)?** This skill was renamed `sei-dev` → `sei` to reflect its broader scope. The dev-focused variant is now `sei-contracts` (formerly `sei-dev`) and the UI-focused variant is `sei-frontend` (formerly `sei-website`). Install the `full` skill for broader coverage, or pick one of the variants. Remove `~/.claude/skills/sei-dev` before installing if you previously had the legacy version.
 

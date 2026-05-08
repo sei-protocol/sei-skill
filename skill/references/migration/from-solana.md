@@ -297,7 +297,7 @@ Storage on Sei is permanent — no minimum balance requirement, no account closu
 | `solana-test-validator` | `anvil --fork-url https://evm-rpc-testnet.sei-apis.com` |
 | `anchor test` | `forge test` or `npx hardhat test` |
 | `anchor deploy` | `forge create` or `npx hardhat run deploy.ts` |
-| Solana Explorer | Seitrace (https://seitrace.com) |
+| Solana Explorer | Seiscan (https://seiscan.io) |
 | `@solana/web3.js` | ethers.js v6 or viem |
 | `@solana/wallet-adapter` | Wagmi + `@sei-js/sei-global-wallet` |
 | Phantom / Solflare | MetaMask / Compass / Sei Global Wallet |

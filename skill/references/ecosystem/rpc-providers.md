@@ -64,7 +64,7 @@ Public, community, and paid RPC endpoints for Sei. Use this as the source of tru
 | `https://rpc-testnet.sei-apis.com` | Cosmos Tendermint RPC | Foundation primary |
 | `https://rest-testnet.sei-apis.com` | Cosmos REST/LCD | Foundation primary |
 
-Testnet faucet: https://docs.sei.io/learn/faucet (link via [networks.md](../networks.md)).
+Testnet faucet: https://atlantic-2.app.sei.io/faucet (link via [networks.md](../networks.md)).
 
 ## Selection checklist
 

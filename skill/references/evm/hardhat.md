@@ -57,30 +57,8 @@ const config: HardhatUserConfig = {
       chainId: 31337,
     },
   },
-  etherscan: {
-    apiKey: {
-      seiTestnet: 'placeholder', // Seitrace doesn't require API key
-      seiMainnet: 'placeholder',
-    },
-    customChains: [
-      {
-        network: 'seiTestnet',
-        chainId: 1328,
-        urls: {
-          apiURL: 'https://seitrace.com/api?chain=atlantic-2',
-          browserURL: 'https://seitrace.com/?chain=atlantic-2',
-        },
-      },
-      {
-        network: 'seiMainnet',
-        chainId: 1329,
-        urls: {
-          apiURL: 'https://seitrace.com/api',
-          browserURL: 'https://seitrace.com',
-        },
-      },
-    ],
-  },
+  // No etherscan block needed — Sei uses Sourcify for verification
+  // npx hardhat verify sourcify --network seiTestnet <ADDRESS>
 };
 
 export default config;
@@ -179,14 +157,16 @@ npx hardhat test  # runs against forked testnet state
 
 This is required when testing contracts that interact with Sei precompiles — precompile addresses (`0x1005`, `0x1006`, etc.) only exist on the actual Sei network.
 
-## Contract Verification on Seitrace
+## Contract Verification on Seiscan
+
+Sei uses Sourcify for verification — no API key or custom chain config needed.
 
 ```bash
 # After deployment, verify source:
-npx hardhat verify --network seiTestnet <CONTRACT_ADDRESS> "Constructor" "Args"
+npx hardhat verify sourcify --network seiTestnet <CONTRACT_ADDRESS> "Constructor" "Args"
 
 # Example for ERC20:
-npx hardhat verify --network seiTestnet 0x1234...abcd "My Token" "MTK"
+npx hardhat verify sourcify --network seiTestnet 0x1234...abcd "My Token" "MTK"
 ```
 
 ## Gas Configuration for Sei
@@ -221,7 +201,7 @@ npm install --save-dev @openzeppelin/hardhat-upgrades
 
 ## Common Issues
 
-**`insufficient funds for gas`** — testnet faucet: https://atlantic-2.app.jellyfish.finance/faucet
+**`insufficient funds for gas`** — testnet faucet: https://atlantic-2.app.sei.io/faucet
 
 **`nonce too low`** — Sei's fast block times mean nonces can conflict when sending many txs quickly; use a nonce manager or sequential sends with `await tx.wait(1)` between each
 

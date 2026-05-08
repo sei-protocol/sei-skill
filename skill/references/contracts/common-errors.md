@@ -179,14 +179,13 @@ balances[c] = z;
 **Cause**: Using a binary version mismatched with the snapshot.  
 **Fix**: Ensure your `seid` binary version matches the chain version at the snapshot height.
 
-### Contract verification fails on Seitrace
+### Contract verification fails on Seiscan
 **Cause**: Solidity version or optimization settings don't match exactly.  
 **Fix**: Match the exact `solc` version and optimizer settings:
 ```bash
 forge verify-contract \
   --chain-id 1328 \
-  --verifier blockscout \
-  --verifier-url https://seitrace.com/atlantic-2/api \
+  --verifier sourcify \
   --compiler-version v0.8.28 \
   --num-of-optimizations 200 \
   $CONTRACT_ADDRESS \

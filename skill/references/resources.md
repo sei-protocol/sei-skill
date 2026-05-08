@@ -36,8 +36,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 
 | Explorer | URL |
 |---|---|
-| Seitrace (primary) | https://seitrace.com |
-| Seiscan | https://seiscan.app |
+| Seiscan | https://seiscan.io |
 | Mintscan | https://www.mintscan.io/sei |
 
 ## Faucets
@@ -56,7 +55,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 | Foundry | https://book.getfoundry.sh |
 | Hardhat | https://hardhat.org |
 | OpenZeppelin Contracts | https://github.com/OpenZeppelin/openzeppelin-contracts |
-| Seitrace (block explorer + verification) | https://seitrace.com |
+| Seiscan (block explorer + verification) | https://seiscan.io |
 
 ### Frontend
 
@@ -90,7 +89,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 
 | Bridge | Docs |
 |---|---|
-| IBC channels | https://seitrace.com (Relayers tab) or https://www.mintscan.io/sei/relayers |
+| IBC channels | https://seiscan.io or https://www.mintscan.io/sei/relayers |
 | LayerZero | https://layerzero.network |
 | ThirdWeb Bridge | https://portal.thirdweb.com/connect/blockchain-api |
 

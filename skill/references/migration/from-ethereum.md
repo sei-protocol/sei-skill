@@ -210,11 +210,10 @@ forge create \
   --private-key $PRIVATE_KEY \
   src/MyContract.sol:MyContract
 
-# Verify on Seitrace
+# Verify on Seiscan
 forge verify-contract \
   --chain-id 1328 \
-  --verifier blockscout \
-  --verifier-url https://seitrace.com/atlantic-2/api \
+  --verifier sourcify \
   $CONTRACT_ADDRESS \
   src/MyContract.sol:MyContract
 ```

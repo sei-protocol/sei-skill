@@ -1,6 +1,6 @@
 ---
 title: Upgradeable Contracts on Sei
-description: Proxy patterns (UUPS, Transparent, Beacon, Diamond) on Sei EVM with Sei-specific caveats — precompile interactions, dual-address pitfalls, OCC implications, and Seitrace verification of proxies.
+description: Proxy patterns (UUPS, Transparent, Beacon, Diamond) on Sei EVM with Sei-specific caveats — precompile interactions, dual-address pitfalls, OCC implications, and Seiscan verification of proxies.
 ---
 
 # Upgradeable Contracts on Sei
@@ -111,15 +111,15 @@ For Foundry deployments, use `forge inspect <Contract> storageLayout` and diff m
 
 If your upgrade adds a `reinitializer`, the call writes to storage during the upgrade tx. Schedule upgrades during low-traffic windows; otherwise the OCC scheduler conflicts every concurrent caller against your reinit write.
 
-### 6. Verification on Seitrace
+### 6. Verification on Seiscan
 
-Upgrade flow on Seitrace:
+Upgrade flow on Seiscan:
 
-1. Verify the **new implementation** contract: `forge verify-contract <NEW_IMPL> src/MyTokenV2.sol:MyTokenV2 --verifier blockscout --verifier-url https://seitrace.com/pacific-1/api --chain-id 1329`.
-2. After the upgrade tx confirms, navigate to the **proxy** address on Seitrace.
-3. Click "More" → "Is this a proxy?" → confirm. Seitrace will reroute reads to the new impl ABI.
+1. Verify the **new implementation** contract: `forge verify-contract <NEW_IMPL> src/MyTokenV2.sol:MyTokenV2 --verifier sourcify --chain-id 1329`.
+2. After the upgrade tx confirms, navigate to the **proxy** address on Seiscan.
+3. Click "More" → "Is this a proxy?" → confirm. Seiscan will reroute reads to the new impl ABI.
 
-If Seitrace shows stale ABI, manually re-link via the proxy admin tab.
+If Seiscan shows stale ABI, manually re-link via the proxy admin tab.
 
 See [contract-verification.md](contract-verification.md) for full verification flow.
 
@@ -204,7 +204,7 @@ function _authorizeUpgrade(address) internal override onlyOwner {
 | Storage layout clash | Reordered or removed variable | Use `__gap` slots; never delete variables, only deprecate |
 | `Initializable: contract is already initialized` | Trying to re-init without `reinitializer(N)` | Use `reinitializer(2)` for V2-specific init logic |
 | Proxy reads return zeros after upgrade | New impl forgot to import storage layout from V1 | Inherit V1 → V2 chain or use the `__gap` trick |
-| Seitrace shows old ABI | Proxy not re-linked to new impl | Re-confirm via Seitrace UI proxy tab |
+| Seiscan shows old ABI | Proxy not re-linked to new impl | Re-confirm via Seiscan UI proxy tab |
 | `Ownable` constructor revert | Implementation deployed without `_disableInitializers()` | Always include the constructor pattern above |
 
 ## Sei-specific notes

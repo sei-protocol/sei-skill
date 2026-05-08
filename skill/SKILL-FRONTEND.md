@@ -112,7 +112,7 @@ Use it for: address lookup, balance checks, contract reads from a frontend testb
 
 ### 4. Verify the user flow
 - Check wallet connection works on testnet first
-- Use the testnet faucet (https://docs.sei.io/learn/faucet) for SEI
+- Use the testnet faucet (https://atlantic-2.app.sei.io/faucet) for SEI
 - Verify dual-address UX with the Addr precompile (`getSeiAddr` / `getEvmAddr`)
 - Test transaction submission with `gasPrice` set explicitly
 

@@ -16,8 +16,8 @@ description: Network information for Sei mainnet and testnet — chain IDs, RPC 
 | REST/LCD | `https://rest.sei-apis.com` | `https://rest-testnet.sei-apis.com` |
 | gRPC | `https://grpc.sei-apis.com` | `https://grpc-testnet.sei-apis.com` |
 | WebSocket (EVM) | `wss://evm-ws.sei-apis.com` | `wss://evm-ws-testnet.sei-apis.com` |
-| Explorer | https://seitrace.com | https://seitrace.com/?chain=atlantic-2 |
-| Faucet | N/A | https://atlantic-2.app.jellyfish.finance/faucet |
+| Explorer | https://seiscan.io | https://testnet.seiscan.io |
+| Faucet | N/A | https://atlantic-2.app.sei.io/faucet |
 
 > **Default: always use testnet** unless the user explicitly requests mainnet.
 
@@ -49,7 +49,7 @@ const seiTestnet = {
     default: { http: ['https://evm-rpc-testnet.sei-apis.com'] },
   },
   blockExplorers: {
-    default: { name: 'Seitrace', url: 'https://seitrace.com/?chain=atlantic-2' },
+    default: { name: 'Seiscan', url: 'https://testnet.seiscan.io' },
   },
 };
 
@@ -62,7 +62,7 @@ const seiMainnet = {
     default: { http: ['https://evm-rpc.sei-apis.com'] },
   },
   blockExplorers: {
-    default: { name: 'Seitrace', url: 'https://seitrace.com' },
+    default: { name: 'Seiscan', url: 'https://seiscan.io' },
   },
 };
 ```
@@ -77,7 +77,7 @@ To manually add Sei to MetaMask:
    - **New RPC URL**: `https://evm-rpc.sei-apis.com` (or testnet URL)
    - **Chain ID**: `1329` (or `1328`)
    - **Currency symbol**: `SEI`
-   - **Block explorer URL**: `https://seitrace.com`
+   - **Block explorer URL**: `https://seiscan.io`
 
 ## `seid` CLI Network Flags
 
@@ -102,9 +102,9 @@ seid q evm params --node https://rpc.sei-apis.com
 Get testnet SEI for development:
 
 ```bash
-# Via Jellyfish Finance faucet UI
-# https://atlantic-2.app.jellyfish.finance/faucet
-# Connect wallet or enter EVM address — receive test SEI within seconds
+# Via Sei faucet docs
+# https://atlantic-2.app.sei.io/faucet
+# Connect wallet or enter EVM address — receive test SEI
 ```
 
 ## Gas Configuration
@@ -121,11 +121,11 @@ const tx = await signer.sendTransaction({
 });
 ```
 
-## Block Explorer — Seitrace
+## Block Explorer — Seiscan
 
-- Mainnet: https://seitrace.com
-- Testnet: https://seitrace.com/?chain=atlantic-2
+- Mainnet: https://seiscan.io
+- Testnet: https://testnet.seiscan.io
 
 Features: EVM transaction tracing, contract verification, token holders, internal transactions, Cosmos/EVM dual view per address.
 
-Contract verification via Seitrace is required before most DeFi integrations will list your token/protocol.
+Contract verification via Seiscan is required before most DeFi integrations will list your token/protocol.

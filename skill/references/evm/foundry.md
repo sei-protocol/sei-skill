@@ -1,6 +1,6 @@
 ---
 title: Foundry for Sei
-description: Setting up Foundry for Sei EVM development — configuration, forge test, forge script deployment, cast, and contract verification on Seitrace.
+description: Setting up Foundry for Sei EVM development — configuration, forge test, forge script deployment, cast, and contract verification on Seiscan.
 ---
 
 # Foundry for Sei
@@ -47,10 +47,6 @@ optimizer_runs = 200
 [rpc_endpoints]
 sei_testnet = "${SEI_TESTNET_RPC}"
 sei_mainnet = "${SEI_MAINNET_RPC}"
-
-[etherscan]
-sei_testnet = { key = "placeholder", url = "https://seitrace.com/api?chain=atlantic-2" }
-sei_mainnet = { key = "placeholder", url = "https://seitrace.com/api" }
 ```
 
 ## .env Setup
@@ -163,18 +159,16 @@ forge script script/DeployMyToken.s.sol \
   --rpc-url https://evm-rpc-testnet.sei-apis.com \
   --broadcast \
   --verify \
-  --verifier-url https://seitrace.com/api?chain=atlantic-2 \
-  --verifier etherscan \
-  --etherscan-api-key placeholder
+  --verifier sourcify \
+  --chain-id 1328
 
 # Deploy to mainnet
 forge script script/DeployMyToken.s.sol \
   --rpc-url https://evm-rpc.sei-apis.com \
   --broadcast \
   --verify \
-  --verifier-url https://seitrace.com/api \
-  --verifier etherscan \
-  --etherscan-api-key placeholder
+  --verifier sourcify \
+  --chain-id 1329
 ```
 
 ## Useful cast Commands
@@ -208,10 +202,8 @@ cast block latest --rpc-url https://evm-rpc-testnet.sei-apis.com
 ```bash
 # Verify after deployment
 forge verify-contract <CONTRACT_ADDRESS> src/MyToken.sol:MyToken \
-  --chain 1328 \
-  --verifier-url https://seitrace.com/api?chain=atlantic-2 \
-  --verifier etherscan \
-  --etherscan-api-key placeholder \
+  --chain-id 1328 \
+  --verifier sourcify \
   --constructor-args $(cast abi-encode "constructor(string,string,uint256)" "My Token" "MTK" 1000000000000000000000000)
 ```
 

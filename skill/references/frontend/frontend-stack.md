@@ -333,7 +333,7 @@ For most consumer apps, expose Sei Global Wallet **first** in the connect menu a
 
 - **Unit**: mock contracts; test hooks with `@testing-library/react`.
 - **Integration**: spin up a forked anvil (`anvil --fork-url https://evm-rpc-testnet.sei-apis.com --chain-id 1328`) and point Wagmi at `http://localhost:8545`.
-- **End-to-end**: testnet with the faucet (`https://docs.sei.io/learn/faucet`) — verify dual-address flows, especially.
+- **End-to-end**: testnet with the faucet (`https://atlantic-2.app.sei.io/faucet`) — verify dual-address flows, especially.
 
 ## Project scaffolding
 

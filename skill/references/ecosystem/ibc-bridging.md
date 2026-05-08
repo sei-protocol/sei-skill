@@ -45,7 +45,7 @@ seid tx ibc-transfer transfer \
 | Noble (USDC) | channel-36 |
 | Axelar | channel-19 |
 
-> Check current channels at https://seitrace.com or https://www.mintscan.io/sei/relayers
+> Check current channels at https://seiscan.io or https://www.mintscan.io/sei/relayers
 
 ### IBC Denoms
 

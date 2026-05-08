@@ -10,7 +10,7 @@ Where to send a user when they ask about Sei. Two primary properties:
 - **https://www.sei.io** — marketing, ecosystem, media, institutional, blog, research.
 - **https://docs.sei.io** — technical documentation (developer, node operator, validator).
 
-Plus secondary properties: https://blog.sei.io (blog), https://seiresearch.io (research), https://www.seifdn.org (Foundation), https://dashboard.sei.io (chain dashboard), https://seitrace.com (block explorer).
+Plus secondary properties: https://blog.sei.io (blog), https://seiresearch.io (research), https://www.seifdn.org (Foundation), https://dashboard.sei.io (chain dashboard), https://seiscan.io (block explorer).
 
 ## sei.io top-level navigation
 
@@ -30,7 +30,7 @@ External linked from sei.io:
 - https://seiresearch.io — research portal
 - https://www.seifdn.org — Sei Foundation
 - https://dashboard.sei.io — chain dashboard
-- https://seitrace.com — primary block explorer
+- https://seiscan.io — primary block explorer
 
 ## docs.sei.io structure
 
@@ -77,7 +77,7 @@ Four top-level sections.
 | "I want to apply for a grant" | https://www.sei.io/grants-and-funding |
 | "I need the Sei logo" | https://docs.sei.io/learn/general-brand-kit (or sei.io/media) |
 | "How do I deploy a contract on Sei?" | https://docs.sei.io/evm/smart-contracts |
-| "What's the Sei testnet faucet?" | https://docs.sei.io/learn/faucet |
+| "What's the Sei testnet faucet?" | https://atlantic-2.app.sei.io/faucet |
 | "Which RPC endpoints can I use?" | https://docs.sei.io/learn/rpc-providers |
 | "How do I run a Sei node?" | https://docs.sei.io/node |
 | "How do precompiles work?" | https://docs.sei.io/evm/precompiles |
@@ -85,7 +85,7 @@ Four top-level sections.
 | "Where's the Sei blog?" | https://blog.sei.io |
 | "Where's research?" | https://seiresearch.io |
 | "Where do I track Sei chain stats?" | https://dashboard.sei.io |
-| "Block explorer?" | https://seitrace.com |
+| "Block explorer?" | https://seiscan.io |
 
 ## Sei docs build/repo
 

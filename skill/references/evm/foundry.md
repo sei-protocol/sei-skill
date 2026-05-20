@@ -103,11 +103,18 @@ forge test --gas-report                            # gas summary
 pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
-import "@sei-js/precompiles/contracts/IStaking.sol";
+
+// @sei-js/precompiles ships JS/TS only — define the Solidity interface inline
+// (source of truth: github.com/sei-protocol/sei-chain/tree/main/precompiles/staking)
+interface IStaking {
+    struct Validator { string operatorAddress; bool jailed; string status; uint256 tokens; }
+    function validators(string memory status, uint256 maxResults, string memory pageKey)
+        external view returns (Validator[] memory);
+    function delegate(string memory validatorAddress) external payable returns (bool);
+}
 
 contract PrecompileTest is Test {
-    address constant STAKING = 0x0000000000000000000000000000000000001005;
-    IStaking staking = IStaking(STAKING);
+    IStaking constant staking = IStaking(0x0000000000000000000000000000000000001005);
 
     function setUp() public {
         // Fork testnet — precompiles live at fixed addresses

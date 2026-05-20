@@ -50,9 +50,9 @@ function associatePubKey(string memory pubKeyHex)
 
 ```typescript
 import { ethers } from 'ethers';
-import { ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI } from '@sei-js/evm';
+import { ADDRESS_PRECOMPILE_ADDRESS, ADDRESS_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
-const addr = new ethers.Contract(ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI, provider);
+const addr = new ethers.Contract(ADDRESS_PRECOMPILE_ADDRESS, ADDRESS_PRECOMPILE_ABI, provider);
 
 // Check if an EVM address has an associated sei1... address
 const seiAddress = await addr.getSeiAddr("0x1234...");
@@ -231,7 +231,7 @@ interface IPointerView {
 ### ethers.js Example
 
 ```typescript
-import { POINTERVIEW_PRECOMPILE_ADDRESS, POINTERVIEW_PRECOMPILE_ABI } from '@sei-js/evm';
+import { POINTERVIEW_PRECOMPILE_ADDRESS, POINTERVIEW_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const pointerView = new ethers.Contract(
   POINTERVIEW_PRECOMPILE_ADDRESS,

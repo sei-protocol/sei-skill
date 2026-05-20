@@ -157,7 +157,7 @@ const balance = await token.balanceOf(userAddress);
 const seiBalance = await provider.getBalance(userAddress);
 
 // Query native denom balance via Bank precompile
-import { BANK_PRECOMPILE_ADDRESS, BANK_PRECOMPILE_ABI } from '@sei-js/evm';
+import { BANK_PRECOMPILE_ADDRESS, BANK_PRECOMPILE_ABI } from '@sei-js/precompiles';
 const bank = new ethers.Contract(BANK_PRECOMPILE_ADDRESS, BANK_PRECOMPILE_ABI, provider);
 const useiBalance = await bank.balance("sei1abc...", "usei");
 ```

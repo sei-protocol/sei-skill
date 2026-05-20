@@ -10,7 +10,7 @@ This skill provides AI coding assistants with deep knowledge of the Sei ecosyste
 - **EVM Contracts**: Foundry + Hardhat setup, deployment, fork testing
 - **Precompiles**: All 11 Sei precompiles (Staking, Governance, Bank, Addr, Oracle, IBC, Pointer, P256, etc.)
 - **Pointer Contracts**: Cross-VM asset bridging between EVM and Cosmos
-- **Verification**: Seitrace verification flows for Foundry and Hardhat
+- **Verification**: Seiscan (Sourcify) verification flows for Foundry and Hardhat
 - **Performance**: Load testing, OCC-aware design, Sei-specific gas optimization
 - **Account abstraction (ERC-4337)**: Pimlico, Particle, smart-account flows
 - **Upgradeability**: UUPS, Transparent, Beacon, Diamond
@@ -50,10 +50,6 @@ cd sei-skill
 ```
 
 That installs to `~/.claude/skills/sei`. No flags needed.
-
-```bash
-npx skills add sei
-```
 
 ### Other AI Agents
 
@@ -126,7 +122,7 @@ skill/
     ├── resources.md                      # Curated reference links
     │
     ├── contracts/                        # ── Domain: Contracts ──────────────────
-    │   ├── contract-verification.md      # Seitrace verification (Foundry + Hardhat)
+    │   ├── contract-verification.md      # Seiscan verification via Sourcify (Foundry + Hardhat)
     │   ├── performance-testing.md        # Load testing, OCC scheduler benchmarking
     │   ├── occ-aware-design.md           # Parallelization-friendly storage layouts
     │   ├── gas-optimization-sei.md       # SSTORE costs, calldata, multicall
@@ -189,7 +185,7 @@ Once installed, your AI assistant automatically uses this skill when you ask abo
 "Deploy a Solidity contract on Sei testnet"
 "Why is SSTORE so expensive on Sei testnet?"
 "Set up Foundry for Sei"
-"How do I verify my contract on Seitrace?"
+"How do I verify my contract on Seiscan?"
 "Load test my contract against the OCC scheduler"
 "Optimize gas for my Sei contract"
 "Use ERC-4337 account abstraction on Sei"
@@ -251,7 +247,7 @@ Once installed, your AI assistant automatically uses this skill when you ask abo
 | Smart contracts | **Foundry** | Hardhat |
 | Frontend | **Wagmi + Viem** (React) | Ethers.js v6 |
 | Wallet | **Sei Global Wallet** + MetaMask | Compass, Ledger |
-| Chain config | **@sei-js/evm** | Manual RPC config |
+| Chain config | **@sei-js/precompiles** | Manual RPC config |
 | Randomness | **Pyth VRF** | Chainlink VRF |
 | Oracles | **Native precompile** (free) → Pyth (pull) → Chainlink (push) | — |
 | Indexers | **The Graph** (custom queries) / **Goldsky** (real-time) | Dune (analytics) |

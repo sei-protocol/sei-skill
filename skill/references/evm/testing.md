@@ -116,15 +116,15 @@ networks: {
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Addresses from @sei-js/evm
+// Addresses from @sei-js/precompiles
 const STAKING_ADDRESS = "0x0000000000000000000000000000000000001005";
 
 describe("Staking precompile integration", () => {
   it("should return validators", async () => {
-    const abi = ["function validators(string,uint32,string) view returns (tuple[])"];
+    const abi = ["function validators(string,bytes) view returns ((string operatorAddress, bool jailed, int32 status, string tokens)[] validators, bytes nextKey)"];
     const staking = new ethers.Contract(STAKING_ADDRESS, abi, ethers.provider);
-    const validators = await staking.validators("BONDED", 10, "");
-    expect(validators.length).to.be.greaterThan(0);
+    const result = await staking.validators("BONDED", "0x"); // "0x" = empty bytes, first page
+    expect(result.validators.length).to.be.greaterThan(0);
   });
 });
 ```
@@ -152,10 +152,10 @@ function test_MyContractWithMockedStaking() public {
 ### Testing with real precompile ABIs
 
 ```bash
-# Install @sei-js/evm for TypeScript ABI access
-npm install @sei-js/evm
+# Install @sei-js/precompiles for TypeScript ABI access
+npm install @sei-js/precompiles
 
-# For Foundry — copy ABI JSON files from @sei-js/evm into test/fixtures/
+# For Foundry — copy ABI JSON files from @sei-js/precompiles into test/fixtures/
 ```
 
 ## Testing Parallel-Execution Safety
@@ -253,7 +253,7 @@ Before promoting to mainnet:
 
 1. `forge test --fork-url https://evm-rpc-testnet.sei-apis.com` — all pass
 2. `forge script ... --simulate` — deployment simulation succeeds
-3. Deploy to atlantic-2, check Seitrace explorer
+3. Deploy to atlantic-2, check Seiscan explorer
 4. Run integration tests against deployed testnet address
-5. Verify contract source on Seitrace
+5. Verify contract source on Seiscan
 6. Test with a real wallet (MetaMask or Compass) connected to testnet

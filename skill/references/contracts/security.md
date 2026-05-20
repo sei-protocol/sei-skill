@@ -259,7 +259,7 @@ Sei supports `SELFDESTRUCT` (the opcode still exists), but the behavior changed 
 □ Audit all admin functions (ownable actions, upgrades, pauses)
 □ Consider Timelock for protocol admin (24h+ delay for sensitive params)
 □ Use a multisig (Safe) for contract ownership
-□ Verify source code on Seitrace immediately after deploy
+□ Verify source code on Seiscan immediately after deploy
 □ Run Slither / Aderyn static analysis before mainnet
 □ Get an external audit for contracts holding >$100k TVL
 □ Test on atlantic-2 testnet with realistic amounts before mainnet

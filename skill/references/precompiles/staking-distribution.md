@@ -35,14 +35,17 @@ function redelegate(
 
 ```solidity
 // Get all validators with a given status and optional pagination
+// Pagination is cursor-based: pass nextKey from previous ValidatorsResponse; "" for first page
 struct Validator { string operatorAddress; /* ... */ }
-function validators(string memory status, uint32 pageLimit, string memory pageKey)
-    external view returns (Validator[] memory);
+struct ValidatorsResponse { Validator[] validators; bytes nextKey; }
+function validators(string memory status, bytes memory nextKey)
+    external view returns (ValidatorsResponse memory);
 
 // Get a delegator's delegations
 struct DelegationResponse { /* delegatorAddress, validatorAddress, shares, balance */ }
-function delegatorDelegations(address delegatorAddress, uint32 pageLimit, string memory pageKey)
-    external view returns (DelegationResponse[] memory);
+struct DelegationsResponse { DelegationResponse[] delegations; bytes nextKey; }
+function delegatorDelegations(address delegator, bytes memory nextKey)
+    external view returns (DelegationsResponse memory);
 
 // Get a specific delegation
 function delegation(address delegatorAddress, string memory validatorAddress)
@@ -85,7 +88,7 @@ import {
   STAKING_PRECOMPILE_ABI,
   DISTRIBUTION_PRECOMPILE_ADDRESS,
   DISTRIBUTION_PRECOMPILE_ABI,
-} from '@sei-js/evm';
+} from '@sei-js/precompiles';
 
 const provider = new ethers.BrowserProvider(window.ethereum);
 const signer = await provider.getSigner();

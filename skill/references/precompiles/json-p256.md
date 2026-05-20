@@ -70,7 +70,7 @@ contract OracleConsumer {
 
 ```typescript
 import { ethers } from 'ethers';
-import { JSON_PRECOMPILE_ADDRESS, JSON_PRECOMPILE_ABI } from '@sei-js/evm';
+import { JSON_PRECOMPILE_ADDRESS, JSON_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const json = new ethers.Contract(JSON_PRECOMPILE_ADDRESS, JSON_PRECOMPILE_ABI, provider);
 
@@ -161,7 +161,13 @@ contract PasskeyWallet {
 
 ```typescript
 import { ethers } from 'ethers';
-import { P256_PRECOMPILE_ADDRESS, P256_PRECOMPILE_ABI } from '@sei-js/evm';
+
+// P256 is not exported by @sei-js/precompiles — define address and ABI inline
+// (source of truth: github.com/sei-protocol/sei-chain/tree/main/precompiles/p256)
+const P256_PRECOMPILE_ADDRESS = '0x0000000000000000000000000000000000001011';
+const P256_PRECOMPILE_ABI = [
+  'function verify(bytes32 hash, bytes32 r, bytes32 s, bytes32 x, bytes32 y) view returns (bool)'
+];
 
 const p256 = new ethers.Contract(P256_PRECOMPILE_ADDRESS, P256_PRECOMPILE_ABI, provider);
 

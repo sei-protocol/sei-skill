@@ -36,8 +36,8 @@ For production dApps, use a provider account rather than the public endpoints.
 ## Chain IDs Reference
 
 ```javascript
-// Viem chain definitions — use @sei-js/evm for pre-built definitions
-import { seiMainnet, seiTestnet } from '@sei-js/evm';
+// Viem chain definitions — use @sei-js/precompiles for pre-built definitions
+import { sei, seiTestnet } from '@sei-js/precompiles';
 
 // Or define manually:
 const seiTestnet = {
@@ -53,7 +53,7 @@ const seiTestnet = {
   },
 };
 
-const seiMainnet = {
+const sei = {
   id: 1329,
   name: 'Sei',
   network: 'pacific-1',

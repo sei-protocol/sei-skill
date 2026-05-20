@@ -103,11 +103,38 @@ forge test --gas-report                            # gas summary
 pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
-import "@sei-js/evm/contracts/IStaking.sol";
+
+// @sei-js/precompiles ships JS/TS only — define the Solidity interface inline
+// (source of truth: github.com/sei-protocol/sei-chain/tree/main/precompiles/staking)
+interface IStaking {
+    struct Validator {
+        string operatorAddress;
+        bytes consensusPubkey;
+        bool jailed;
+        int32 status;
+        string tokens;
+        string delegatorShares;
+        string description;
+        int64 unbondingHeight;
+        int64 unbondingTime;
+        string commissionRate;
+        string commissionMaxRate;
+        string commissionMaxChangeRate;
+        int64 commissionUpdateTime;
+        string minSelfDelegation;
+    }
+    struct ValidatorsResponse {
+        Validator[] validators;
+        bytes nextKey; // cursor for next page; empty when no more pages
+    }
+    // Pagination is cursor-based: pass nextKey from previous response; "" for first page
+    function validators(string memory status, bytes memory nextKey)
+        external view returns (ValidatorsResponse memory);
+    function delegate(string memory validatorAddress) external payable returns (bool);
+}
 
 contract PrecompileTest is Test {
-    address constant STAKING = 0x0000000000000000000000000000000000001005;
-    IStaking staking = IStaking(STAKING);
+    IStaking constant staking = IStaking(0x0000000000000000000000000000000000001005);
 
     function setUp() public {
         // Fork testnet — precompiles live at fixed addresses
@@ -116,8 +143,8 @@ contract PrecompileTest is Test {
 
     function test_QueryValidators() public view {
         // Precompile call works against real chain state
-        IStaking.Validator[] memory vals = staking.validators("BONDED", 10, "");
-        assertGt(vals.length, 0);
+        IStaking.ValidatorsResponse memory resp = staking.validators("BONDED", "");
+        assertGt(resp.validators.length, 0);
     }
 }
 ```

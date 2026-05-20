@@ -250,6 +250,21 @@ if [ "$FLATTEN" = true ]; then
         echo "Flattening Sei Skill ($VARIANT) → $OUTPUT_PATH"
     fi
 
+    # Warn before clobbering an existing file
+    if [ -f "$OUTPUT_PATH" ]; then
+        if [ -t 0 ]; then
+            echo "Warning: '$OUTPUT_PATH' already exists"
+            read -p "Overwrite? (y/N) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo "Installation cancelled"
+                exit 0
+            fi
+        else
+            echo "Warning: '$OUTPUT_PATH' already exists — overwriting (non-interactive)"
+        fi
+    fi
+
     # Create output directory if needed
     mkdir -p "$(dirname "$OUTPUT_PATH")"
 
@@ -316,12 +331,16 @@ fi
 
 # Confirm overwrite if destination exists
 if [ -d "$INSTALL_PATH" ]; then
-    echo "Warning: '$INSTALL_PATH' already exists"
-    read -p "Overwrite? (y/N) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Installation cancelled"
-        exit 0
+    if [ -t 0 ]; then
+        echo "Warning: '$INSTALL_PATH' already exists"
+        read -p "Overwrite? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Installation cancelled"
+            exit 0
+        fi
+    else
+        echo "Warning: '$INSTALL_PATH' already exists — overwriting (non-interactive)"
     fi
     rm -rf "$INSTALL_PATH"
 fi

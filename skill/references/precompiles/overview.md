@@ -1,6 +1,6 @@
 ---
 title: Sei Precompiles Overview
-description: All Sei precompile addresses, ABI setup with @sei-js/evm, and quick interaction patterns.
+description: All Sei precompile addresses, ABI setup with @sei-js/precompiles, and quick interaction patterns.
 ---
 
 # Sei Precompiles Overview
@@ -27,12 +27,12 @@ Precompiles are fixed-address contracts deployed by the Sei protocol that expose
 
 > Note: CosmWasm, CosmWasm bridge (Bank, IBC), and Solo precompiles are marked legacy because CosmWasm is deprecated per SIP-3. They remain functional for existing integrations.
 
-## Setup: @sei-js/evm
+## Setup: @sei-js/precompiles
 
-The `@sei-js/evm` package provides pre-built ABIs and address constants for all Sei precompiles:
+The `@sei-js/precompiles` package provides pre-built ABIs and address constants for all Sei precompiles:
 
 ```bash
-npm install @sei-js/evm
+npm install @sei-js/precompiles
 ```
 
 ```typescript
@@ -47,22 +47,22 @@ import {
   ORACLE_PRECOMPILE_ABI,
   JSON_PRECOMPILE_ADDRESS,
   JSON_PRECOMPILE_ABI,
-  ADDR_PRECOMPILE_ADDRESS,
-  ADDR_PRECOMPILE_ABI,
+  ADDRESS_PRECOMPILE_ADDRESS,
+  ADDRESS_PRECOMPILE_ABI,
   BANK_PRECOMPILE_ADDRESS,
   BANK_PRECOMPILE_ABI,
   POINTER_PRECOMPILE_ADDRESS,
   POINTER_PRECOMPILE_ABI,
   POINTERVIEW_PRECOMPILE_ADDRESS,
   POINTERVIEW_PRECOMPILE_ABI,
-} from '@sei-js/evm';
+} from '@sei-js/precompiles';
 ```
 
 ## Quick Interaction Pattern (ethers.js v6)
 
 ```typescript
 import { ethers } from 'ethers';
-import { STAKING_PRECOMPILE_ADDRESS, STAKING_PRECOMPILE_ABI } from '@sei-js/evm';
+import { STAKING_PRECOMPILE_ADDRESS, STAKING_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 // Setup provider + signer (e.g., from MetaMask)
 const provider = new ethers.BrowserProvider(window.ethereum);
@@ -83,8 +83,8 @@ const validators = await staking.validators("BONDED", 10, "");
 
 ```typescript
 import { createWalletClient, custom, getContract } from 'viem';
-import { seiTestnet } from '@sei-js/evm';
-import { STAKING_PRECOMPILE_ADDRESS, STAKING_PRECOMPILE_ABI } from '@sei-js/evm';
+import { seiTestnet } from '@sei-js/precompiles';
+import { STAKING_PRECOMPILE_ADDRESS, STAKING_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const walletClient = createWalletClient({
   chain: seiTestnet,

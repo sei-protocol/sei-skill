@@ -112,7 +112,7 @@ seid q evm pointer ERC20 <ERC20_ADDRESS> \
 ### Via PointerView Precompile
 
 ```typescript
-import { POINTERVIEW_PRECOMPILE_ADDRESS, POINTERVIEW_PRECOMPILE_ABI } from '@sei-js/evm';
+import { POINTERVIEW_PRECOMPILE_ADDRESS, POINTERVIEW_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const pointerView = new ethers.Contract(
   POINTERVIEW_PRECOMPILE_ADDRESS,

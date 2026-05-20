@@ -14,14 +14,14 @@ Build dApps that interact with Sei from the browser or Node. This file replaces 
 | **Library** | Wagmi + Viem | You want maximum control or React-free scripts → ethers v6 |
 | **Wallet (consumer)** | Sei Global Wallet (`@sei-js/sei-global-wallet`) | Power-user app → MetaMask, Compass, Ledger |
 | **Wallet UX shell** | RainbowKit or ConnectKit | You want bare bones → Wagmi `useConnect` directly |
-| **Chain config** | `@sei-js/evm` exports | You need a chain not in `@sei-js/evm` → manual `defineChain` |
+| **Chain config** | `@sei-js/precompiles` exports | You need a chain not in `@sei-js/precompiles` → manual `defineChain` |
 | **State / data** | TanStack Query (Wagmi default) | Already on Redux/Zustand → integrate manually |
 
 ## Quick install
 
 ```bash
 # React + Wagmi + Viem default
-npm install wagmi viem @tanstack/react-query @sei-js/evm
+npm install wagmi viem @tanstack/react-query @sei-js/precompiles
 
 # Optional embedded wallet
 npm install @sei-js/sei-global-wallet
@@ -30,7 +30,7 @@ npm install @sei-js/sei-global-wallet
 npm install @rainbow-me/rainbowkit
 
 # Non-React / Node.js scripts
-npm install ethers @sei-js/evm
+npm install ethers @sei-js/precompiles
 ```
 
 ## Wagmi setup
@@ -38,13 +38,13 @@ npm install ethers @sei-js/evm
 ```ts
 // wagmi.config.ts
 import { createConfig, http } from "wagmi";
-import { seiMainnet, seiTestnet } from "@sei-js/evm";
+import { sei, seiTestnet } from "@sei-js/precompiles";
 import { injected, walletConnect } from "wagmi/connectors";
 
 export const wagmiConfig = createConfig({
-  chains: [seiMainnet, seiTestnet],
+  chains: [sei, seiTestnet],
   transports: {
-    [seiMainnet.id]: http("https://evm-rpc.sei-apis.com"),
+    [sei.id]: http("https://evm-rpc.sei-apis.com"),
     [seiTestnet.id]: http("https://evm-rpc-testnet.sei-apis.com"),
   },
   connectors: [
@@ -76,7 +76,7 @@ export function App({ children }: { children: React.ReactNode }) {
 ```tsx
 import { useAccount, useReadContract, useWriteContract } from "wagmi";
 import { parseEther, parseUnits } from "viem";
-import { seiMainnet } from "@sei-js/evm";
+import { sei } from "@sei-js/precompiles";
 
 function Balance({ token }: { token: `0x${string}` }) {
   const { address } = useAccount();
@@ -98,7 +98,7 @@ function Send({ token, to, amount }: { token: `0x${string}`; to: `0x${string}`; 
       functionName: "transfer",
       args: [to, parseUnits(amount, 18)],
       gasPrice: parseUnits("50", "gwei"),  // ≥ 50 gwei on Sei
-      chainId: seiMainnet.id,              // pin chain to prevent cross-chain mistakes
+      chainId: sei.id,              // pin chain to prevent cross-chain mistakes
     });
   };
   return <button onClick={onClick} disabled={isPending}>Send</button>;
@@ -133,12 +133,12 @@ For a polished modal, use RainbowKit:
 ```tsx
 import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
-import { seiMainnet, seiTestnet } from "@sei-js/evm";
+import { sei, seiTestnet } from "@sei-js/precompiles";
 
 const config = getDefaultConfig({
   appName: "My Sei App",
   projectId: process.env.NEXT_PUBLIC_WC_PROJECT_ID!,
-  chains: [seiMainnet, seiTestnet],
+  chains: [sei, seiTestnet],
 });
 
 export function App() {
@@ -174,12 +174,12 @@ Every Sei account has both an EVM address (`0x...`) and a Cosmos address (`sei1.
 3. Detect and surface the **association** state.
 
 ```tsx
-import { ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI } from "@sei-js/evm";
+import { ADDRESS_PRECOMPILE_ADDRESS, ADDRESS_PRECOMPILE_ABI } from "@sei-js/precompiles";
 
 function DualAddress({ evm }: { evm: `0x${string}` }) {
   const { data: cosmos } = useReadContract({
-    address: ADDR_PRECOMPILE_ADDRESS,
-    abi: ADDR_PRECOMPILE_ABI,
+    address: ADDRESS_PRECOMPILE_ADDRESS,
+    abi: ADDRESS_PRECOMPILE_ABI,
     functionName: "getSeiAddr",
     args: [evm],
   });
@@ -230,12 +230,12 @@ Wagmi handles multichain natively. Just include the chains you support:
 
 ```ts
 import { mainnet, arbitrum, optimism } from "wagmi/chains";
-import { seiMainnet } from "@sei-js/evm";
+import { sei } from "@sei-js/precompiles";
 
 export const config = createConfig({
-  chains: [seiMainnet, mainnet, arbitrum, optimism],
+  chains: [sei, mainnet, arbitrum, optimism],
   transports: {
-    [seiMainnet.id]: http("https://evm-rpc.sei-apis.com"),
+    [sei.id]: http("https://evm-rpc.sei-apis.com"),
     [mainnet.id]: http(),
     [arbitrum.id]: http(),
     [optimism.id]: http(),
@@ -246,7 +246,7 @@ export const config = createConfig({
 When sending a tx, always pin `chainId` to prevent the wallet from routing to the wrong chain:
 
 ```ts
-await writeContract({ /* ... */, chainId: seiMainnet.id });
+await writeContract({ /* ... */, chainId: sei.id });
 ```
 
 ## Network-add UX
@@ -255,15 +255,15 @@ If the user's wallet doesn't already know about Sei, prompt to add it:
 
 ```ts
 import { useSwitchChain } from "wagmi";
-import { seiMainnet } from "@sei-js/evm";
+import { sei } from "@sei-js/precompiles";
 
 const { switchChainAsync } = useSwitchChain();
 
-await switchChainAsync({ chainId: seiMainnet.id });
+await switchChainAsync({ chainId: sei.id });
 // Wagmi triggers wallet_addEthereumChain if needed
 ```
 
-`@sei-js/evm`'s exports include the canonical `chainName`, `nativeCurrency`, `rpcUrls`, and `blockExplorers` that wallets need.
+`@sei-js/precompiles`'s exports include the canonical `chainName`, `nativeCurrency`, `rpcUrls`, and `blockExplorers` that wallets need.
 
 ## ethers v6 (non-React, scripts)
 
@@ -294,7 +294,7 @@ Use viem's `fallback` transport (or ethers' `FallbackProvider`) for production:
 import { createPublicClient, fallback, http } from "viem";
 
 const client = createPublicClient({
-  chain: seiMainnet,
+  chain: sei,
   transport: fallback([
     http("https://evm-rpc.sei-apis.com"),
     http("https://1rpc.io/sei"),
@@ -321,11 +321,11 @@ For most consumer apps, expose Sei Global Wallet **first** in the connect menu a
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `unsupported chain` from wallet | Wallet doesn't know Sei | Use `useSwitchChain` to add Sei via `@sei-js/evm` config |
+| `unsupported chain` from wallet | Wallet doesn't know Sei | Use `useSwitchChain` to add Sei via `@sei-js/precompiles` config |
 | `replacement transaction underpriced` | gas price < 50 gwei | Set `gasPrice: parseUnits("50", "gwei")` |
 | `user rejected` after delay | EIP-1559 fields confused wallet | Drop `maxFeePerGas`/`maxPriorityFeePerGas`; use legacy `gasPrice` |
 | Transaction confirms but UI never updates | Watching wrong chain | Pin `chainId` in writes; ensure read hooks watch the same chain |
-| `ChainId 1329 not found` | Stale `@sei-js/evm` version | Upgrade to latest |
+| `ChainId 1329 not found` | Stale `@sei-js/precompiles` version | Upgrade to latest |
 | Two wallets fight for `window.ethereum` | Pre-EIP-6963 wallet behavior | Use `injected()` connector — it uses EIP-6963 discovery, not `window.ethereum` |
 | Sei Global Wallet doesn't appear | Forgot side-effect import | Add `import "@sei-js/sei-global-wallet"` at app entry |
 
@@ -349,7 +349,7 @@ Includes pre-configured Sei network entries.
 - **Always use legacy `gasPrice ≥ 50 gwei`**; never EIP-1559 priority fee fields.
 - **Always pin `chainId`** in write calls.
 - **Always use `wait(1)` / `confirmations: 1`** — anything more is wasted UX time.
-- **Always import precompile addresses + ABIs from `@sei-js/evm`** rather than hardcoding.
+- **Always import precompile addresses + ABIs from `@sei-js/precompiles`** rather than hardcoding.
 - **For consumer onboarding**, lead with Sei Global Wallet + social login rather than MetaMask.
 - **For production**, use multi-RPC failover (viem `fallback` or ethers `FallbackProvider`).
 - **For dual-address UX**, surface the `sei1...` counterpart when the user touches IBC, staking, or governance flows.

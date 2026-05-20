@@ -47,7 +47,7 @@ const config: HardhatUserConfig = {
       accounts: [PRIVATE_KEY],
       chainId: 1328,
     },
-    seiMainnet: {
+    sei: {
       url: 'https://evm-rpc.sei-apis.com',
       accounts: [PRIVATE_KEY],
       chainId: 1329,

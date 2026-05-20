@@ -76,7 +76,7 @@ import "@nomicfoundation/hardhat-verify";
 
 export default {
   networks: {
-    seiMainnet: {
+    sei: {
       url: "https://evm-rpc.sei-apis.com",
       chainId: 1329,
     },
@@ -91,7 +91,7 @@ export default {
 Then verify:
 
 ```bash
-npx hardhat verify sourcify --network seiMainnet <DEPLOYED_ADDRESS> "constructor-arg-1" "constructor-arg-2"
+npx hardhat verify sourcify --network sei <DEPLOYED_ADDRESS> "constructor-arg-1" "constructor-arg-2"
 ```
 
 ## Proxy verification (UUPS, Transparent, Beacon)
@@ -103,7 +103,7 @@ npx hardhat verify sourcify --network seiMainnet <DEPLOYED_ADDRESS> "constructor
 For OpenZeppelin proxies deployed via Hardhat-Upgrades:
 
 ```bash
-npx hardhat verify sourcify --network seiMainnet <PROXY_ADDRESS>
+npx hardhat verify sourcify --network sei <PROXY_ADDRESS>
 # Then on Seiscan: mark address as proxy + link to implementation
 ```
 

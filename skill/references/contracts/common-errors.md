@@ -65,7 +65,7 @@ try {
 **Fix**: Associate the addresses first. The easiest method is to send any transaction from the account (the association happens automatically on first EVM tx).
 ```typescript
 // Check if associated
-const addrPrecompile = new ethers.Contract(ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI, provider);
+const addrPrecompile = new ethers.Contract(ADDRESS_PRECOMPILE_ADDRESS, ADDRESS_PRECOMPILE_ABI, provider);
 const seiAddr = await addrPrecompile.getSeiAddr(evmAddress);
 // If returns empty string, address is not yet associated
 ```

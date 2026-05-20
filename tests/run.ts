@@ -183,7 +183,7 @@ const triggerCases: TestCase[] = [
   { prompt: "I'm coming from Solana, how does Sei work?", expected: true },
   { prompt: "How do I use the TokenFactory on Sei?", expected: true },
   { prompt: "Debug my Sei transaction — it keeps reverting", expected: true },
-  { prompt: "How do I verify my contract on Seitrace?", expected: true },
+  { prompt: "How do I verify my contract on Seiscan?", expected: true },
   { prompt: "Load test my Sei contract against the OCC scheduler", expected: true },
   { prompt: "How should I design a Sei contract for parallel execution?", expected: true },
   { prompt: "Optimize gas for my Sei contract — what's different from Ethereum?", expected: true },

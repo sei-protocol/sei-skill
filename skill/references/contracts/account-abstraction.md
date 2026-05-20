@@ -160,7 +160,7 @@ See [frontend/frontend-stack.md](../frontend/frontend-stack.md) for the wallet s
 
 ## Observability
 
-- Track user ops via Seitrace: search by user op hash (the bundler returns it; it differs from the underlying tx hash).
+- Track user ops via Seiscan: search by user op hash (the bundler returns it; it differs from the underlying tx hash).
 - Pimlico dashboard shows bundler success/fail rate per chain.
 - Indexers (Goldsky, The Graph) can index `UserOperationEvent` from the EntryPoint contract — see [indexers.md](../ecosystem/indexers.md).
 

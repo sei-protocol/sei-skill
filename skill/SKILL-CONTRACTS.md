@@ -5,7 +5,7 @@ description: >
   "write a Solidity contract for Sei", "use Sei precompiles", "set up Hardhat or
   Foundry for Sei", "create a token on Sei", "test my Sei contract", "migrate
   from Ethereum or Solana to Sei", "use pointer contracts", "verify a contract
-  on Seitrace", "load-test my Sei contract", "design for OCC parallel execution",
+  on Seiscan", "load-test my Sei contract", "design for OCC parallel execution",
   "optimize gas on Sei", "use ERC-4337 / account abstraction on Sei", "make my
   contract upgradeable on Sei", "use the Staking or Governance precompile",
   "create a native token with TokenFactory", "debug a Sei transaction", or "why
@@ -36,7 +36,7 @@ Use this Skill when the user asks for:
 - CosmWasm bridge precompiles (Addr, Bank, CosmWasm, IBC, Pointer, PointerView)
 - Pointer contracts and cross-VM asset bridging (ERC20↔CW20, ERC721↔CW721, ERC20↔native)
 - Token creation (ERC20/721/1155, TokenFactory native denoms)
-- Contract verification on Seitrace
+- Contract verification on Seiscan
 - Performance / load testing against the OCC scheduler
 - OCC-aware contract design (parallelization-friendly storage layouts)
 - Sei-specific gas optimization (SSTORE costs, calldata, multicall)
@@ -67,7 +67,7 @@ These facts must inform every answer involving Sei code or configuration:
 2. **Precompile ABIs + addresses**: always import from `@sei-js/evm` rather than hardcoding
 3. **Testing**: Fork testing against testnet for precompile and cross-VM interactions
 4. **Networks**: Default to testnet (`atlantic-2`, chain ID 1328) unless the user explicitly requests mainnet
-5. **Verification**: Seitrace via Blockscout-compatible API (`forge verify-contract --verifier blockscout`)
+5. **Verification**: Seiscan via Sourcify (`forge verify-contract --verifier sourcify`)
 
 ## Agent safety guardrails
 
@@ -115,7 +115,7 @@ claude mcp add sei-mcp-server npx @sei-js/mcp-server
 - Frontend (basic): `@sei-js/evm` for precompile ABIs
 
 ### 4. Test before mainnet
-- Unit test → fork test against testnet → deploy testnet → verify on Seitrace → mainnet
+- Unit test → fork test against testnet → deploy testnet → verify on Seiscan → mainnet
 - `--fork-url https://evm-rpc-testnet.sei-apis.com` for testnet fork
 - `--fork-url https://evm-rpc.sei-apis.com` for mainnet fork
 
@@ -139,7 +139,7 @@ When implementing changes, provide:
 - **Foundry for Sei:** [evm/foundry.md](references/evm/foundry.md)
 - **Testing strategy:** [evm/testing.md](references/evm/testing.md)
 - **Parallelization & gas best practices:** [evm/best-practices.md](references/evm/best-practices.md)
-- **Contract verification (Seitrace):** [contracts/contract-verification.md](references/contracts/contract-verification.md)
+- **Contract verification (Seiscan):** [contracts/contract-verification.md](references/contracts/contract-verification.md)
 - **Performance & load testing:** [contracts/performance-testing.md](references/contracts/performance-testing.md)
 - **OCC-aware contract design:** [contracts/occ-aware-design.md](references/contracts/occ-aware-design.md)
 - **Sei-specific gas optimization:** [contracts/gas-optimization-sei.md](references/contracts/gas-optimization-sei.md)

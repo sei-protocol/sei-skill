@@ -9,7 +9,7 @@ description: >
   SeiDB, Sei Giga), "use pointer contracts", "build with sei-js", "set up a Sei
   validator", "bridge tokens on Sei", "debug a Sei transaction", "use the Staking
   or Governance precompile", "create a native token with TokenFactory", "verify a
-  contract on Seitrace", "load-test my Sei contract", "design for OCC parallel
+  contract on Seiscan", "load-test my Sei contract", "design for OCC parallel
   execution", "optimize gas on Sei", "use ERC-4337 / account abstraction on Sei",
   "make my contract upgradeable on Sei", "what dapps are on Sei", "integrate with
   a Sei DEX or lending protocol", "what bridges work with Sei", "find a Sei RPC
@@ -44,7 +44,7 @@ This Skill covers three overlapping domains. Use it when the user asks for:
 - CosmWasm bridge precompiles (Addr, Bank, CosmWasm, IBC, Pointer, PointerView)
 - Pointer contracts and cross-VM asset bridging (ERC20↔CW20, ERC721↔CW721, ERC20↔native)
 - Token creation (ERC20/721/1155, TokenFactory native denoms)
-- Contract verification on Seitrace
+- Contract verification on Seiscan
 - Performance / load testing against the OCC scheduler
 - OCC-aware contract design (parallelization-friendly storage layouts)
 - Sei-specific gas optimization (SSTORE costs, calldata, multicall)
@@ -157,7 +157,7 @@ Always be explicit about:
 ### 4. Test before mainnet
 - Unit test: `forge test` (Foundry) or `npx hardhat test` (Hardhat)
 - Fork test against testnet: `--fork-url https://evm-rpc-testnet.sei-apis.com`
-- Deploy to testnet (atlantic-2), verify on Seitrace, then promote to mainnet
+- Deploy to testnet (atlantic-2), verify on Seiscan, then promote to mainnet
 
 ### 5. Deliverables
 When implementing changes, provide:
@@ -179,7 +179,7 @@ When implementing changes, provide:
 - **Foundry for Sei:** [evm/foundry.md](references/evm/foundry.md)
 - **Testing strategy:** [evm/testing.md](references/evm/testing.md)
 - **Parallelization & gas best practices:** [evm/best-practices.md](references/evm/best-practices.md)
-- **Contract verification (Seitrace):** [contracts/contract-verification.md](references/contracts/contract-verification.md)
+- **Contract verification (Seiscan):** [contracts/contract-verification.md](references/contracts/contract-verification.md)
 - **Performance & load testing:** [contracts/performance-testing.md](references/contracts/performance-testing.md)
 - **OCC-aware contract design:** [contracts/occ-aware-design.md](references/contracts/occ-aware-design.md)
 - **Sei-specific gas optimization:** [contracts/gas-optimization-sei.md](references/contracts/gas-optimization-sei.md)

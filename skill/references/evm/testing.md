@@ -253,7 +253,7 @@ Before promoting to mainnet:
 
 1. `forge test --fork-url https://evm-rpc-testnet.sei-apis.com` — all pass
 2. `forge script ... --simulate` — deployment simulation succeeds
-3. Deploy to atlantic-2, check Seitrace explorer
+3. Deploy to atlantic-2, check Seiscan explorer
 4. Run integration tests against deployed testnet address
-5. Verify contract source on Seitrace
+5. Verify contract source on Seiscan
 6. Test with a real wallet (MetaMask or Compass) connected to testnet

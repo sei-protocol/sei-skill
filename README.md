@@ -51,10 +51,6 @@ cd sei-skill
 
 That installs to `~/.claude/skills/sei`. No flags needed.
 
-```bash
-npx skills add sei
-```
-
 ### Other AI Agents
 
 Use `--agent <name>` to install for a specific agent. The correct output path, directory structure, and any required formatting are handled automatically.

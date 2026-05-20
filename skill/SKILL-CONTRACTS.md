@@ -64,7 +64,7 @@ These facts must inform every answer involving Sei code or configuration:
 ## Default stack decisions
 
 1. **Smart contracts**: Foundry for serious development (faster tests, fuzz, fork); Hardhat for JS-heavy teams + OpenZeppelin plugins
-2. **Precompile ABIs + addresses**: always import from `@sei-js/evm` rather than hardcoding
+2. **Precompile ABIs + addresses**: always import from `@sei-js/precompiles` rather than hardcoding
 3. **Testing**: Fork testing against testnet for precompile and cross-VM interactions
 4. **Networks**: Default to testnet (`atlantic-2`, chain ID 1328) unless the user explicitly requests mainnet
 5. **Verification**: Seiscan via Sourcify (`forge verify-contract --verifier sourcify`)
@@ -110,9 +110,9 @@ claude mcp add sei-mcp-server npx @sei-js/mcp-server
 - **Parallel execution implications** for shared mutable state
 
 ### 3. Pick the right tools
-- Foundry: `forge build`, `forge test`, `forge script`, `forge verify-contract --verifier blockscout`
+- Foundry: `forge build`, `forge test`, `forge script`, `forge verify-contract --verifier sourcify`
 - Hardhat: `npx hardhat compile/test/deploy`, `npx hardhat verify`
-- Frontend (basic): `@sei-js/evm` for precompile ABIs
+- Frontend (basic): `@sei-js/precompiles` for precompile ABIs
 
 ### 4. Test before mainnet
 - Unit test → fork test against testnet → deploy testnet → verify on Seiscan → mainnet

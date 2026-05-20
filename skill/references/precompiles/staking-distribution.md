@@ -85,7 +85,7 @@ import {
   STAKING_PRECOMPILE_ABI,
   DISTRIBUTION_PRECOMPILE_ADDRESS,
   DISTRIBUTION_PRECOMPILE_ABI,
-} from '@sei-js/evm';
+} from '@sei-js/precompiles';
 
 const provider = new ethers.BrowserProvider(window.ethereum);
 const signer = await provider.getSigner();

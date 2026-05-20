@@ -61,7 +61,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 
 | Tool | URL |
 |---|---|
-| @sei-js/evm (chain config + precompile ABIs) | https://www.npmjs.com/package/@sei-js/evm |
+| @sei-js/precompiles (chain config + precompile ABIs) | https://www.npmjs.com/package/@sei-js/precompiles |
 | @sei-js/sei-global-wallet | https://www.npmjs.com/package/@sei-js/sei-global-wallet |
 | @sei-js/create-sei (scaffolding) | https://www.npmjs.com/package/@sei-js/create-sei |
 | Wagmi | https://wagmi.sh |

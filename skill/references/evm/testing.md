@@ -116,7 +116,7 @@ networks: {
 import { ethers } from "hardhat";
 import { expect } from "chai";
 
-// Addresses from @sei-js/evm
+// Addresses from @sei-js/precompiles
 const STAKING_ADDRESS = "0x0000000000000000000000000000000000001005";
 
 describe("Staking precompile integration", () => {
@@ -152,10 +152,10 @@ function test_MyContractWithMockedStaking() public {
 ### Testing with real precompile ABIs
 
 ```bash
-# Install @sei-js/evm for TypeScript ABI access
-npm install @sei-js/evm
+# Install @sei-js/precompiles for TypeScript ABI access
+npm install @sei-js/precompiles
 
-# For Foundry — copy ABI JSON files from @sei-js/evm into test/fixtures/
+# For Foundry — copy ABI JSON files from @sei-js/precompiles into test/fixtures/
 ```
 
 ## Testing Parallel-Execution Safety

@@ -105,7 +105,7 @@ seid tx distribution withdraw-rewards <VALIDATOR_ADDRESS> \
 See [`precompiles/staking-distribution.md`](../precompiles/staking-distribution.md) for full examples. Quick reference:
 
 ```solidity
-import { STAKING_PRECOMPILE_ADDRESS, STAKING_PRECOMPILE_ABI } from '@sei-js/evm';
+import { STAKING_PRECOMPILE_ADDRESS, STAKING_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 // Delegate: takes ETH value in wei
 STAKING(0x1005).delegate{value: amount}(validatorAddress);

@@ -247,7 +247,7 @@ Once installed, your AI assistant automatically uses this skill when you ask abo
 | Smart contracts | **Foundry** | Hardhat |
 | Frontend | **Wagmi + Viem** (React) | Ethers.js v6 |
 | Wallet | **Sei Global Wallet** + MetaMask | Compass, Ledger |
-| Chain config | **@sei-js/evm** | Manual RPC config |
+| Chain config | **@sei-js/precompiles** | Manual RPC config |
 | Randomness | **Pyth VRF** | Chainlink VRF |
 | Oracles | **Native precompile** (free) → Pyth (pull) → Chainlink (push) | — |
 | Indexers | **The Graph** (custom queries) / **Goldsky** (real-time) | Dune (analytics) |

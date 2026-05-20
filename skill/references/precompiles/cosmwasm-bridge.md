@@ -50,7 +50,7 @@ function associatePubKey(string memory pubKeyHex)
 
 ```typescript
 import { ethers } from 'ethers';
-import { ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI } from '@sei-js/evm';
+import { ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const addr = new ethers.Contract(ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI, provider);
 
@@ -231,7 +231,7 @@ interface IPointerView {
 ### ethers.js Example
 
 ```typescript
-import { POINTERVIEW_PRECOMPILE_ADDRESS, POINTERVIEW_PRECOMPILE_ABI } from '@sei-js/evm';
+import { POINTERVIEW_PRECOMPILE_ADDRESS, POINTERVIEW_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const pointerView = new ethers.Contract(
   POINTERVIEW_PRECOMPILE_ADDRESS,

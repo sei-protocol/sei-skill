@@ -140,7 +140,7 @@ Sei does not expose a `pending` block tag. Use `latest`.
 
 ```typescript
 // Add Sei to your Wagmi config
-import { seiMainnet, seiTestnet } from '@sei-js/evm';
+import { seiMainnet, seiTestnet } from '@sei-js/precompiles';
 
 export const config = createConfig({
   chains: [seiMainnet, seiTestnet],

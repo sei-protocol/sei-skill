@@ -81,8 +81,8 @@ Public Key (uncompressed 65 bytes)
 ```
 
 ```typescript
-// Convert between formats using @sei-js/evm or the Addr precompile
-import { ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI } from '@sei-js/evm';
+// Convert between formats using @sei-js/precompiles or the Addr precompile
+import { ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const addr = new ethers.Contract(ADDR_PRECOMPILE_ADDRESS, ADDR_PRECOMPILE_ABI, provider);
 
@@ -145,7 +145,7 @@ const provider = new ethers.BrowserProvider(window.ethereum);
 
 ### WalletConnect
 
-Standard WalletConnect v2 works with Sei — use `seiMainnet` or `seiTestnet` chain definitions from `@sei-js/evm`.
+Standard WalletConnect v2 works with Sei — use `seiMainnet` or `seiTestnet` chain definitions from `@sei-js/precompiles`.
 
 ## Address Validation
 

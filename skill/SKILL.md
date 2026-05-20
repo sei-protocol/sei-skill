@@ -96,7 +96,7 @@ These facts must inform every answer involving Sei code or configuration:
 1. **Smart contracts**: Foundry for serious development (faster tests, fuzz testing, fork testing against testnet); Hardhat for JavaScript-heavy teams, OpenZeppelin plugins, and existing JS toolchains
 2. **Frontend**: Wagmi + Viem for React dApps; Ethers.js v6 for Node.js scripts and non-React environments
 3. **Wallet**: Sei Global Wallet (`@sei-js/sei-global-wallet`) for consumer apps (no-install, social login, EIP-6963 compatible); MetaMask or Compass for power users
-4. **Precompile ABIs + addresses**: Always import from `@sei-js/evm` rather than hardcoding — this ensures you have correct addresses and up-to-date ABIs
+4. **Precompile ABIs + addresses**: Always import from `@sei-js/precompiles` rather than hardcoding — this ensures you have correct addresses and up-to-date ABIs
 5. **Testing**: Fork testing against testnet for precompile and cross-VM interactions; Foundry unit tests for pure contract logic
 6. **Networks**: Default to testnet (`atlantic-2`, chain ID 1328) unless the user explicitly requests mainnet
 
@@ -150,8 +150,8 @@ Always be explicit about:
 
 ### 3. Pick the right tools
 - Contracts: Foundry (`forge build`, `forge test`) or Hardhat (`npx hardhat compile`, `npx hardhat test`)
-- Frontend: `@sei-js/evm` for precompile ABIs, `@sei-js/sei-global-wallet` for wallet connection
-- Precompiles: `ethers.Contract` or Viem `getContract` with ABI + address from `@sei-js/evm`
+- Frontend: `@sei-js/precompiles` for precompile ABIs, `@sei-js/sei-global-wallet` for wallet connection
+- Precompiles: `ethers.Contract` or Viem `getContract` with ABI + address from `@sei-js/precompiles`
 - CLI: `seid` for Cosmos-side operations (staking, tokenfactory, governance)
 
 ### 4. Test before mainnet

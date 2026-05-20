@@ -103,7 +103,7 @@ forge test --gas-report                            # gas summary
 pragma solidity ^0.8.28;
 
 import "forge-std/Test.sol";
-import "@sei-js/evm/contracts/IStaking.sol";
+import "@sei-js/precompiles/contracts/IStaking.sol";
 
 contract PrecompileTest is Test {
     address constant STAKING = 0x0000000000000000000000000000000000001005;

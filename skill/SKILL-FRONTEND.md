@@ -59,7 +59,7 @@ These facts must inform every Sei answer:
 1. **Library**: Wagmi + Viem for React; Ethers.js v6 for non-React or Node scripts
 2. **Wallet (consumer)**: Sei Global Wallet (`@sei-js/sei-global-wallet`) — no install, social login, EIP-6963
 3. **Wallet UX shell**: RainbowKit or ConnectKit for polished connect modal
-4. **Chain config**: import `seiMainnet` / `seiTestnet` from `@sei-js/evm`
+4. **Chain config**: import `seiMainnet` / `seiTestnet` from `@sei-js/precompiles`
 5. **Always pin `chainId`** in writeContract calls
 6. **Always use legacy `gasPrice ≥ 50 gwei`**, never EIP-1559 fields
 7. **Default to testnet** in development; switch to mainnet only when explicitly requested
@@ -105,7 +105,7 @@ Use it for: address lookup, balance checks, contract reads from a frontend testb
 - Surface dual-address state where it matters
 
 ### 3. Pick the right libraries
-- React app: Wagmi + Viem + `@sei-js/evm` + (optional) RainbowKit
+- React app: Wagmi + Viem + `@sei-js/precompiles` + (optional) RainbowKit
 - Consumer-friendly wallet: Sei Global Wallet via `import "@sei-js/sei-global-wallet"`
 - Multi-chain dApp: Wagmi with `chains: [seiMainnet, seiTestnet, mainnet, ...]`
 - Node script / SSR: Ethers.js v6 + manual JsonRpcProvider

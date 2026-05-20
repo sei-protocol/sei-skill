@@ -70,7 +70,7 @@ contract OracleConsumer {
 
 ```typescript
 import { ethers } from 'ethers';
-import { JSON_PRECOMPILE_ADDRESS, JSON_PRECOMPILE_ABI } from '@sei-js/evm';
+import { JSON_PRECOMPILE_ADDRESS, JSON_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const json = new ethers.Contract(JSON_PRECOMPILE_ADDRESS, JSON_PRECOMPILE_ABI, provider);
 
@@ -161,7 +161,7 @@ contract PasskeyWallet {
 
 ```typescript
 import { ethers } from 'ethers';
-import { P256_PRECOMPILE_ADDRESS, P256_PRECOMPILE_ABI } from '@sei-js/evm';
+import { P256_PRECOMPILE_ADDRESS, P256_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const p256 = new ethers.Contract(P256_PRECOMPILE_ADDRESS, P256_PRECOMPILE_ABI, provider);
 

@@ -67,7 +67,7 @@ function getProposals(uint32 proposalStatus, uint32 pageLimit, string memory pag
 
 ```typescript
 import { ethers } from 'ethers';
-import { GOVERNANCE_PRECOMPILE_ADDRESS, GOVERNANCE_PRECOMPILE_ABI } from '@sei-js/evm';
+import { GOVERNANCE_PRECOMPILE_ADDRESS, GOVERNANCE_PRECOMPILE_ABI } from '@sei-js/precompiles';
 
 const provider = new ethers.BrowserProvider(window.ethereum);
 const signer = await provider.getSigner();

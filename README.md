@@ -51,6 +51,12 @@ cd sei-skill
 
 That installs to `~/.claude/skills/sei`. No flags needed.
 
+**Re-running the installer merges** — new and updated files are copied in, and anything you've added to the skill directory is left untouched. Use `--force` for a clean reinstall that removes and replaces the existing directory (prompts for confirmation):
+
+```bash
+./install.sh --force
+```
+
 ### Other AI Agents
 
 Use `--agent <name>` to install for a specific agent. The correct output path, directory structure, and any required formatting are handled automatically.
@@ -93,10 +99,14 @@ All install modes support the same four variants. Use a focused variant to reduc
 Both `--variant` and `--name` accept either the short alias (`contracts`, `frontend`, `ecosystem`) or the actual skill name (`sei-contracts`, `sei-frontend`, `sei-ecosystem`).
 
 ```bash
-# Claude Code variants
+# Claude Code variants (merge by default)
 ./install.sh --variant contracts
 ./install.sh --variant contracts --project     # install to current project's .claude/
 ./install.sh --path /tmp/sei-test              # custom path
+
+# Clean reinstall (removes existing skill dir first, prompts for confirmation)
+./install.sh --force
+./install.sh --variant contracts --force
 
 # Flattened variants for other agents
 ./install.sh --flatten --variant contracts

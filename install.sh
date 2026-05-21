@@ -16,6 +16,7 @@ VARIANT=""
 INSTALL_PATH=""
 INSTALL_PATH_TYPE=""
 FLATTEN=false
+FORCE=false
 OUTPUT_PATH=""
 AGENT=""
 AGENT_FRONTMATTER=""
@@ -49,6 +50,10 @@ while [[ $# -gt 0 ]]; do
         --path)
             INSTALL_PATH="$2"
             shift 2
+            ;;
+        --force)
+            FORCE=true
+            shift
             ;;
         -h|--help)
             cat <<EOF
@@ -87,13 +92,21 @@ Options:
   --project         (Claude Code) Install to .claude/skills/<name> in the
                     current project instead of ~/.claude/skills/<name>
   --path PATH       (Claude Code) Install to a custom path
+  --force           (Claude Code) Clean reinstall — removes the existing skill
+                    directory before copying. Prompts for confirmation.
+                    Default behaviour merges new files into an existing install
+                    without removing anything.
   -h, --help        Show this help
 
 Examples:
-  # Claude Code (default)
+  # Claude Code (default — merges into existing install if present)
   ./install.sh
   ./install.sh --variant contracts
   ./install.sh --variant ecosystem --project
+
+  # Clean reinstall (removes existing skill dir first)
+  ./install.sh --force
+  ./install.sh --variant contracts --force
 
   # Specific agents
   ./install.sh --agent cursor
@@ -329,30 +342,46 @@ if [ -z "$INSTALL_PATH" ]; then
     fi
 fi
 
-# Confirm overwrite if destination exists
+EXISTING_INSTALL=false
 if [ -d "$INSTALL_PATH" ]; then
-    if [ -t 0 ]; then
-        echo "Warning: '$INSTALL_PATH' already exists"
-        read -p "Overwrite? (y/N) " -n 1 -r
-        echo
-        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-            echo "Installation cancelled"
-            exit 0
-        fi
-    else
-        echo "Warning: '$INSTALL_PATH' already exists — overwriting (non-interactive)"
-    fi
-    rm -rf "$INSTALL_PATH"
+    EXISTING_INSTALL=true
 fi
 
-# Copy skill files
-if [ "$USING_DEFAULT" = "yes" ]; then
-    echo "Installing Sei Skill (full — default) → $INSTALL_PATH"
-else
-    echo "Installing Sei Skill ($VARIANT variant) → $INSTALL_PATH"
+# --force: confirm then wipe before copying
+if [ "$FORCE" = true ]; then
+    if [ "$EXISTING_INSTALL" = true ]; then
+        if [ -t 0 ]; then
+            echo "Warning: this will remove and replace '$INSTALL_PATH'."
+            read -p "Continue? (y/N) " -n 1 -r
+            echo
+            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+                echo "Installation cancelled"
+                exit 0
+            fi
+        else
+            echo "Warning: --force removing existing install at '$INSTALL_PATH' (non-interactive)"
+        fi
+        rm -rf "$INSTALL_PATH"
+        EXISTING_INSTALL=false
+    fi
 fi
-mkdir -p "$(dirname "$INSTALL_PATH")"
-cp -r "$SOURCE_DIR" "$INSTALL_PATH"
+
+# Print install message
+if [ "$USING_DEFAULT" = "yes" ]; then
+    VARIANT_LABEL="full — default"
+else
+    VARIANT_LABEL="$VARIANT variant"
+fi
+
+if [ "$EXISTING_INSTALL" = true ]; then
+    echo "Merging Sei Skill ($VARIANT_LABEL) into existing install → $INSTALL_PATH"
+else
+    echo "Installing Sei Skill ($VARIANT_LABEL) → $INSTALL_PATH"
+fi
+
+# Copy skill files (merge into existing, or fresh copy)
+mkdir -p "$INSTALL_PATH"
+cp -r "$SOURCE_DIR/." "$INSTALL_PATH/"
 
 # Replace SKILL.md with the variant entry point if not the full install
 if [ "$VARIANT_FILE" != "SKILL.md" ]; then
@@ -363,7 +392,11 @@ fi
 find "$INSTALL_PATH" -maxdepth 1 -name 'SKILL-*.md' -delete
 
 echo ""
-echo "Successfully installed '$SKILL_NAME' to: $INSTALL_PATH"
+if [ "$EXISTING_INSTALL" = true ]; then
+    echo "Successfully updated '$SKILL_NAME' at: $INSTALL_PATH"
+else
+    echo "Successfully installed '$SKILL_NAME' to: $INSTALL_PATH"
+fi
 echo ""
 echo "Installed reference files:"
 find "$INSTALL_PATH/references" -type f -name "*.md" | sort | while read -r file; do

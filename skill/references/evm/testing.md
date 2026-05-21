@@ -223,7 +223,7 @@ forge test --gas-report
 ```
 
 **Sei-specific gas callouts:**
-- SSTORE — testnet (atlantic-2): 72k gas per write; mainnet (pacific-1): 20k gas. Fork test against your target network; check complex write patterns stay within block gas limit (12.5M)
+- SSTORE — both mainnet and testnet: 72k gas per cold write (governance-adjustable). Fork test against your target network; check complex write patterns stay within block gas limit (12.5M)
 - Call to precompile — cheaper than equivalent Solidity logic; verify in gas report
 
 ## Transaction Tracing for Debugging

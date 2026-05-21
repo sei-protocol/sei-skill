@@ -44,7 +44,7 @@ contract SeiToken is ERC20, ERC20Burnable, Ownable {
 }
 ```
 
-**SSTORE note**: ERC20 `transfer()` writes to 2 storage slots (sender and recipient balances). On testnet (atlantic-2) this costs 144,000 gas in storage alone (2 × 72,000); on mainnet (pacific-1) it costs 40,000 gas (2 × 20,000). Always verify gas costs against your target network.
+**SSTORE note**: ERC20 `transfer()` writes to 2 storage slots (sender and recipient balances). On both mainnet and testnet this costs 144,000 gas in storage alone (2 × 72,000) — significantly higher than Ethereum mainnet (2 × 20,000).
 
 ### ERC721 (NFTs)
 

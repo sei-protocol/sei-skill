@@ -53,7 +53,7 @@ These facts must inform every Sei ecosystem answer:
 
 1. **400ms block time, instant finality** — block-level systems (relayers, bridges) should expect fast confirmation
 2. **Parallel execution (OCC)** — high-throughput protocols must design for non-conflicting state
-3. **SSTORE gas cost differs by network** — testnet 72,000 gas / mainnet 20,000 gas (governance-adjustable)
+3. **SSTORE gas cost differs by network** — both mainnet and testnet: 72,000 gas per write (governance-adjustable)
 4. **Dual address system** — every account has both `sei1...` and `0x...`; cross-VM transfers require association
 5. **PREVRANDAO is NOT random** — use Pyth VRF or Chainlink VRF
 6. **No base fee burn** — all fees go to validators; legacy `gasPrice` ≥ 50 gwei

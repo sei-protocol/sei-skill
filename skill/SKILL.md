@@ -82,7 +82,7 @@ These facts must inform every answer involving Sei code or configuration:
 
 1. **400ms block time, instant finality** — use `txResponse.wait(1)` for confirmations; there is no "safe" or "finalized" block distinction
 2. **Parallel execution (OCC)** — minimize shared storage writes; partition state by user/asset/id; avoid hot globals written by many users
-3. **SSTORE gas cost differs by network** — testnet (atlantic-2) charges 72,000 gas per write (governance proposal #240); mainnet (pacific-1) is currently 20,000 gas (standard EVM cost). Always verify with `forge test --gas-report` against the target network; this param is governance-adjustable
+3. **SSTORE gas cost differs by network** — both mainnet (pacific-1) and testnet (atlantic-2) charge 72,000 gas per write (governance proposal #240); governance-adjustable — always verify with `forge test --gas-report` against the target network
 4. **Dual address system** — every account has both a `sei1...` bech32 address and a `0x...` EVM address derived from the same public key; they must be **associated** before cross-VM token transfers work
 5. **PREVRANDAO is NOT random** — it returns a block-time-derived value; always use oracle VRF (Pyth VRF or Chainlink VRF) for on-chain randomness
 6. **COINBASE = fee collector** — always returns the global fee collector address, not the block proposer; do not use it for proposer identity

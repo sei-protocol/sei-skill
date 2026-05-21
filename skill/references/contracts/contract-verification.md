@@ -136,5 +136,5 @@ Sourcify performs byte-by-byte verification by recompiling your source with the 
 ## Sei-specific notes
 
 - Verify on testnet first to confirm config before mainnet — same steps, swap chain ID 1329 → 1328 and RPC URL.
-- After SSTORE-cost differences between testnet and mainnet, the **deployed bytecode is identical** — verification metadata depends only on `solc` settings, not gas params.
+- After SSTORE cost changes, the **deployed bytecode is identical** — verification metadata depends only on `solc` settings, not gas params.
 - For contracts that call precompiles, no special verification step is needed; precompile addresses are immutable and decoded by Seiscan automatically.

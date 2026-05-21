@@ -154,7 +154,7 @@ See [frontend/frontend-stack.md](../frontend/frontend-stack.md) for the wallet s
 |---|---|---|
 | Bundler rejects user op with `aa23 reverted` | EntryPoint sim failed | Increase `verificationGasLimit`; check that smart account has been deployed (first user op deploys) |
 | `gasPrice` confusion in user ops | AA uses `maxFeePerGas` semantically; bundler converts to legacy on submit | Always set `maxFeePerGas ≥ 50 gwei`; bundler picks legacy on Sei |
-| User op succeeds on testnet, fails on mainnet | SSTORE 72k testnet vs 20k mainnet — gas estimate may underestimate testnet cost | Use Pimlico's `estimateFeesPerGas` from the bundler, not your own ceiling |
+| User op succeeds on testnet, fails on mainnet | SSTORE 72k on both mainnet and testnet — gas estimate may be too low | Use Pimlico's `estimateFeesPerGas` from the bundler, not your own ceiling |
 | Smart account address differs across chains | Some factories use chain-id in CREATE2 salt | Use a chain-agnostic factory (Safe, Kernel) if you need address parity |
 | Long-tail user op pending | Bundler congestion or under-priced | Bump `maxPriorityFeePerGas`; on Sei the priority fee just inflates total gasPrice |
 

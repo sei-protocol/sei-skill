@@ -77,11 +77,10 @@ address proposer = block.coinbase;
 
 Sei runs Pectra EVM but without blob transactions (`BLOBHASH` / `BLOBBASEFEE`). If your contract uses blobs, you need to refactor.
 
-### 6. SSTORE Costs Differ by Network
+### 6. SSTORE Costs Are Higher Than Ethereum
 
 Storage write costs are network-dependent on Sei:
-- **Testnet (atlantic-2)**: 72,000 gas per cold SSTORE (governance proposal #240)
-- **Mainnet (pacific-1)**: 20,000 gas (standard EVM cost)
+- **Both mainnet & testnet**: 72,000 gas per cold SSTORE (governance proposal #240)
 
 Best practice: minimize storage writes regardless of network.
 

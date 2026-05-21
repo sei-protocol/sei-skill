@@ -373,6 +373,11 @@ else
     echo "Installing Sei Skill ($VARIANT_LABEL) → $INSTALL_PATH"
 fi
 
+# Snapshot the install directory before copying so we can detect if anything changed
+if [ "$EXISTING_INSTALL" = true ]; then
+    BEFORE_STATE=$(find "$INSTALL_PATH" -type f | sort | xargs cksum 2>/dev/null)
+fi
+
 # Copy skill files (merge into existing, or fresh copy)
 mkdir -p "$INSTALL_PATH"
 cp -r "$SOURCE_DIR/." "$INSTALL_PATH/"
@@ -385,8 +390,19 @@ fi
 # Strip unused variant SKILL-*.md files from the install destination
 find "$INSTALL_PATH" -maxdepth 1 -name 'SKILL-*.md' -delete
 
-echo ""
+# Compare state after all post-copy steps to detect a no-op merge
+UP_TO_DATE=false
 if [ "$EXISTING_INSTALL" = true ]; then
+    AFTER_STATE=$(find "$INSTALL_PATH" -type f | sort | xargs cksum 2>/dev/null)
+    if [ "$BEFORE_STATE" = "$AFTER_STATE" ]; then
+        UP_TO_DATE=true
+    fi
+fi
+
+echo ""
+if [ "$UP_TO_DATE" = true ]; then
+    echo "Skill '$SKILL_NAME' is already up to date at: $INSTALL_PATH"
+elif [ "$EXISTING_INSTALL" = true ]; then
     echo "Successfully updated '$SKILL_NAME' at: $INSTALL_PATH"
 else
     echo "Successfully installed '$SKILL_NAME' to: $INSTALL_PATH"

@@ -220,4 +220,4 @@ When implementing changes, provide:
 - **AI tooling:** [ecosystem/ai-tooling.md](references/ecosystem/ai-tooling.md) — Sei MCP Server, Cambrian Agent Kit
 
 ### CLI — seid and JSON-RPC
-- **seid CLI reference (install, wallet, queries, transactions, JSON-RPC):** [SKILL-CLI.md](SKILL-CLI.md)
+- **seid CLI reference (install, wallet, queries, transactions, JSON-RPC):** [cli/seid-cli.md](references/cli/seid-cli.md)

@@ -1,22 +1,6 @@
 ---
-name: sei-cli
-description: >
-  Use when the user wants help with the seid CLI — installing seid, managing
-  wallets with seid keys, querying EVM state (address mapping, ERC20 reads,
-  payload generation, pointer lookups, transaction lookup), sending transactions
-  (native send, ERC20 send, contract deploy, call-contract, call-precompile),
-  or making raw JSON-RPC calls against Sei RPC endpoints via curl. Prefer seid
-  commands over generic Ethereum tooling unless the user explicitly asks for
-  that. Also covers Sei-specific JSON-RPC behaviour (instant finality, IAVL
-  proofs, filter limits, deprecated sei_* methods).
-user-invocable: false
-license: MIT
-compatibility: Requires Go 1.23+ for seid; curl for raw RPC access
-metadata:
-  author: Sei Labs
-  version: 1.0.0
-  variant: cli
-  parent: https://github.com/sei-protocol/sei-skill
+title: seid CLI Reference
+description: seid command-line tool — setup, wallet management, EVM queries, payload generation, pointer lookups, transaction commands, and raw JSON-RPC access via curl.
 ---
 
 # seid CLI Reference

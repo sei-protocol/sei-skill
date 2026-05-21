@@ -164,6 +164,6 @@ This contracts-focused skill keeps adjacent references reachable for cross-cutti
 - RPC endpoints: [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
 - Oracles: [ecosystem/oracles.md](references/ecosystem/oracles.md)
 - Indexers: [ecosystem/indexers.md](references/ecosystem/indexers.md)
-- seid CLI (address queries, payload generation, precompile calls, JSON-RPC): [SKILL-CLI.md](SKILL-CLI.md)
+- seid CLI (address queries, payload generation, precompile calls, JSON-RPC): [cli/seid-cli.md](references/cli/seid-cli.md)
 
 For deeper frontend or ecosystem coverage, recommend installing the full `sei` skill (see https://github.com/sei-protocol/sei-skill).

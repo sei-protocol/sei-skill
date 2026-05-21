@@ -84,7 +84,8 @@ Options:
                       gemini      → GEMINI.md
 
   --flatten         Output a single flat markdown file without agent-specific
-                    formatting. Use --output to set the path.
+                    formatting. Use --output to set the path. Always overwrites
+                    if the file already exists — no prompt.
 
   --output PATH     Override the default output path. Only valid with --agent
                     or --flatten.
@@ -92,10 +93,12 @@ Options:
   --project         (Claude Code) Install to .claude/skills/<name> in the
                     current project instead of ~/.claude/skills/<name>
   --path PATH       (Claude Code) Install to a custom path
-  --force           (Claude Code) Clean reinstall — removes the existing skill
-                    directory before copying. Prompts for confirmation.
-                    Default behaviour merges new files into an existing install
-                    without removing anything.
+  --force           (Claude Code only) Clean reinstall — removes the existing
+                    skill directory before copying. Prompts for confirmation
+                    before removing. Not valid with --agent or --flatten (those
+                    always overwrite their single output file anyway).
+                    Default behaviour without --force merges new files into an
+                    existing install without removing anything.
   -h, --help        Show this help
 
 Examples:
@@ -137,6 +140,12 @@ fi
 
 if [ -n "$OUTPUT_PATH" ] && [ "$FLATTEN" = false ]; then
     echo "Error: --output is only valid with --agent or --flatten"
+    exit 1
+fi
+
+if [ "$FORCE" = true ] && [ "$FLATTEN" = true ]; then
+    echo "Error: --force is only valid for Claude Code directory installs"
+    echo "Agent and flatten installs always overwrite the output file — --force is not needed."
     exit 1
 fi
 
@@ -261,21 +270,6 @@ if [ "$FLATTEN" = true ]; then
         echo "Installing Sei Skill ($VARIANT) for $AGENT → $OUTPUT_PATH"
     else
         echo "Flattening Sei Skill ($VARIANT) → $OUTPUT_PATH"
-    fi
-
-    # Warn before clobbering an existing file
-    if [ -f "$OUTPUT_PATH" ]; then
-        if [ -t 0 ]; then
-            echo "Warning: '$OUTPUT_PATH' already exists"
-            read -p "Overwrite? (y/N) " -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                echo "Installation cancelled"
-                exit 0
-            fi
-        else
-            echo "Warning: '$OUTPUT_PATH' already exists — overwriting (non-interactive)"
-        fi
     fi
 
     # Create output directory if needed

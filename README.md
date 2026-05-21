@@ -71,6 +71,8 @@ Use `--agent <name>` to install for a specific agent. The correct output path, d
 ./install.sh --agent gemini      # → GEMINI.md
 ```
 
+Agent installs always overwrite the output file — no prompt, no merge logic. Each install produces a single self-contained file, so overwriting is the only sensible behaviour. `--force` is not valid with `--agent` or `--flatten` and will error.
+
 Use `--output` to override the default path for any agent:
 
 ```bash

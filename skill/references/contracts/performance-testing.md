@@ -126,7 +126,7 @@ You don't need to fork it. Build your own loadtest in TypeScript with viem (abov
 | Many txs revert under load | Reentrancy guard global counter | Use per-user reentrancy state or remove guard if the function is naturally idempotent |
 | Long-tail p99 latency | Mempool fill from low gas price | Use ≥ 50 gwei (Sei minimum) |
 | Gas usage spikes mid-test | Storage growth (cold→warm transitions) | Pre-warm state in test setup, or accept the cost |
-| Tests pass on testnet, fail on mainnet | SSTORE cost differs (72k testnet vs 20k mainnet) | Run gas-report on both targets; budget for the higher cost |
+| Tests pass on testnet, fail on mainnet | SSTORE costs 72k on both networks | Run gas-report on both targets; budget for the higher cost |
 
 ## Gas profiling
 

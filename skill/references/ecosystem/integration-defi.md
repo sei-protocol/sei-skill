@@ -153,7 +153,7 @@ await wallet.writeContract({
 
 Sei deltas vs Ethereum:
 - Liquidations are ~30× faster (12s → 400ms) — health factor tolerances should be tighter.
-- SSTORE cost difference between testnet (72k) and mainnet (20k) means lending operations cost noticeably more on testnet — budget gas estimates accordingly.
+- SSTORE costs 72k per cold write on both mainnet and testnet — significantly higher than Ethereum mainnet (20k); budget gas estimates accordingly.
 
 ## Reading prices (oracles)
 

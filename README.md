@@ -183,7 +183,7 @@ Once installed, your AI assistant automatically uses this skill when you ask abo
 ### Contracts — Smart Contracts
 ```
 "Deploy a Solidity contract on Sei testnet"
-"Why is SSTORE so expensive on Sei testnet?"
+"Why is SSTORE so expensive on Sei?"
 "Set up Foundry for Sei"
 "How do I verify my contract on Seiscan?"
 "Load test my contract against the OCC scheduler"
@@ -257,7 +257,7 @@ Once installed, your AI assistant automatically uses this skill when you ask abo
 Every answer from this skill applies these Sei-specific facts:
 
 1. 400ms block time, **instant finality** → use `tx.wait(1)`
-2. **SSTORE gas varies by network**: testnet (atlantic-2) = 72,000 gas; mainnet (pacific-1) = 20,000 gas (governance-adjustable)
+2. **SSTORE gas is 72,000 on Sei**: both mainnet (pacific-1) and testnet (atlantic-2) charge 72,000 gas per write (governance-adjustable)
 3. **Use `gasPrice`** (legacy) — Sei does not support EIP-1559 `maxFeePerGas`
 4. **Minimum gas price: 50 gwei**
 5. **Block gas limit: 12.5 M** per block

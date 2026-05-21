@@ -50,7 +50,7 @@ try {
 
 ### `out of gas`
 **Cause**: Gas limit exhausted before execution completed.  
-**Fix**: Check SSTORE patterns. Testnet (atlantic-2) charges 72,000 gas per cold storage write; mainnet (pacific-1) charges 20,000. Cache in memory and minimize writes regardless of network.
+**Fix**: Check SSTORE patterns. Both mainnet and testnet charge 72,000 gas per cold storage write. Cache in memory and minimize writes regardless of network.
 
 ### `transaction gas limit exceeds block gas limit`
 **Cause**: Single transaction gas limit > 12.5 M (Sei block gas cap).  
@@ -155,11 +155,10 @@ curl http://localhost:26657/net_info | jq '.result.n_peers'
 ## Solidity / Contract Development
 
 ### SSTORE gas unexpectedly high
-**Cause**: Cold SSTORE costs differ by network — testnet (atlantic-2) charges 72,000 gas per write (governance proposal #240); mainnet (pacific-1) charges 20,000 gas. Multiple storage writes in a function compound quickly on either network.  
+**Cause**: Sei charges 72,000 gas per cold write on both mainnet and testnet (governance proposal #240). Multiple storage writes in a function compound quickly.  
 **Fix**: Cache in memory, minimize storage writes. Use `forge test --gas-report` against the target network.
 ```solidity
-// Testnet (atlantic-2): 3 × 72,000 = 216,000 gas just for storage
-// Mainnet (pacific-1): 3 × 20,000 = 60,000 gas
+// Both networks: 3 × 72,000 = 216,000 gas just for storage
 balances[a] = x;
 balances[b] = y;
 balances[c] = z;

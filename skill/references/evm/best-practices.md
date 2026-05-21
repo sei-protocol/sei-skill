@@ -13,7 +13,7 @@ Sei executes non-conflicting transactions in parallel. Your contract design dire
 2. **Partition state by user/asset/id** — independent users should write to independent keys
 3. **Prefer pull over push** — let users claim funds; don't mass-push in loops
 4. **Batch in memory, write once** — compute intermediate values in memory, commit minimal final writes
-5. **SSTORE gas varies by network** — testnet charges 72,000 gas per write; mainnet is 20,000 gas (governance-adjustable); measure with `forge test --gas-report`
+5. **SSTORE gas is 72,000 on Sei** — both mainnet and testnet charge 72,000 gas per write (governance-adjustable); measure with `forge test --gas-report`
 
 ## Storage Design Patterns
 
@@ -89,11 +89,7 @@ function batchUpdate(address[] calldata users, uint256[] calldata scores) extern
 
 ## SSTORE Gas Awareness
 
-SSTORE costs differ by network:
-- **Testnet (atlantic-2)**: 72,000 gas per cold write (governance proposal #240, activated v6.3.0)
-- **Mainnet (pacific-1)**: 20,000 gas (standard EVM; v6.3.1 reverted before proposal #108 activated)
-
-Both values are governance-adjustable. Always verify with `forge test --gas-report` targeting the correct network.
+Both mainnet (pacific-1) and testnet (atlantic-2) charge **72,000 gas per cold write** (governance proposal #240). This is governance-adjustable — always verify with `forge test --gas-report` targeting the correct network.
 
 **Testnet budget impact (72k):**
 - A simple 3-slot write transaction: 3 × 72k = 216k gas just for storage

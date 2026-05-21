@@ -1,6 +1,6 @@
 ---
 title: Sei-Specific Gas Optimization
-description: Gas optimization rules of thumb that differ from mainnet Ethereum — SSTORE cost variance (72k testnet / 20k mainnet), 50 gwei minimum, 12.5M block limit, calldata vs storage trade-offs at 400ms blocks, and patterns that exploit instant finality.
+description: Gas optimization rules of thumb that differ from mainnet Ethereum — SSTORE cost (72k on both mainnet and testnet), 50 gwei minimum, 12.5M block limit, calldata vs storage trade-offs at 400ms blocks, and patterns that exploit instant finality.
 ---
 
 # Sei-Specific Gas Optimization
@@ -15,24 +15,21 @@ Most Solidity gas advice transfers from Ethereum directly. This file covers only
 | Block gas limit | 30M | **12.5M** | 12.5M |
 | Min gas price | dynamic (EIP-1559) | **50 gwei (fixed)** | 50 gwei |
 | Cold SSTORE | 22,100 gas | 22,100 gas | 22,100 gas |
-| Warm SSTORE (zero→nonzero) | 20,000 gas | 20,000 gas | **72,000 gas** |
+| Warm SSTORE (zero→nonzero) | 20,000 gas | **72,000 gas** | **72,000 gas** |
 | EIP-1559 base fee burn | yes | **no — all to validators** | no |
 | `PREVRANDAO` | RANDAO output | **block-time-derived (NOT random)** | NOT random |
 | `COINBASE` | block proposer | **fee collector address** | fee collector |
 
-## Rule 1: SSTORE costs differ between testnet and mainnet
+## Rule 1: SSTORE costs 72,000 gas on Sei (both networks)
 
-Testnet (atlantic-2) charges **72,000 gas per zero→nonzero SSTORE** (governance proposal #240). Mainnet (pacific-1) charges 20,000. Both are governance-adjustable; verify against your target network before assuming.
+Both mainnet (pacific-1) and testnet (atlantic-2) charge **72,000 gas per zero→nonzero SSTORE** (governance proposal #240). This is governance-adjustable; verify against your target network before assuming.
 
-**Implication:** a contract that costs 200k gas/tx on mainnet can cost 600k on testnet. Don't size your gas budget from testnet-only measurements.
+**Implication:** a contract with many storage writes will cost significantly more on Sei than on Ethereum mainnet (20k). Measure with `forge test --gas-report` and minimise writes.
 
 ```bash
-# Run gas reports against both
 forge test --gas-report --fork-url https://evm-rpc.sei-apis.com         # mainnet
 forge test --gas-report --fork-url https://evm-rpc-testnet.sei-apis.com # testnet
 ```
-
-The diff between the two gas reports is exactly the SSTORE cost delta × number of writes.
 
 ### Practical optimizations
 
@@ -120,7 +117,7 @@ These are not Sei-specific but matter equally:
 
 ## Sei-specific micro-pattern: pull-and-zero
 
-Because mainnet warm SSTORE is 20k (not 72k like testnet), the classic "withdraw and zero" pattern is cheap:
+At 72k per warm SSTORE, the classic "withdraw and zero" pattern is still worth using — zeroing a slot earns a gas refund that partially offsets the write cost:
 
 ```solidity
 function withdraw() external {
@@ -130,7 +127,7 @@ function withdraw() external {
 }
 ```
 
-On testnet, that single SSTORE costs 72k. Worth knowing if you load-test on testnet — your real-world (mainnet) cost is much lower.
+That single SSTORE costs 72k on Sei. The gas refund for zeroing partially offsets it — still cheaper than a separate cleanup transaction.
 
 ## Multicall on Sei
 

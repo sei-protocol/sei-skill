@@ -18,7 +18,7 @@ description: How Sei's EVM differs from Ethereum — opcodes, gas model, finalit
 | Per-Tx gas cap | 12.5M (block limit) | ~16.7M (EIP-7825) |
 | Byte size limit | 21MB | None |
 | State storage | AVL-tree (global root) | Merkle Patricia Trie (per-account root) |
-| SSTORE gas cost | Testnet: 72,000 / Mainnet: 20,000 (governance-adjustable) | 20,000 (fixed) |
+| SSTORE gas cost | 72,000 gas on both mainnet & testnet (governance-adjustable) | 20,000 (fixed) |
 | Address system | Dual (sei1... bech32 + 0x... EVM) | Single (0x...) |
 | Fee burn | No — all fees to validators | Yes (EIP-1559 base fee burn) |
 | Pending state | None | Yes (proposer-execute-then-broadcast) |
@@ -66,8 +66,8 @@ const tx = {
 ### SSTORE and Storage Writes
 ```solidity
 // SSTORE costs differ by network:
-// - Testnet (atlantic-2): 72,000 gas per cold write (governance proposal #240)
-// - Mainnet (pacific-1): 20,000 gas (standard EVM; governance-adjustable)
+// - Both mainnet & testnet: 72,000 gas per cold write (governance proposal #240)
+
 // Always verify with `forge test --gas-report` against your target network.
 
 // BAD: 10 writes = potentially expensive in either case
@@ -122,7 +122,7 @@ const balance = await provider.getBalance(address); // always accurate
 - ✅ Remove EIP-1559 fee UI; use single `gasPrice` input
 - ✅ Remove "safe"/"finalized" confirmation logic; treat all confirmed blocks as final
 - ✅ Replace PREVRANDAO/DIFFICULTY randomness with oracle VRF
-- ✅ Audit SSTORE usage — testnet charges 72k gas per write; mainnet is 20k (governance-adjustable); restructure if needed
+- ✅ Audit SSTORE usage — both networks charge 72k gas per write (governance-adjustable); restructure if needed
 - ✅ Do not assume COINBASE is the validator/proposer
 - ✅ Remove blob-related code (EIP-4844 not supported)
 - ✅ Size gasLimit with buffer (OCC can slightly vary estimates vs single-threaded chains)

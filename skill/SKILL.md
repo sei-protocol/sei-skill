@@ -218,3 +218,6 @@ When implementing changes, provide:
 - **Staking & governance:** [ecosystem/staking-governance.md](references/ecosystem/staking-governance.md) — delegation, proposals
 - **Participation roles (validator, RPC, indexer, oracle, IBC relayer, grants):** [ecosystem/participation-roles.md](references/ecosystem/participation-roles.md)
 - **AI tooling:** [ecosystem/ai-tooling.md](references/ecosystem/ai-tooling.md) — Sei MCP Server, Cambrian Agent Kit
+
+### CLI — seid and JSON-RPC
+- **seid CLI reference (install, wallet, queries, transactions, JSON-RPC):** [SKILL-CLI.md](SKILL-CLI.md)

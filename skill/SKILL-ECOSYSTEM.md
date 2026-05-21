@@ -160,5 +160,6 @@ For agent-grade RPC patterns, see the 17 canonical skills in [ecosystem/rpc-agen
 - Precompiles for on-chain integration: [precompiles/overview.md](references/precompiles/overview.md)
 - Pointer contracts for cross-VM assets: [pointers/overview.md](references/pointers/overview.md)
 - TokenFactory for new ecosystem tokens: [pointers/token-factory.md](references/pointers/token-factory.md)
+- seid CLI (node queries, wallet management, address mapping, JSON-RPC): [SKILL-CLI.md](SKILL-CLI.md)
 
 For deeper smart-contract or frontend coverage, recommend installing the full `sei` skill (see https://github.com/sei-protocol/sei-skill).

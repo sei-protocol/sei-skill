@@ -81,7 +81,7 @@ Use `--flatten` without `--agent` to generate a plain markdown file at any path:
 
 ### Variants
 
-All install modes support the same four variants. Use a focused variant to reduce context size when you only need one domain.
+All install modes support the same variants. Use a focused variant to reduce context size when you only need one domain.
 
 | Variant | Scope | Best for |
 |---|---|---|
@@ -89,8 +89,9 @@ All install modes support the same four variants. Use a focused variant to reduc
 | `contracts` / `sei-contracts` | Smart contracts + tooling | Contract development teams |
 | `frontend` / `sei-frontend` | UI stack + site awareness | Frontend / dApp teams |
 | `ecosystem` / `sei-ecosystem` | Apps, integrations, infra | Integration and infrastructure work |
+| `cli` / `sei-cli` | seid CLI + JSON-RPC reference | Teams scripting against Sei via seid or raw RPC |
 
-Both `--variant` and `--name` accept either the short alias (`contracts`, `frontend`, `ecosystem`) or the actual skill name (`sei-contracts`, `sei-frontend`, `sei-ecosystem`).
+Both `--variant` and `--name` accept either the short alias (`contracts`, `frontend`, `ecosystem`, `cli`) or the actual skill name (`sei-contracts`, `sei-frontend`, `sei-ecosystem`, `sei-cli`).
 
 ```bash
 # Claude Code variants
@@ -115,6 +116,7 @@ skill/
 ├── SKILL-CONTRACTS.md                    # Contracts variant entry point
 ├── SKILL-FRONTEND.md                     # Frontend variant entry point
 ├── SKILL-ECOSYSTEM.md                    # Ecosystem variant entry point
+├── SKILL-CLI.md                          # CLI variant — seid commands and JSON-RPC reference
 └── references/
     ├── architecture.md                   # Twin Turbo, OCC, SeiDB, Sei Giga
     ├── networks.md                       # Chain IDs, RPC URLs, explorers, faucet
@@ -223,6 +225,18 @@ Once installed, your AI assistant automatically uses this skill when you ask abo
 "How do I create and register a validator?"
 "Submit a governance proposal via CLI"
 "Set up the Sei MCP server in Claude Code"
+```
+
+### CLI — seid and JSON-RPC
+```
+"How do I install seid?"
+"Query the EVM address for a sei1... address"
+"Generate an ERC20 transfer payload with seid"
+"Look up a pointer contract for a native denom"
+"Send a transaction with seid"
+"Call a precompile with seid"
+"How do I make a raw eth_call with curl?"
+"What JSON-RPC methods are deprecated on Sei?"
 ```
 
 ### Architecture

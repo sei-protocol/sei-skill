@@ -65,6 +65,7 @@ Options:
                       contracts  | sei-contracts    — smart contracts and tooling
                       frontend   | sei-frontend     — UI stack and site awareness
                       ecosystem  | sei-ecosystem    — apps, integrations, infra
+                      cli        | sei-cli          — seid CLI and JSON-RPC reference
 
   --agent NAME      Install for a specific AI agent. Implies --flatten and sets
                     the correct output path and formatting automatically.
@@ -155,9 +156,14 @@ case "$VARIANT" in
         SKILL_NAME="sei-ecosystem"
         VARIANT_FILE="SKILL-ECOSYSTEM.md"
         ;;
+    cli|sei-cli)
+        VARIANT="cli"
+        SKILL_NAME="sei-cli"
+        VARIANT_FILE="SKILL-CLI.md"
+        ;;
     *)
         echo "Error: unknown variant/name '$VARIANT'"
-        echo "Accepted values: full|sei, contracts|sei-contracts, frontend|sei-frontend, ecosystem|sei-ecosystem"
+        echo "Accepted values: full|sei, contracts|sei-contracts, frontend|sei-frontend, ecosystem|sei-ecosystem, cli|sei-cli"
         echo "Run with --help for details."
         exit 1
         ;;

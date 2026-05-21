@@ -351,6 +351,7 @@ if [ "$USING_DEFAULT" = "yes" ]; then
 else
     echo "Installing Sei Skill ($VARIANT variant) → $INSTALL_PATH"
 fi
+mkdir -p "$(dirname "$INSTALL_PATH")"
 cp -r "$SOURCE_DIR" "$INSTALL_PATH"
 
 # Replace SKILL.md with the variant entry point if not the full install

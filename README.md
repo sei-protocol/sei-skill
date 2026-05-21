@@ -174,6 +174,9 @@ skill/
         ├── staking-governance.md         # Delegation, unbonding, proposals
         ├── ai-tooling.md                 # Sei MCP Server, Cambrian Agent Kit
         └── participation-roles.md        # Validator, RPC, indexer, oracle, grants
+    │
+    └── cli/                              # ── Cross-cutting: CLI ─────────────────
+        └── seid-cli.md                   # seid setup, wallet, queries, txns, JSON-RPC
 ```
 
 ## Usage
@@ -223,6 +226,18 @@ Once installed, your AI assistant automatically uses this skill when you ask abo
 "How do I create and register a validator?"
 "Submit a governance proposal via CLI"
 "Set up the Sei MCP server in Claude Code"
+```
+
+### CLI — seid and JSON-RPC
+```
+"How do I install seid?"
+"Query the EVM address for a sei1... address"
+"Generate an ERC20 transfer payload with seid"
+"Look up a pointer contract for a native denom"
+"Send a transaction with seid"
+"Call a precompile with seid"
+"How do I make a raw eth_call with curl?"
+"What JSON-RPC methods are deprecated on Sei?"
 ```
 
 ### Architecture

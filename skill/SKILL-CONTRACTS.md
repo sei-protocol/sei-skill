@@ -158,11 +158,12 @@ When implementing changes, provide:
 - **Migrate from Ethereum:** [migration/from-ethereum.md](references/migration/from-ethereum.md)
 - **Migrate from Solana:** [migration/from-solana.md](references/migration/from-solana.md)
 
-### When the user crosses into frontend or ecosystem territory
-This contracts-focused skill keeps frontend and ecosystem references reachable for cross-cutting questions:
+### When the user crosses into frontend, ecosystem, or CLI territory
+This contracts-focused skill keeps adjacent references reachable for cross-cutting questions:
 - Frontend stack (when wiring contracts to a UI): [frontend/frontend-stack.md](references/frontend/frontend-stack.md)
 - RPC endpoints: [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
 - Oracles: [ecosystem/oracles.md](references/ecosystem/oracles.md)
 - Indexers: [ecosystem/indexers.md](references/ecosystem/indexers.md)
+- seid CLI (address queries, payload generation, precompile calls, JSON-RPC): [cli/seid-cli.md](references/cli/seid-cli.md)
 
 For deeper frontend or ecosystem coverage, recommend installing the full `sei` skill (see https://github.com/sei-protocol/sei-skill).

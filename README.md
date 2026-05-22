@@ -51,6 +51,36 @@ cd sei-skill
 
 That installs to `~/.claude/skills/sei`. No flags needed.
 
+**Re-running the installer merges** — new and updated files are copied in, and anything you've added to the skill directory is left untouched. Use `--force` for a clean reinstall that removes and replaces the existing directory (prompts for confirmation):
+
+```bash
+./install.sh --force
+```
+
+### Windows
+
+| Environment | Works? | Notes |
+|---|---|---|
+| **Git Bash** (Git for Windows) | ✅ Yes | Recommended. GNU coreutils ship with it; paths resolve correctly to where Claude Code looks. |
+| **WSL** | ⚠️ With caveat | The script runs, but the default global install lands inside the Linux filesystem where Claude Code (a native Windows app) can't find it. Use `--path` to target your Windows home directory instead. |
+| **PowerShell / cmd** | ❌ No | Bash is required. Use Git Bash or WSL. |
+
+**Git Bash** is the recommended shell for Windows. Clone and run the installer the same way as on macOS/Linux:
+
+```bash
+git clone https://github.com/sei-protocol/sei-skill
+cd sei-skill
+./install.sh
+```
+
+**WSL users** — pass `--path` to install into your Windows home directory so Claude Code can find the skill:
+
+```bash
+./install.sh --path "/mnt/c/Users/$USER/.claude/skills/sei"
+```
+
+Or use `--project` to install into the current project directory (as long as the project lives on the Windows filesystem under `/mnt/c/`).
+
 ### Other AI Agents
 
 Use `--agent <name>` to install for a specific agent. The correct output path, directory structure, and any required formatting are handled automatically.
@@ -64,6 +94,8 @@ Use `--agent <name>` to install for a specific agent. The correct output path, d
 ./install.sh --agent codex       # → AGENTS.md
 ./install.sh --agent gemini      # → GEMINI.md
 ```
+
+Agent installs always overwrite the output file — no prompt, no merge logic. Each install produces a single self-contained file, so overwriting is the only sensible behaviour. `--force` is not valid with `--agent` or `--flatten` and will error.
 
 Use `--output` to override the default path for any agent:
 
@@ -93,10 +125,14 @@ All install modes support the same four variants. Use a focused variant to reduc
 Both `--variant` and `--name` accept either the short alias (`contracts`, `frontend`, `ecosystem`) or the actual skill name (`sei-contracts`, `sei-frontend`, `sei-ecosystem`).
 
 ```bash
-# Claude Code variants
+# Claude Code variants (merge by default)
 ./install.sh --variant contracts
 ./install.sh --variant contracts --project     # install to current project's .claude/
 ./install.sh --path /tmp/sei-test              # custom path
+
+# Clean reinstall (removes existing skill dir first, prompts for confirmation)
+./install.sh --force
+./install.sh --variant contracts --force
 
 # Flattened variants for other agents
 ./install.sh --flatten --variant contracts

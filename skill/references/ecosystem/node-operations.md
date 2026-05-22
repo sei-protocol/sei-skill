@@ -21,8 +21,8 @@ description: Running and maintaining Sei full nodes — node types, setup, state
 ### Prerequisites
 
 - Ubuntu 22.04 (recommended) or macOS
-- 8+ CPU cores, 64 GB RAM, 2 TB NVMe SSD
-- Go 1.21+ installed
+- 16+ CPU cores, 256 GB DDR5 RAM, 2 TB NVMe SSD
+- Go 1.24.x installed (required for seid v6.3+)
 
 ### Build from Source
 

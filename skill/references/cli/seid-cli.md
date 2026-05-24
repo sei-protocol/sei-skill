@@ -25,7 +25,7 @@ seid version
 ```
 
 Requirements:
-- Go 1.23+ required. Run `go version` to confirm.
+- Go 1.24.x required. Run `go version` to confirm.
 - If `seid` is not found after install: run `go env GOPATH` and ensure `$GOPATH/bin` is on `PATH`.
 
 ## Network Reference

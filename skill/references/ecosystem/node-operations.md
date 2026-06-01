@@ -18,6 +18,29 @@ description: Running and maintaining Sei full nodes — node types, setup, state
 
 ## Quick Node Setup
 
+## Genesis Chain Deployment with `apply`
+
+Use `--genesis-override` with `apply --preset genesis-chain` to set genesis parameters at deploy time.
+
+```bash
+# Set a single genesis parameter
+apply --preset genesis-chain \
+  --genesis-override staking.params.unbonding_time=600s
+
+# Set multiple parameters (flag is repeatable)
+apply --preset genesis-chain \
+  --genesis-override staking.params.unbonding_time=600s \
+  --genesis-override gov.voting_params.voting_period=120s
+```
+
+**Key constraints:**
+- `--genesis-override` is only valid with `--preset genesis-chain`; any other preset returns an error.
+- Keys must be dotted cosmos-module paths: `module.field[.field...]`
+- Values are parsed as JSON when valid (numbers, bools, objects, arrays); otherwise stored as raw strings.
+- To force a numeric-looking value to be a string, wrap in JSON quotes: `--genesis-override foo.bar='"42"'`
+
+<!-- TODO: expand with full list of overridable keys and apply command context -->
+
 ### Prerequisites
 
 - Ubuntu 22.04 (recommended) or macOS

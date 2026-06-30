@@ -155,7 +155,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 | Addr precompile | `0x0000000000000000000000000000000000001004` | same |
 | Staking precompile | `0x0000000000000000000000000000000000001005` | same |
 | Governance precompile | `0x0000000000000000000000000000000000001006` | same |
-| Oracle precompile | `0x0000000000000000000000000000000000001008` | same |
+| Oracle precompile (❌ shut off ~July 2026) | `0x0000000000000000000000000000000000001008` | same |
 | IBC precompile | `0x0000000000000000000000000000000000001009` | same |
 | Multicall3 | `0xcA11bde05977b3631167028862bE2a173976CA11` | same |
 | Permit2 | `0xB952578f3520EE8Ea45b7914994dcf4702cEe578` | same |

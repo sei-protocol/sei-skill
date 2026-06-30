@@ -3,8 +3,8 @@ name: sei-ecosystem
 description: >
   Use when user asks "what dApps are on Sei", "list Sei DEXes / lending /
   perps", "integrate with a Sei DEX or lending protocol", "what bridges work
-  with Sei", "how do I bridge tokens to Sei with LayerZero / Wormhole / Axelar
-  / IBC / CCTP", "find a Sei RPC endpoint", "RPC failover for Sei", "use Pyth /
+  with Sei", "how do I bridge tokens to Sei with LayerZero / Wormhole / CCTP",
+  "find a Sei RPC endpoint", "RPC failover for Sei", "use Pyth /
   Chainlink oracles on Sei", "set up The Graph / Goldsky subgraph for Sei",
   "set up a Sei full node", "how do I delegate SEI to a validator", "submit a
   governance proposal on Sei", "how do I become a Sei validator / RPC provider
@@ -35,16 +35,17 @@ Use this Skill when the user asks for:
 
 - Sei dApps directory by category (DEX, lending, perps, RWA, NFT, gaming, infra, AI)
 - Integration patterns for DeFi protocols (DragonSwap, Yei, Takara, Saphyre)
-- Bridges (LayerZero V2, Wormhole, Axelar, IBC, ThirdWeb, CCTP)
+- Bridges (LayerZero V2, Circle CCTP v2; Wormhole legacy/verify-first); inbound IBC disabled (SIP-3, legacy/exit-only)
 - RPC endpoints — public, community, and paid providers + failover patterns
-- Oracle integration (Chainlink, Pyth, API3, RedStone, native oracle precompile, VRF)
+- Oracle integration (Chainlink, Pyth, API3, RedStone, VRF — the native oracle precompile is shut off)
 - Indexer setup (The Graph, Goldsky, Dune, Moralis, Goldrush)
 - Node operations (full node setup, state sync, snapshots, `seid` CLI)
 - Validator setup (key management, HSM, slashing, monitoring)
 - Staking, delegation, governance proposals
 - Participation roles (validator, RPC provider, indexer operator, oracle relayer, IBC relayer)
 - Grants and builder programs (Sei Foundation, Ecosystem Fund, Creator Fund)
-- AI tooling (Sei MCP Server, Cambrian Agent Kit, x402)
+- AI tooling (Sei MCP Server, Cambrian Agent Kit)
+- Payments (USDC transfers, x402 HTTP-native micropayments)
 - Sei architecture context for ecosystem decisions (Twin Turbo, OCC, SeiDB, Sei Giga)
 
 ## Key architectural facts (always apply)
@@ -53,19 +54,19 @@ These facts must inform every Sei ecosystem answer:
 
 1. **400ms block time, instant finality** — block-level systems (relayers, bridges) should expect fast confirmation
 2. **Parallel execution (OCC)** — high-throughput protocols must design for non-conflicting state
-3. **SSTORE gas cost differs by network** — both mainnet and testnet: 72,000 gas per write (governance-adjustable)
+3. **SSTORE gas is non-standard (and identical on both networks)** — mainnet and testnet both charge 72,000 gas per write (governance [Proposal #109 (pacific-1)](https://www.mintscan.io/sei/proposals/109); testnet carries the same value with no separate proposal; governance-adjustable)
 4. **Dual address system** — every account has both `sei1...` and `0x...`; cross-VM transfers require association
 5. **PREVRANDAO is NOT random** — use Pyth VRF or Chainlink VRF
-6. **No base fee burn** — all fees go to validators; legacy `gasPrice` ≥ 50 gwei
+6. **No base fee burn** — all fees go to validators; use legacy `gasPrice` at the governance-set, adjustable floor (currently ~50 gwei on mainnet — pacific-1 Proposal #112 / atlantic-2 #244; query `eth_gasPrice` for the live value)
 7. **CosmWasm is deprecated** (SIP-3) — new ecosystem dApps should target EVM
 8. **Chain IDs:** Mainnet `pacific-1` / EVM `1329`; Testnet `atlantic-2` / EVM `1328`
 9. **Block gas limit:** 12.5M per block
 
 ## Default stack decisions
 
-1. **Oracles**: Native oracle precompile for free SEI/USD price; Pyth (pull) for sub-second latency; Chainlink (push) for production DeFi defaults
+1. **Oracles**: Pyth (pull) for sub-second latency; Chainlink (push) for production DeFi defaults; API3 / RedStone as alternatives. The native oracle precompile is **shut off (~July 2026)** — it returns no data; do not use it
 2. **Indexers**: The Graph for custom query workloads; Goldsky for real-time CDC; Dune for analytics
-3. **Bridges**: LayerZero V2 OFT for omnichain tokens; CCTP for native USDC; IBC for Cosmos ecosystem; Wormhole/Axelar for general-purpose
+3. **Bridges**: LayerZero V2 OFT for omnichain tokens; CCTP for native USDC. Wormhole (NTT/WTT) is supported per Wormhole but **not documented by Sei** — verify first. Inbound IBC is disabled (SIP-3) — not a path for new transfers
 4. **RPC**: Sei Foundation primary + community fallback for free; paid SaaS (QuickNode, Alchemy, dRPC) with multi-provider failover for production
 5. **Networks**: Default to testnet (`atlantic-2`, chain ID 1328) unless explicitly mainnet
 6. **Validators**: HSM-backed key management; uptime monitoring; participation in governance
@@ -140,8 +141,8 @@ For agent-grade RPC patterns, see the 17 canonical skills in [ecosystem/rpc-agen
 ### Apps + integrations
 - **dApps directory by category:** [ecosystem/apps-directory.md](references/ecosystem/apps-directory.md)
 - **DeFi integration patterns (DEXes, lending):** [ecosystem/integration-defi.md](references/ecosystem/integration-defi.md)
-- **Bridges (LayerZero, Wormhole, Axelar, IBC, CCTP):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
-- **IBC + legacy bridging deep dive:** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
+- **Bridges (LayerZero V2, CCTP; Wormhole verify-first; IBC legacy/exit-only):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
+- **IBC (legacy / exit-only — inbound disabled, SIP-3):** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
 
 ### Infrastructure
 - **RPC endpoints — public, community, paid:** [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
@@ -155,6 +156,7 @@ For agent-grade RPC patterns, see the 17 canonical skills in [ecosystem/rpc-agen
 ### Participation
 - **Participation roles (validator / RPC / indexer / oracle / IBC / grants):** [ecosystem/participation-roles.md](references/ecosystem/participation-roles.md)
 - **AI tooling (Sei MCP Server, Cambrian, x402):** [ecosystem/ai-tooling.md](references/ecosystem/ai-tooling.md)
+- **Payments (USDC + x402):** [ecosystem/payments.md](references/ecosystem/payments.md)
 
 ### Cross-domain references the ecosystem reaches for
 - Precompiles for on-chain integration: [precompiles/overview.md](references/precompiles/overview.md)

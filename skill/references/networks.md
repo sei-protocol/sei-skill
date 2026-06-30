@@ -36,8 +36,8 @@ For production dApps, use a provider account rather than the public endpoints.
 ## Chain IDs Reference
 
 ```javascript
-// Viem chain definitions — use @sei-js/precompiles for pre-built definitions
-import { sei, seiTestnet } from '@sei-js/precompiles';
+// Viem chain definitions — import sei/seiTestnet from viem/chains (or wagmi/chains)
+import { sei, seiTestnet } from 'viem/chains';
 
 // Or define manually:
 const seiTestnet = {
@@ -110,7 +110,7 @@ Get testnet SEI for development:
 ## Gas Configuration
 
 ```bash
-# Minimum gas price: 50 gwei
+# Minimum gas price: ~50 gwei (governance-set, adjustable — pacific-1 Prop #112 / atlantic-2 #244; query eth_gasPrice)
 # Use gasPrice, NOT maxFeePerGas/maxPriorityFeePerGas
 
 # Example with ethers.js v6

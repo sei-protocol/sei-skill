@@ -5,7 +5,7 @@ description: Addr, Bank, CosmWasm, IBC, Pointer, and PointerView precompiles for
 
 # CosmWasm Bridge Precompiles
 
-> **Deprecation notice**: CosmWasm is deprecated per SIP-3 (governance proposal 99 on mainnet). These precompiles remain functional for existing integrations and legacy support, but new projects should use EVM-only with pointer contracts for cross-VM asset representation.
+> **Deprecation notice**: CosmWasm is deprecated per SIP-3 (initiated by mainnet [Proposal #99](https://www.mintscan.io/sei/proposals/99); new uploads/instantiation disabled by mainnet #115 / atlantic-2 testnet #246). These precompiles remain functional for existing integrations and legacy support, but new projects should use EVM-only with pointer contracts for cross-VM asset representation.
 
 ## Address Summary
 

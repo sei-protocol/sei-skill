@@ -155,7 +155,7 @@ curl http://localhost:26657/net_info | jq '.result.n_peers'
 ## Solidity / Contract Development
 
 ### SSTORE gas unexpectedly high
-**Cause**: Sei charges 72,000 gas per cold write on both mainnet and testnet (governance proposal #240). Multiple storage writes in a function compound quickly.  
+**Cause**: Sei charges 72,000 gas per cold write on both mainnet and testnet (governance Proposal #109 on pacific-1; testnet carries the same value with no separate proposal). Multiple storage writes in a function compound quickly.  
 **Fix**: Cache in memory, minimize storage writes. Use `forge test --gas-report` against the target network.
 ```solidity
 // Both networks: 3 × 72,000 = 216,000 gas just for storage

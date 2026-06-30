@@ -135,7 +135,7 @@ const txHash = await smartAccount.sendTransaction({
 
 The paymaster pulls the equivalent USDC from the smart account to cover gas. The user holds zero SEI and still transacts.
 
-> Verify the USDC contract address against [docs.sei.io USDC page](https://docs.sei.io/evm/reference/usdc) before deploying — addresses move during integration phases.
+> Verify the USDC contract address against [docs.sei.io USDC page](https://docs.sei.io/evm/usdc-on-sei) before deploying — addresses move during integration phases.
 
 ## Sei Global Wallet (embedded AA)
 

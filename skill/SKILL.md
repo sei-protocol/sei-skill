@@ -59,15 +59,15 @@ This Skill covers three overlapping domains. Use it when the user asks for:
 - Wallet detection (EIP-6963), dual-address UX (`sei1...` ↔ `0x...`), fast-finality patterns
 - RainbowKit / ConnectKit integration
 - Navigating sei.io and docs.sei.io — pointing users to the right page
-- Contributing pages to docs.sei.io (Nextra MDX, _meta.js, build flow)
+- Contributing pages to docs.sei.io (Mintlify MDX, docs.json navigation, snippets)
 - Sei brand kit, logos, media assets, press contacts
 
 ### Ecosystem (apps + integration + participation)
 - Sei dApps directory by category (DEX, lending, perps, RWA, NFT, gaming, infra)
 - Integration patterns for DeFi protocols (DragonSwap, Yei, Takara, Saphyre)
-- Bridges (LayerZero V2, Wormhole, Axelar, IBC, ThirdWeb, CCTP)
+- Bridges (LayerZero V2, Circle CCTP v2 for native USDC; Wormhole legacy/verify-first); inbound IBC disabled (SIP-3)
 - RPC endpoints — public, community, and paid providers
-- Oracle integration (Chainlink, Pyth, API3, RedStone, native precompile, VRF)
+- Oracle integration (Chainlink, Pyth, API3, RedStone, VRF; native precompile is shut off)
 - Indexer setup (The Graph, Goldsky, Dune, Moralis, Goldrush)
 - Participation roles (validator, RPC provider, indexer operator, oracle relayer, IBC relayer)
 - Grants and builder programs (Sei Foundation, Ecosystem Fund, Creator Fund)
@@ -80,9 +80,9 @@ This Skill covers three overlapping domains. Use it when the user asks for:
 
 These facts must inform every answer involving Sei code or configuration:
 
-1. **400ms block time, instant finality** — use `txResponse.wait(1)` for confirmations; there is no "safe" or "finalized" block distinction
+1. **400ms block time, instant finality** — use `txResponse.wait(1)` for confirmations; `safe`/`finalized`/`latest` all resolve to the same instantly-final block, so just query `latest`
 2. **Parallel execution (OCC)** — minimize shared storage writes; partition state by user/asset/id; avoid hot globals written by many users
-3. **SSTORE gas cost differs by network** — both mainnet (pacific-1) and testnet (atlantic-2) charge 72,000 gas per write (governance proposal #240); governance-adjustable — always verify with `forge test --gas-report` against the target network
+3. **SSTORE gas cost is non-standard (and identical on both networks)** — mainnet (pacific-1) and testnet (atlantic-2) both charge 72,000 gas per write (set by governance [Proposal #109 (pacific-1)](https://www.mintscan.io/sei/proposals/109); testnet carries the same value with no separate proposal); governance-adjustable. A `forge --gas-report --fork-url` uses revm's standard EVM schedule and shows ~22,100, *not* Sei's cost — use a live `eth_estimateGas` against a Sei RPC for the real value
 4. **Dual address system** — every account has both a `sei1...` bech32 address and a `0x...` EVM address derived from the same public key; they must be **associated** before cross-VM token transfers work
 5. **PREVRANDAO is NOT random** — it returns a block-time-derived value; always use oracle VRF (Pyth VRF or Chainlink VRF) for on-chain randomness
 6. **COINBASE = fee collector** — always returns the global fee collector address, not the block proposer; do not use it for proposer identity
@@ -143,7 +143,7 @@ Once connected, use MCP tools for: wallet queries, balance checks, transaction d
 ### 2. Apply Sei-specific correctness
 Always be explicit about:
 - **Network** (testnet atlantic-2 vs mainnet pacific-1) and chain ID (1328 vs 1329)
-- **Gas price**: minimum 50 gwei for legacy txs; use `gasPrice` not EIP-1559 fields
+- **Gas price**: governance-set, adjustable minimum (currently ~50 gwei on mainnet — pacific-1 [Proposal #112](https://www.mintscan.io/sei/proposals/112) / atlantic-2 #244; it has changed before, 100→10→50) — query `eth_gasPrice` for the live floor; use legacy `gasPrice`, not EIP-1559 fields
 - **Address format** expected (bech32 `sei1...` vs EVM `0x...`) and whether association is required
 - **SSTORE implications** for contracts with many storage writes
 - **Parallel execution implications** for contracts with shared mutable state (hot globals)
@@ -201,14 +201,15 @@ When implementing changes, provide:
 ### Frontend — UI stack and site awareness
 - **Frontend stack (Wagmi/Viem/sei-js, Sei Global Wallet, EIP-6963, dual-address UX):** [frontend/frontend-stack.md](references/frontend/frontend-stack.md)
 - **sei.io / docs.sei.io site map:** [frontend/sites-map.md](references/frontend/sites-map.md)
-- **Contributing to docs.sei.io (Nextra, MDX, _meta.js):** [frontend/docs-contributing.md](references/frontend/docs-contributing.md)
+- **Contributing to docs.sei.io (Mintlify, MDX, docs.json):** [frontend/docs-contributing.md](references/frontend/docs-contributing.md)
 - **Sei brand kit, logos, media:** [frontend/branding-media.md](references/frontend/branding-media.md)
 
 ### Ecosystem — apps, integration, participation
 - **dApps directory by category:** [ecosystem/apps-directory.md](references/ecosystem/apps-directory.md)
 - **DeFi integration patterns (DEXes, lending):** [ecosystem/integration-defi.md](references/ecosystem/integration-defi.md)
-- **Bridges (LayerZero, Wormhole, Axelar, IBC, CCTP):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
-- **IBC & legacy bridging deep dive:** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
+- **Bridges (LayerZero V2, CCTP; Wormhole verify-first; IBC legacy/exit-only):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
+- **IBC (legacy / exit-only — inbound disabled, SIP-3):** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
+- **Payments (USDC + x402):** [ecosystem/payments.md](references/ecosystem/payments.md)
 - **RPC endpoints — public, community, paid:** [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
 - **RPC agent skills (17 canonical patterns, retry, response shapes):** [ecosystem/rpc-agent-skills.md](references/ecosystem/rpc-agent-skills.md)
 - **Oracles:** [ecosystem/oracles.md](references/ecosystem/oracles.md) — Chainlink, Pyth, API3, RedStone, VRF

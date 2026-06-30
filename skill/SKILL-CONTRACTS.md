@@ -50,9 +50,9 @@ Use this Skill when the user asks for:
 
 These facts must inform every answer involving Sei code or configuration:
 
-1. **400ms block time, instant finality** — use `txResponse.wait(1)`; there is no "safe"/"finalized" distinction
+1. **400ms block time, instant finality** — use `txResponse.wait(1)`; `safe`/`finalized`/`latest` all resolve to the same instantly-final block, so just query `latest`
 2. **Parallel execution (OCC)** — minimize shared storage writes; partition state by user/asset/id; avoid hot globals
-3. **SSTORE gas cost differs by network** — both mainnet (pacific-1) and testnet (atlantic-2) charge 72,000 gas per write (governance-adjustable)
+3. **SSTORE gas is non-standard (and identical on both networks)** — mainnet (pacific-1) and testnet (atlantic-2) both charge 72,000 gas per write (governance [Proposal #109 (pacific-1)](https://www.mintscan.io/sei/proposals/109); testnet carries the same value with no separate proposal; governance-adjustable); a `forge --gas-report --fork-url` shows revm's ~22,100, not Sei's cost — use live `eth_estimateGas`
 4. **Dual address system** — every account has both `sei1...` (bech32) and `0x...` (EVM); they must be **associated** before cross-VM token transfers
 5. **PREVRANDAO is NOT random** — block-time-derived; always use Pyth VRF or Chainlink VRF for randomness
 6. **COINBASE = fee collector** — global fee collector address, not the block proposer
@@ -104,7 +104,7 @@ claude mcp add sei-mcp-server npx @sei-js/mcp-server
 
 ### 2. Apply Sei-specific correctness
 - **Network** (testnet 1328 vs mainnet 1329)
-- **Gas price**: ≥ 50 gwei legacy `gasPrice`
+- **Gas price**: legacy `gasPrice` at the governance-set, adjustable floor (currently ~50 gwei on mainnet — pacific-1 Proposal #112 / atlantic-2 #244; query `eth_gasPrice`)
 - **Address format** (bech32 vs EVM) and association if cross-VM
 - **SSTORE implications** for storage-heavy contracts
 - **Parallel execution implications** for shared mutable state

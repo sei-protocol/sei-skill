@@ -48,7 +48,7 @@ Integration tip: see [integration-defi.md](integration-defi.md) for router/comet
 |---|---|---|---|
 | **Ondo Finance** | Tokenized US Treasuries (USDY) | https://ondo.finance | Largest tokenized Treasury by TVL |
 | **Agora** | Stablecoin / payments | https://agora.finance | RWA + payment rails |
-| **Native USDC** | Stablecoin | (issued by Circle) | Verify current contract via [docs.sei.io USDC integration](https://docs.sei.io/evm/reference/usdc) |
+| **Native USDC** | Stablecoin | (issued by Circle) | Verify current contract via [docs.sei.io USDC integration](https://docs.sei.io/evm/usdc-on-sei) |
 
 ## Liquid Staking (LSTs)
 
@@ -110,10 +110,10 @@ See [addresses-wallets.md](../addresses-wallets.md) for setup and dual-address h
 
 | Bridge | Site | Notes |
 |---|---|---|
-| **LayerZero V2** | https://layerzero.network | OFT standard; 50+ source chains |
-| **Wormhole** | https://wormhole.com | Native + ERC-20 + NFT |
-| **Axelar** | https://axelar.network | Cross-chain message passing |
-| **IBC** | https://www.mintscan.io/sei/relayers | Cosmos-native; via Cosmos-side address |
+| **LayerZero V2** | https://layerzero.network | OFT standard; Sei is a LayerZero V2 endpoint |
+| **Wormhole** | https://wormhole.com | SeiEVM supported per Wormhole (NTT/WTT); not documented by Sei — verify. CosmWasm side legacy/exit-only |
+| **Circle CCTP v2** | https://developers.circle.com/cctp | Native USDC, burn-and-mint |
+| **IBC** | — | Legacy/exit-only — **inbound IBC disabled** (SIP-3, pacific-1 Prop 116 / atlantic-2 #247) |
 
 See [bridges.md](bridges.md) for integration details and addresses.
 
@@ -147,5 +147,5 @@ These categories exist on other chains but have limited Sei presence as of this 
 ## Sei-specific notes for integrators
 
 - Sei is **EVM-first as of SIP-3** — new dApps are EVM. Older CosmWasm-based protocols (Astroport, Kryptonite v1) may have EVM equivalents or pointer contracts.
-- Treat all listed addresses as **placeholders until verified** against the project's docs or [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/reference/ecosystem-contracts).
-- Use [docs.sei.io/evm/reference/ecosystem-contracts](https://docs.sei.io/evm/reference/ecosystem-contracts) as the source of truth for canonical contract addresses (USDC, WETH, common bridge contracts).
+- Treat all listed addresses as **placeholders until verified** against the project's docs or [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/ecosystem-contracts).
+- Use [docs.sei.io/evm/ecosystem-contracts](https://docs.sei.io/evm/ecosystem-contracts) as the source of truth for canonical contract addresses (USDC, WETH, common bridge contracts).

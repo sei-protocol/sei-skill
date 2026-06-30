@@ -89,7 +89,7 @@ function batchUpdate(address[] calldata users, uint256[] calldata scores) extern
 
 ## SSTORE Gas Awareness
 
-Both mainnet (pacific-1) and testnet (atlantic-2) charge **72,000 gas per cold write** (governance proposal #240). This is governance-adjustable — always verify with `forge test --gas-report` targeting the correct network.
+Both mainnet (pacific-1) and testnet (atlantic-2) charge **72,000 gas per cold write** (pacific-1 [Proposal #109](https://www.mintscan.io/sei/proposals/109); testnet carries the same value with no separate proposal). This is governance-adjustable. Note: a `forge test --gas-report --fork-url` report uses revm's standard EVM schedule and shows ~22,100, *not* Sei's cost — use a live `eth_estimateGas` against a Sei RPC for the real storage-write cost.
 
 **Testnet budget impact (72k):**
 - A simple 3-slot write transaction: 3 × 72k = 216k gas just for storage
@@ -206,7 +206,7 @@ Sei precompiles are highly optimized native contracts — cheaper and more relia
 | Stake/unstake SEI | Staking | `0x1005` |
 | Claim rewards | Distribution | `0x1007` |
 | On-chain governance vote | Governance | `0x1006` |
-| Oracle price feed | Oracle | `0x1008` |
+| Oracle price feed — ❌ shut off (~July 2026), use a third-party oracle | Oracle | `0x1008` |
 | Address conversion | Addr | `0x1004` |
 | Native token send | Bank | `0x1001` |
 

@@ -27,7 +27,7 @@ These are not optional edge cases — they **will** break your app if ignored.
 
 ### 1. Gas Price: Prefer `gasPrice` Over EIP-1559 Fields
 
-Sei's fee model does not burn a base fee, so EIP-1559 priority fee mechanics don't apply. `maxFeePerGas`/`maxPriorityFeePerGas` can be omitted — use legacy `gasPrice` instead.
+Sei's fee model does not burn a base fee, so EIP-1559 priority fee mechanics don't apply. `maxFeePerGas`/`maxPriorityFeePerGas` can be omitted — use legacy `gasPrice` instead. The minimum gas price is a **governance-set, adjustable** value (currently ~50 gwei on mainnet, set by pacific-1 [Proposal #112](https://www.mintscan.io/sei/proposals/112) / atlantic-2 #244; it has changed before — 100 → 10 → 50). **Query the live floor with `eth_gasPrice`** rather than hardcoding a constant.
 
 ```typescript
 // ⚠️ EIP-1559 style — may not behave as expected on Sei (no base fee burn)
@@ -36,9 +36,9 @@ const tx = await contract.myFunction({
   maxPriorityFeePerGas: parseUnits("1", "gwei"),
 });
 
-// ✅ Preferred: legacy gasPrice
+// ✅ Preferred: legacy gasPrice — read the live floor, don't bake in a number
 const tx = await contract.myFunction({
-  gasPrice: parseUnits("50", "gwei"),  // minimum 50 gwei
+  gasPrice: await provider.send("eth_gasPrice", []),  // ≥ governance floor (~50 gwei mainnet)
 });
 ```
 
@@ -79,10 +79,10 @@ Sei runs Pectra EVM but without blob transactions (`BLOBHASH` / `BLOBBASEFEE`). 
 
 ### 6. SSTORE Costs Are Higher Than Ethereum
 
-Storage write costs are network-dependent on Sei:
-- **Both mainnet & testnet**: 72,000 gas per cold SSTORE (governance proposal #240)
+Storage writes are far costlier than Ethereum's 20,000 gas:
+- **Both mainnet & testnet**: 72,000 gas per cold SSTORE — set by pacific-1 governance [Proposal #109](https://www.mintscan.io/sei/proposals/109) (testnet carries the same value with no separate proposal). Governance-adjustable.
 
-Best practice: minimize storage writes regardless of network.
+Best practice: minimize storage writes. Note a `forge --gas-report --fork-url` report applies revm's standard EVM schedule and shows ~22,100 — **not** Sei's 72,000; use a live `eth_estimateGas` against a Sei RPC for the real cost.
 
 ```solidity
 // ❌ Bad: multiple storage writes in a loop (expensive on either network)
@@ -102,20 +102,32 @@ function processAndStore(uint256[] calldata items) external {
 }
 ```
 
-### 7. No "safe" / "finalized" Block Tags
+### 7. `safe` / `finalized` Resolve to `latest`
 
 ```typescript
-// ❌ Ethereum: different commitment levels exist
+// Ethereum: these are different, lagging commitment levels
 const safeBlock = await provider.getBlock("safe");
 const finalBlock = await provider.getBlock("finalized");
 
-// ✅ Sei: all equivalent to "latest"
+// Sei: the tags are accepted but resolve to the SAME instantly-final
+// block as "latest" — there's nothing to gain from safe/finalized.
 const block = await provider.getBlock("latest");
 ```
 
 ### 8. No Pending State
 
 Sei does not expose a `pending` block tag. Use `latest`.
+
+### 9. SELFDESTRUCT is Neutered (EIP-6780)
+
+Sei runs post-EIP-6780 semantics: `SELFDESTRUCT` no longer deletes the contract or its storage — it only forwards the remaining ETH, unless it runs in the *same transaction* that created the contract. Any cleanup/upgrade logic that relied on destroying a contract must be refactored to a "soft close".
+
+```solidity
+// ❌ Don't rely on SELFDESTRUCT to remove a contract — it won't (EIP-6780).
+// ✅ Soft close instead:
+bool public closed;
+modifier notClosed() { require(!closed, "closed"); _; }
+```
 
 ---
 
@@ -126,8 +138,9 @@ Sei does not expose a `pending` block tag. Use `latest`.
 □ Remove PREVRANDAO randomness → integrate VRF oracle
 □ Check COINBASE usage — does not return block proposer
 □ Check for blob opcodes (BLOBHASH, BLOBBASEFEE) — not available
-□ Audit SSTORE patterns — consider caching in memory before writing
-□ Remove "safe"/"finalized" block tag references
+□ Refactor SELFDESTRUCT cleanup → soft-close pattern (EIP-6780 neutered it)
+□ Audit SSTORE patterns — consider caching in memory before writing (72k gas/cold write)
+□ Drop waits on "safe"/"finalized" — they resolve to "latest" on Sei; use tx.wait(1)
 □ Test contract on atlantic-2 testnet before mainnet
 ```
 
@@ -139,7 +152,7 @@ Sei does not expose a `pending` block tag. Use `latest`.
 
 ```typescript
 // Add Sei to your Wagmi config
-import { sei, seiTestnet } from '@sei-js/precompiles';
+import { sei, seiTestnet } from 'viem/chains';
 
 export const config = createConfig({
   chains: [sei, seiTestnet],
@@ -228,7 +241,7 @@ Once migrated, you can optionally leverage Sei-specific features:
 | **Precompiles** | Staking, governance, IBC from Solidity |
 | **Pointer contracts** | Your ERC20 token usable in Cosmos wallets |
 | **Dual addresses** | Users can interact via `sei1...` or `0x...` |
-| **Native oracle** | Free price feeds without external dependencies |
+| **Third-party oracles** | Pyth / Chainlink / API3 / RedStone price feeds (the native Oracle precompile is shut off) |
 
 See [`precompiles/overview.md`](../precompiles/overview.md) and [`pointers/overview.md`](../pointers/overview.md) for details.
 

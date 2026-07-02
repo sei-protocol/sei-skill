@@ -13,11 +13,11 @@ description: Chainlink, Pyth Network, API3, and RedStone oracle integrations on 
 | **Pyth Network** | Sub-second latency, NFTs, perps, high-frequency | Pull (user pushes update per tx) |
 | **API3** | First-party data, operational simplicity | Push (dAPI proxies) |
 | **RedStone** | On-demand, modular, custom feeds | Pull (wrap tx with price data) |
-| **Native Oracle** (`0x…1008`) | ❌ **Shut off (~July 2026) — returns no data; do not use** | — |
+| **Native Oracle** (`0x…1008`) | ❌ **Retired (shut off July 2026) — queries revert; do not use** | — |
 
 > **NEVER use `block.prevrandao` or `block.timestamp` for randomness** — use Pyth VRF or Chainlink VRF instead.
 
-> **❌ The native Oracle precompile (`0x…1008`) is being shut off (~July 2026) and returns no usable data — treat it as a no-op.** It's gone, not merely deprecated: do not read prices from it. Use a third-party oracle (Chainlink, Pyth, API3, RedStone) for every feed — covered below.
+> **❌ The native Oracle precompile (`0x…1008`) is retired (shut off July 2026) — every data query reverts with `oracle precompile is retired; oracle data queries are disabled`.** It's gone, not merely deprecated: the revert bubbles up, so any contract path that still reads it breaks. Use a third-party oracle (Chainlink, Pyth, API3, RedStone) for every feed — covered below.
 
 ---
 

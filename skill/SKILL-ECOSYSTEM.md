@@ -64,7 +64,7 @@ These facts must inform every Sei ecosystem answer:
 
 ## Default stack decisions
 
-1. **Oracles**: Pyth (pull) for sub-second latency; Chainlink (push) for production DeFi defaults; API3 / RedStone as alternatives. The native oracle precompile is **shut off (~July 2026)** — it returns no data; do not use it
+1. **Oracles**: Pyth (pull) for sub-second latency; Chainlink (push) for production DeFi defaults; API3 / RedStone as alternatives. The native oracle precompile is **retired (shut off July 2026)** — queries revert; do not use it
 2. **Indexers**: The Graph for custom query workloads; Goldsky for real-time CDC; Dune for analytics
 3. **Bridges**: LayerZero V2 OFT for omnichain tokens; CCTP for native USDC. Wormhole (NTT/WTT) is supported per Wormhole but **not documented by Sei** — verify first. Inbound IBC is disabled (SIP-3) — not a path for new transfers
 4. **RPC**: Sei Foundation primary + community fallback for free; paid SaaS (QuickNode, Alchemy, dRPC) with multi-provider failover for production

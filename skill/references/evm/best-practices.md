@@ -206,7 +206,7 @@ Sei precompiles are highly optimized native contracts — cheaper and more relia
 | Stake/unstake SEI | Staking | `0x1005` |
 | Claim rewards | Distribution | `0x1007` |
 | On-chain governance vote | Governance | `0x1006` |
-| Oracle price feed — ❌ shut off (~July 2026), use a third-party oracle | Oracle | `0x1008` |
+| Oracle price feed — ❌ retired (shut off July 2026; queries revert), use a third-party oracle | Oracle | `0x1008` |
 | Address conversion | Addr | `0x1004` |
 | Native token send | Bank | `0x1001` |
 

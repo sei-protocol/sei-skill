@@ -197,8 +197,9 @@ uint256 price = pool.token0() / pool.token1();
 // ✅ Use a TWAP or external oracle (Pyth, Chainlink, API3, RedStone)
 PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceId, 60);
 
-// ❌ The native Oracle precompile (0x...1008) is SHUT OFF (~July 2026) — it
-//    returns no data (no-op). Use a third-party oracle (Pyth, Chainlink, API3, RedStone).
+// ❌ The native Oracle precompile (0x...1008) is RETIRED (shut off July 2026) —
+//    any query REVERTS ("oracle precompile is retired"). Use a third-party
+//    oracle (Pyth, Chainlink, API3, RedStone).
 ```
 
 ### Signature Replay

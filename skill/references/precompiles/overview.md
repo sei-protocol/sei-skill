@@ -18,7 +18,7 @@ Precompiles are fixed-address contracts deployed by the Sei protocol that expose
 | Staking | `0x0000000000000000000000000000000000001005` | Delegate/undelegate/redelegate SEI |
 | Governance | `0x0000000000000000000000000000000000001006` | Vote, submit proposals, deposit |
 | Distribution | `0x0000000000000000000000000000000000001007` | Claim staking rewards |
-| Oracle | `0x0000000000000000000000000000000000001008` | ❌ Shut off (~July 2026) — returns no data; use a third-party oracle |
+| Oracle | `0x0000000000000000000000000000000000001008` | ❌ Retired (shut off July 2026) — queries revert; use a third-party oracle |
 | IBC | `0x0000000000000000000000000000000000001009` | IBC transfers from EVM (legacy) |
 | PointerView | `0x000000000000000000000000000000000000100A` | Query pointer registrations |
 | Pointer | `0x000000000000000000000000000000000000100B` | Register pointer contracts |

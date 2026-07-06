@@ -13,16 +13,15 @@ Most Solidity gas advice transfers from Ethereum directly. This file covers only
 |---|---|---|---|
 | Block time | ~12s | **400ms** | 400ms |
 | Block gas limit | 30M | **12.5M** | 12.5M |
-| Min gas price | dynamic (EIP-1559) | **50 gwei (fixed)** | 50 gwei |
-| Cold SSTORE | 22,100 gas | 22,100 gas | 22,100 gas |
-| Warm SSTORE (zero→nonzero) | 20,000 gas | **72,000 gas** | **72,000 gas** |
+| Min gas price | dynamic (EIP-1559) | **~50 gwei (governance-set)** | ~50 gwei |
+| SSTORE (zero→nonzero, first/cold write) | 22,100 gas | **72,000 gas** | **72,000 gas** |
 | EIP-1559 base fee burn | yes | **no — all to validators** | no |
 | `PREVRANDAO` | RANDAO output | **block-time-derived (NOT random)** | NOT random |
 | `COINBASE` | block proposer | **fee collector address** | fee collector |
 
 ## Rule 1: SSTORE costs 72,000 gas on Sei (both networks)
 
-Both mainnet (pacific-1) and testnet (atlantic-2) charge **72,000 gas per zero→nonzero SSTORE** (governance proposal #240). This is governance-adjustable; verify against your target network before assuming.
+Both mainnet (pacific-1) and testnet (atlantic-2) charge **72,000 gas per zero→nonzero SSTORE** (set by pacific-1 governance [Proposal #109](https://www.mintscan.io/sei/proposals/109); testnet carries the same value with no separate proposal). This is governance-adjustable; verify against your target network before assuming.
 
 **Implication:** a contract with many storage writes will cost significantly more on Sei than on Ethereum mainnet (20k). Measure with `forge test --gas-report` and minimise writes.
 
@@ -37,9 +36,9 @@ forge test --gas-report --fork-url https://evm-rpc-testnet.sei-apis.com # testne
 - **Avoid setting then unsetting** — clearing a slot back to zero refunds gas (capped on Sei as on EIP-3529 Ethereum), but the round-trip rarely beats not writing at all.
 - **Use `transient` storage (EIP-1153)** for cross-call temporaries that don't need persistence — no SSTORE cost. Sei supports `tload`/`tstore` opcodes.
 
-## Rule 2: 50 gwei minimum, no EIP-1559
+## Rule 2: ~50 gwei governance-set minimum, no EIP-1559
 
-Setting `gasPrice` below 50 gwei results in mempool eviction, not slow inclusion.
+The EVM minimum gas price is governance-set and adjustable (currently ~50 gwei on mainnet — pacific-1 [Proposal #112](https://www.mintscan.io/sei/proposals/112) / atlantic-2 #244; it has changed before, 100→10→50). Query `eth_gasPrice` for the live floor. Setting `gasPrice` below it results in mempool eviction, not slow inclusion.
 
 ```ts
 // Viem

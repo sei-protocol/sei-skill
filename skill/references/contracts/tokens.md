@@ -91,7 +91,7 @@ USDC on Sei is a native ERC20 — no pointer or bridging step needed.
 
 ## CW20 / CW721 — Legacy Status
 
-> **Per SIP-3 (governance proposal 99)**: CosmWasm is deprecated on Sei. CW20 and CW721 are no longer the recommended token standards for new projects.
+> **Per SIP-3** (initiated by mainnet Proposal 99; CosmWasm uploads disabled by mainnet #115 / testnet #246): CosmWasm is deprecated on Sei. CW20 and CW721 are no longer the recommended token standards for new projects.
 
 ### Migration Path
 

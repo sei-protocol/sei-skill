@@ -29,7 +29,7 @@ description: Running and maintaining Sei full nodes — node types, setup, state
 ```bash
 git clone https://github.com/sei-protocol/sei-chain.git
 cd sei-chain
-git checkout <latest-version>   # e.g. v5.9.0
+git checkout <version-tag>   # pick the recommended tag from the Network Versions table on docs.sei.io
 make install
 
 # Verify
@@ -39,13 +39,15 @@ seid version
 ### Initialize Node
 
 ```bash
-# Initialize with your moniker
+# Initialize with your moniker. genesis.json is written automatically for known
+# networks (mainnet/testnets) — do NOT hand-download or overwrite it.
 seid init <YOUR_MONIKER> --chain-id pacific-1
 
-# Download genesis
-curl -s https://raw.githubusercontent.com/sei-protocol/testnet/main/pacific-1/genesis.json \
-  > $HOME/.sei/config/genesis.json
+# For a validator (binds RPC/P2P to localhost), init in validator mode instead:
+# seid init <YOUR_MONIKER> --chain-id pacific-1 --mode validator
 ```
+
+> **Never start from genesis on a live network** — it panics with `integer divide by zero`. Bootstrap via state sync (below) or a snapshot.
 
 ---
 
@@ -130,7 +132,7 @@ timeout-broadcast-tx-commit = "10s"
 ### app.toml (Database + API)
 
 ```toml
-minimum-gas-prices = "0.01usei"
+minimum-gas-prices = "0.02usei"   # set at or above the mainnet-enforced floor; 0usei = local dev only
 
 [api]
 enable = true
@@ -148,6 +150,32 @@ ss-backend = "pebbledb"
 ss-keep-recent = 100000             # Keep last 100k blocks
 ss-prune-interval = 600
 ```
+
+---
+
+## SeiDB storage, RocksDB, and Giga
+
+SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds Cosmos module state and computes the app hash — and **State Store (SS)** — versioned raw key/values for historical queries (`ss-enable = true` is required for any RPC node).
+
+- **RocksDB SS backend** (optional): faster for iteration-heavy work (`debug_trace*`, large archive queries). Build with `make build-rocksdb && make install-rocksdb`, then set `ss-backend = "rocksdb"`. RocksDB RPC nodes must state-sync on first start.
+- **Giga SS Store** (optional, RPC nodes): splits the **State Store** so EVM state lives in its own SS DB. Controlled by a single bool — `evm-ss-split = true` (Sei v6.5+; older releases used per-key `evm-ss-write-mode`/`evm-ss-read-mode`). Requires a **fresh state sync** — flipping it on a node with existing data fails startup safety checks. **SC config is left untouched.** See the [Giga SS Store Migration Guide](https://docs.sei.io/node/giga-storage-migration).
+- **Giga Storage (SC FlatKV routing)** is a *separate*, broader option that routes EVM **State Commit** data through FlatKV, controlled by the single `sc-write-mode` key:
+
+  ```toml
+  [state-commit]
+  # Valid: memiavl_only (default), migrate_evm, evm_migrated, migrate_all_but_bank,
+  # all_migrated_but_bank, migrate_bank, flatkv_only.  (test_only_dual_write is
+  # test-only — never in production.) There is NO sc-read-mode and NO
+  # sc-enable-lattice-hash key; the evm_lattice app-hash handling is internal.
+  sc-write-mode = "memiavl_only"
+  # Keys drained memiavl→FlatKV per block while migrating (migrate_* modes):
+  sc-keys-to-migrate-per-block = 1024
+  ```
+
+  The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules.
+- **Giga Executor** (`[giga_executor] enabled`) is a *separate* feature — an evmone-based EVM interpreter for throughput. Don't conflate it with Giga Storage.
+
+> Minimum gas price, block gas limit, and SSTORE/storage gas are governance-adjustable — confirm live values at https://docs.sei.io/evm/differences-with-ethereum, and set `minimum-gas-prices` at or above the mainnet floor (`0usei` is local-dev only).
 
 ---
 

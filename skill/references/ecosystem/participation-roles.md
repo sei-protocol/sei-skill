@@ -69,8 +69,6 @@ Index Sei block data into a queryable form (subgraphs, SQL, REST APIs). Run alon
 
 Publish off-chain data (prices, randomness, weather, etc.) on-chain via an oracle network.
 
-**Sei native oracle** (price feeds) — submitted by validators each epoch, no separate relayer role; price votes are part of consensus duty.
-
 **Pyth Network** — operates a separate publisher/aggregator system; publishers are Pyth ecosystem participants, not Sei-specific.
 
 **Chainlink** — node operator on Chainlink, fulfilling jobs that touch Sei. Apply through Chainlink directly.

@@ -1,61 +1,63 @@
 ---
 title: Contributing to docs.sei.io
-description: How to author or update pages on docs.sei.io. Repo layout, Nextra MDX conventions, _meta.js navigation config, frontmatter requirements, build commands, and PR workflow.
+description: How to author or update pages on docs.sei.io. Mintlify repo layout, docs.json navigation, MDX frontmatter and components, snippets, local preview, CI checks, and PR workflow.
 ---
 
 # Contributing to docs.sei.io
 
-The Sei docs are published from https://github.com/sei-protocol/sei-docs (despite the `-old` suffix in some tooling, this is the live source). Built with Nextra + Bun. This file is the contributor cheat sheet.
+The Sei docs are published from https://github.com/sei-protocol/sei-docs and auto-deploy from `main`. The site is built with **Mintlify** (the repo was migrated off Nextra). This file is the contributor cheat sheet.
 
 ## Repo at a glance
 
 | Item | Value |
 |---|---|
 | Repo | https://github.com/sei-protocol/sei-docs |
-| Framework | Nextra (Next.js docs theme) |
-| Package manager / runtime | Bun |
-| Page format | `.mdx` (Markdown + JSX) |
-| Content root | `/content/` |
-| Style guide | `/STYLE_GUIDE.mdx` |
+| Platform | Mintlify (auto-deploys from `main`) |
+| Config | `docs.json` (navigation, redirects, theme, search) |
+| Page format | `.mdx` (Markdown + JSX components) |
+| Content root | repo root — pages live in top-level section dirs (`evm/`, `learn/`, `node/`, `ai/`) |
+| Reusable components | `/snippets/` (`.mdx` partials and `.jsx` custom React) |
+| Style guide | `STYLE_GUIDE.md` (enforced by Vale) |
+| Contributor rules | `AGENTS.md`, `CODEOWNERS`, PR template |
+
+There is **no `_meta.js`, no Bun, no `/content/` root** — those were the old Nextra setup. Navigation lives entirely in `docs.json`.
 
 ## Directory layout
 
 ```
-content/
-├── _meta.js            # root nav config (top-level sections in display order)
-├── index.mdx           # docs.sei.io home
-├── learn/
-│   ├── _meta.js        # nav config for /learn
-│   ├── index.mdx       # /learn landing
-│   └── ...mdx          # individual pages
-├── evm/
-│   ├── _meta.js
+sei-docs/
+├── docs.json            # navigation, redirects, theme — the single nav source of truth
+├── index.mdx            # docs.sei.io home
+├── evm/                 # EVM developer docs
+│   ├── evm-general.mdx
 │   ├── precompiles/
-│   │   ├── _meta.js
 │   │   └── ...mdx
-│   └── ...
-├── cosmos-sdk/         # deprecated; new content goes elsewhere
-├── node/
-│   └── ...
-└── STYLE_GUIDE.mdx
+│   └── sei-js/
+│       └── ...mdx
+├── learn/               # concepts, accounts, architecture
+├── node/                # node + validator operations
+├── ai/                  # AI tooling, skills, MCP, x402
+├── snippets/            # reusable .jsx custom components (Mintlify also supports .mdx partials)
+├── images/              # static assets
+├── skill.md             # root agent-skill override (served at /.well-known/skills/)
+└── STYLE_GUIDE.md
 ```
 
 ## Authoring a page
 
-1. **Pick the right section** — `learn/` for concepts, `evm/` for EVM dev, `node/` for node ops. Don't put new content in `cosmos-sdk/` (deprecated per SIP-03).
+1. **Pick the right section** — `learn/` for concepts, `evm/` for EVM dev, `node/` for node ops, `ai/` for AI tooling. Don't add new Cosmos-SDK/CosmWasm content (deprecated per SIP-3).
 2. **Filename**: kebab-case (`my-new-page.mdx`).
 3. **MDX with frontmatter** at the top:
 
 ```mdx
 ---
-title: "My Page Title"
-description: "One-sentence description used for SEO and OG cards."
-keywords: ["sei", "evm", "..."]
+title: 'My Page Title'
+sidebarTitle: 'Short Nav Title'
+description: 'One-sentence description used for SEO and the page subtitle.'
+keywords: ['sei', 'evm', '...']
 ---
 
-# My Page Title
-
-Intro paragraph that re-states the H1 in conversational form...
+Intro paragraph. (Mintlify renders `title` as the H1 automatically — do not add your own `# H1`.)
 
 ## First section
 
@@ -65,120 +67,122 @@ Content here. Code blocks use triple-backtick fences with language hints:
 pragma solidity ^0.8.28;
 contract Foo { /* ... */ }
 ```
-
-Tables, callouts, JSX components from Nextra (e.g., `<Callout>`) all work.
 ```
 
-4. **Update the section's `_meta.js`** to add the new page to the nav.
+4. **Register the page in `docs.json`** — add its path (without `.mdx`) to the correct group's `pages` array. A page that isn't in `docs.json` won't appear in the nav.
 
-## `_meta.js` navigation config
+## `docs.json` navigation
 
-Each directory has a `_meta.js` that controls sidebar order and display titles.
+Navigation is a nested structure of tabs → groups → pages. Page entries are file paths **relative to the repo root, without the `.mdx` extension**.
 
-```js
-// content/evm/_meta.js (excerpt)
-export default {
-  index: { title: 'Home' },
-  '-- Essentials': { type: 'separator' },
-  networks: 'Network Information',
-  'evm-hardhat': 'EVM with Hardhat',
-  'evm-foundry': 'EVM with Foundry',
-  'evm-verification': 'Contract Verification',
-  '-- Precompiles': { type: 'separator' },
-  precompiles: 'Precompiles',
-  // ...
+```jsonc
+// docs.json (excerpt)
+{
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "EVM",
+        "groups": [
+          {
+            "group": "Sei-JS",
+            "pages": [
+              "evm/sei-js/index",
+              "evm/sei-js/create-sei",
+              "evm/templates"        // <- add your new page here, in display order
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "redirects": [
+    { "source": "/old-path", "destination": "/new-path", "permanent": true }
+  ]
 }
 ```
 
-Keys are the slugs of files (without `.mdx`) or subdirectory names. Values are either:
-- A string (display title in the sidebar)
-- An object (`{ title, type, display, theme }`) for advanced control
-- A separator (`{ type: 'separator' }`) for visual groupings in the sidebar
+- **Order** in the `pages` array = sidebar order.
+- **Nested groups** are objects with their own `group` + `pages`.
+- **Moved or renamed a page?** Add a `redirects` entry so old URLs keep working (CI link-checks both internal links and the redirect set).
 
-To add a page named `my-new-page.mdx`, add `'my-new-page': 'My New Page'` in the right position in the parent `_meta.js`.
+## Mintlify components
+
+Common components available in any `.mdx` page (no import needed): `<Card>`, `<CardGroup>`, `<Columns>`, `<Steps>`, `<CodeGroup>`, `<Tabs>`, `<Accordion>`/`<AccordionGroup>`, `<Info>`, `<Note>`, `<Warning>`, `<Tip>`, `<Check>`, `<Frame>`. Use `<CodeGroup>` for multi-language tabs (they auto-sync across a page) and `<Steps>` for sequential instructions.
+
+### Snippets and custom React
+
+Reusable content lives in `/snippets/`. Mintlify supports two kinds; Sei's repo currently uses only the second:
+- **`.mdx` partials** — import and render shared prose/components (a Mintlify capability; the Sei repo has none today).
+- **`.jsx` custom components** — interactive widgets. Mintlify's React runtime has strict rules (per Mintlify's custom-React docs):
+  - **Arrow-function component, exported as a named `export const` — no `export default`.**
+  - **No `import` statements** and **no npm packages** — React hooks (`useState`, `useEffect`, …) are pre-injected; use them without importing.
+  - **No dynamic `import()`** / `React.lazy`.
+  - Practical convention (not in Mintlify's published rules): keep declarations inside the component body and stick to plain Tailwind utility classes — use inline `style` for anything they can't express.
+  - Client-rendered — gate heavy widgets behind click-to-load.
+
+```mdx
+import { MyWidget } from '/snippets/my-widget.jsx';
+
+<MyWidget />
+```
 
 ## Style guide essentials
 
-From `STYLE_GUIDE.mdx`:
+From `STYLE_GUIDE.md` (Vale enforces much of this in CI):
 
 1. **Beginner-friendly** — explain Web3 jargon; spell out acronyms on first use ("Ethereum Virtual Machine (EVM)").
-2. **Simple sentences** — short, direct, avoid passive voice.
-3. **Self-explanatory** — provide context; show code over describing it.
-4. **Use code snippets, tables, and callouts** liberally.
-5. **Cross-link** to other docs pages where useful — Nextra resolves relative `.mdx` paths.
-6. **Diagrams** — Mermaid is supported in code fences with `mermaid` language hint.
+2. **Simple, direct sentences** — avoid passive voice.
+3. **Show code over describing it** — paste the working snippet, then explain.
+4. **Use code blocks, tables, and callouts** liberally.
+5. **Cross-link** with root-relative paths (`/evm/precompiles/example-usage`).
+6. **Diagrams** — Mermaid is supported in ` ```mermaid ` code fences.
+7. **Date/version-stamp** anything that drifts (addresses, gas values, version requirements); prefer linking the live value over hardcoding.
 
 ## Local development
 
-```bash
-bun install
-bun dev
-# → http://localhost:3000
-```
-
-Navigate to your new page and verify rendering. Hot reload picks up MDX changes.
-
-## Build validation (run before PR)
+Install the Mintlify CLI and run the dev server from the repo root:
 
 ```bash
-bun run build
+npm i -g mint        # or: npx mint dev
+mint dev             # → http://localhost:3000 (hot-reloads on save)
 ```
 
-Build runs:
-- Next.js production build
-- Pagefind search index generation
-- Sitemap generation
-- HTML scraping for downstream tools (`llms.txt`)
+`mint dev` validates `docs.json` and renders pages exactly as production. Check links before opening a PR:
 
-If any step fails, fix locally before opening a PR.
+```bash
+mint broken-links
+```
+
+## CI checks (run before / expect on PR)
+
+The repo has best-in-class docs CI. Expect these to run on your PR:
+
+- **Vale** (`.vale.ini`) — prose linting against the Sei style rules.
+- **typos** — spell-check.
+- **lychee** (`lychee.toml`) + **`mint broken-links`** — internal and external link validation (including the `redirects` set).
+- **SEO audit** and weekly **`llms.txt`** regeneration.
+
+Fix Vale/link failures locally before requesting review.
 
 ## PR workflow
 
-1. **Fork** https://github.com/sei-protocol/sei-docs.
+1. **Fork** https://github.com/sei-protocol/sei-docs (or branch if you have write access).
 2. **Branch** from `main` with a descriptive name (`docs/add-account-abstraction-page`).
-3. **Edit** files; run `bun dev` to preview.
-4. **Build** with `bun run build` to catch errors.
-5. **Commit** with a clear message ("Add account abstraction guide to /evm").
-6. **Push** to your fork.
-7. **Open a PR** against `sei-protocol/sei-docs:main` using the PR template.
-8. **Address review feedback** — maintainers may request structural or wording changes.
+3. **Edit** pages; run `mint dev` to preview and `mint broken-links` to validate.
+4. **Update `docs.json`** to register new pages and add redirects for any moves.
+5. **Commit** with a clear message; **open a PR** against `sei-protocol/sei-docs:main` using the PR template.
+6. **Address review** — `CODEOWNERS` routes the right reviewers; CI must pass.
 
 ## Common pitfalls
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| Page doesn't appear in sidebar | Missing entry in `_meta.js` | Add the slug to the parent `_meta.js` |
-| Build fails on broken link | Internal link to non-existent page | Fix or use `<a href>` for external |
-| Code block doesn't highlight | Missing language hint after backticks | Add ` ```solidity ` etc. |
-| MDX import error | JSX component not imported at top of file | `import { Callout } from 'nextra/components'` |
-| Incorrect ordering | `_meta.js` keys are out of intended order | Reorder keys; the JS object preserves insertion order |
-| Two pages with the same `title` frontmatter | Duplicate keys collide in nav | Use unique slugs and titles |
-
-## Adding a new top-level section
-
-Rare; usually contributing means adding pages within an existing section. If you must add a new top-level dir:
-
-1. Create `/content/<new-section>/`.
-2. Add `_meta.js` and `index.mdx` (the section landing page).
-3. Update `/content/_meta.js` to register the new section in nav order.
-4. Coordinate with maintainers — top-level sections are an information-architecture decision, not a content one.
-
-## Specific page types
-
-### Tutorials / how-tos
-- Start with prerequisites and goals.
-- Code-first: paste the working snippet immediately, then explain.
-- End with verification: how does the user know it worked?
-
-### Reference pages
-- Tables of values (addresses, RPC endpoints, chain IDs) belong here.
-- Always include "verify against [authoritative source]" notes.
-- Date or version-stamp things that drift.
-
-### Concept pages
-- Lead with a one-sentence definition.
-- Use diagrams (Mermaid) for protocol flows.
-- Cross-link to deeper-dive references.
+| Page doesn't appear in sidebar | Path not added to `docs.json` | Add `"<dir>/<slug>"` (no `.mdx`) to the right group's `pages` |
+| Duplicate H1 on the page | Added `# Title` on top of frontmatter `title` | Remove the manual `# H1` — Mintlify renders `title` as the H1 |
+| Custom `.jsx` snippet throws at runtime | Declared something at module scope, used `export default`, or `import`ed a package | Move all decls inside the arrow-fn component; named `export const`; no imports |
+| Broken-link CI fails | Internal link to a non-existent path, or a renamed page with no redirect | Fix the path or add a `redirects` entry in `docs.json` |
+| Old URL 404s after a rename | Missing redirect | Add `{ source, destination, permanent: true }` to `docs.json` |
+| Code block doesn't highlight | Missing language hint | Add ` ```solidity ` / ` ```ts ` etc. |
 
 ## Where to put what
 
@@ -187,13 +191,15 @@ Rare; usually contributing means adding pages within an existing section. If you
 | New EVM dev guide | `/evm` |
 | Precompile reference | `/evm/precompiles` |
 | Wallet integration | `/evm/wallet-integrations` |
-| Architecture explainer | `/learn` |
-| Node setup tutorial | `/node` |
-| Cosmos-SDK reference | **don't** — section deprecated |
+| Architecture / accounts explainer | `/learn` |
+| Node / validator setup | `/node` |
+| AI tooling, skills, MCP, x402 | `/ai` |
+| Agent skill (hosted) | root `skill.md` (override mode); Mintlify also supports `.mintlify/skills/<name>/SKILL.md` for multiple skills |
+| Cosmos-SDK / CosmWasm | **don't** — deprecated per SIP-3 |
 
 ## Sei-specific notes
 
-- **CosmWasm and Cosmos-SDK content** is being phased out per SIP-03 — confirm with maintainers before contributing legacy CosmWasm content.
-- **EVM-first** is the current direction — most new pages should land in `/evm/`.
-- **Brand kit** lives at https://docs.sei.io/learn/general-brand-kit. Updates to logos/visual identity should also be coordinated with sei.io/media.
-- **The repo name `sei-docs-old`** in some references is a historical artifact — the same repo is the active source.
+- **EVM-first** is the current direction — most new pages land in `/evm/`.
+- **CosmWasm and Cosmos-SDK content** is being phased out per SIP-3; confirm with maintainers before adding legacy content.
+- **Hosted agent skill**: Sei publishes one via a **root `skill.md`** (Mintlify "override" mode — `name: sei-docs`, `intended-host: docs.sei.io`), served at `docs.sei.io/.well-known/skills/` and installable via `npx skills add https://docs.sei.io`. (Mintlify also supports a `.mintlify/skills/<name>/SKILL.md` layout for *multiple* skills, but Sei doesn't use it — `.gitignore` excludes all of `.mintlify/`.)
+- **Brand kit** lives at https://docs.sei.io/learn/general-brand-kit; coordinate visual-identity changes with sei.io/media.

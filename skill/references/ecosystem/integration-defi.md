@@ -7,7 +7,7 @@ description: How to integrate with major DEXes, lending markets, and yield proto
 
 Patterns and code examples for calling DEX routers, lending markets, and other DeFi primitives on Sei. The protocol APIs themselves match their canonical EVM versions (Uniswap-V2/V3, Compound, Aave); this file calls out **only the Sei-specific deltas**.
 
-> **Always verify contract addresses** against the protocol's official docs before sending real value. Addresses below are illustrative — the truth is in [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/reference/ecosystem-contracts).
+> **Always verify contract addresses** against the protocol's official docs before sending real value. Addresses below are illustrative — the truth is in [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/ecosystem-contracts).
 
 ## Pre-flight checklist (every DeFi integration)
 
@@ -181,7 +181,7 @@ See [oracles.md](oracles.md) for full Pyth/Chainlink integration patterns.
 
 ## Stablecoin handling: USDC on Sei
 
-USDC on Sei mainnet is **native USDC issued by Circle**, not a bridged synthetic. Verify the current canonical address via [docs.sei.io USDC integration](https://docs.sei.io/evm/reference/usdc).
+USDC on Sei mainnet is **native USDC issued by Circle**, not a bridged synthetic. Verify the current canonical address via [docs.sei.io USDC integration](https://docs.sei.io/evm/usdc-on-sei).
 
 ```ts
 const USDC_DECIMALS = 6;
@@ -240,7 +240,7 @@ Pointer addresses are deterministic from the underlying CW20 denom. See [pointer
 
 ## Sei-specific notes
 
-- **WSEI** (wrapped SEI) plays the role of WETH. Verify the canonical WSEI address via [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/reference/ecosystem-contracts).
+- **WSEI** (wrapped SEI) plays the role of WETH. Verify the canonical WSEI address via [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/ecosystem-contracts).
 - **Native SEI** uses 18 decimals (not 6 like Cosmos-side `usei` micro-denom — that's a Cosmos-side concept; EVM sees 18 decimals).
 - **Atomic batching**: account abstraction (see [contracts/account-abstraction.md](../contracts/account-abstraction.md)) lets users do approve+swap in one user op without a separate approval tx.
 - **Liquidation latency**: 400ms blocks make liquidation MEV competitive; bots can react within 1-2 blocks.

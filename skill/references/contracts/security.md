@@ -67,6 +67,8 @@ interface IAddr {
 }
 
 function verifyCrossVMCaller(address evmAddr, string memory expectedSeiAddr) internal view {
+    // getSeiAddr REVERTS for an unassociated address (it does NOT return "") —
+    // so an unassociated caller fails closed here, which is the safe outcome.
     string memory actualSeiAddr = IAddr(ADDR_PRECOMPILE).getSeiAddr(evmAddr);
     require(keccak256(bytes(actualSeiAddr)) == keccak256(bytes(expectedSeiAddr)), "Address mismatch");
 }
@@ -82,13 +84,12 @@ function delegateForUser(string calldata validatorAddr, uint256 amount) external
     STAKING(STAKING_PRECOMPILE).delegate{value: amount}(validatorAddr);  // No validation
 }
 
-// ✅ Validate against allowlist or format-check
-bytes memory addrBytes = bytes(validatorAddr);
-require(addrBytes.length == 52, "Invalid validator address length");
-require(
-    addrBytes[0] == 's' && addrBytes[1] == 'e' && addrBytes[2] == 'i',
-    "Not a sei1valoper address"
-);
+// ✅ Validate against a known allowlist of operators you trust.
+//    Do NOT hardcode a bech32 length/prefix check: bech32 lengths are not a
+//    stable constant, and a "sei" prefix check also accepts a regular sei1...
+//    account address (validators use the seivaloper1... prefix).
+mapping(bytes32 => bool) allowedValidators; // keccak256(validatorAddr) => allowed
+require(allowedValidators[keccak256(bytes(validatorAddr))], "validator not allowlisted");
 ```
 
 ### 6. Staking Precompile Amount Units
@@ -193,11 +194,12 @@ function swap(..., uint256 deadline) external {
 // ❌ Spot price from AMM — easily manipulated in same block
 uint256 price = pool.token0() / pool.token1();
 
-// ✅ Use a TWAP or external oracle (Pyth, Chainlink)
+// ✅ Use a TWAP or external oracle (Pyth, Chainlink, API3, RedStone)
 PythStructs.Price memory price = pyth.getPriceNoOlderThan(priceId, 60);
 
-// ✅ On Sei: native oracle precompile is free and safe
-IOracle(0x1008).getOracleTwaps(3600);  // 1-hour TWAP
+// ❌ The native Oracle precompile (0x...1008) is RETIRED (shut off July 2026) —
+//    any query REVERTS ("oracle precompile is retired"). Use a third-party
+//    oracle (Pyth, Chainlink, API3, RedStone).
 ```
 
 ### Signature Replay

@@ -35,7 +35,7 @@ contract MyToken is Initializable, ERC20Upgradeable, OwnableUpgradeable, UUPSUpg
     function initialize(address owner) public initializer {
         __ERC20_init("MyToken", "MTK");
         __Ownable_init(owner);
-        __UUPSUpgradeable_init();
+        // OZ v5's UUPSUpgradeable is stateless — no __UUPSUpgradeable_init() call
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
@@ -209,7 +209,7 @@ function _authorizeUpgrade(address) internal override onlyOwner {
 
 ## Sei-specific notes
 
-- All standard OpenZeppelin upgrade tooling works unchanged. There's no Sei fork of `@openzeppelin/hardhat-upgrades` needed.
+- No Sei fork of OpenZeppelin tooling is needed, but match the plugin line to your Hardhat major: `@openzeppelin/hardhat-upgrades` **v4** (stable since June 2026, npm `latest`) targets **Hardhat 3** (`hardhat@^3.6.0`, ESM-only, new plugin-hooks API — no automatic `hre.upgrades`; register the plugin in config, then `const connection = await hre.network.create()` and call the `upgrades(hre, connection)` factory), while the **v3.x** line remains for **Hardhat 2**. With OZ Contracts v5, `UUPSUpgradeable` is **stateless** — no `__UUPSUpgradeable_init()` call in your initializer (it's a no-op in v5.0.x and removed in v5.1+).
 - `evm_version = "cancun"` (or earlier) — newer EVM versions may not be enabled.
 - Proxy contracts work correctly with pointer contracts and precompiles.
 - OCC parallelism applies to upgrade-target contracts the same way: the upgrade itself is a single tx (serializing on the proxy slot for that one tx), but normal users hitting the proxy run in parallel.

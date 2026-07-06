@@ -6,7 +6,7 @@ description: >
   login", "display both EVM and Cosmos addresses", "RainbowKit / ConnectKit
   with Sei", "EIP-6963 wallet detection on Sei", "where on docs.sei.io is X",
   "where on sei.io is X", "contribute a page to docs.sei.io", "how do I author
-  Nextra MDX docs for Sei", "what's in the Sei brand kit", "where do I find
+  Mintlify MDX docs for Sei", "what's in the Sei brand kit", "where do I find
   Sei logos / press kit", or anything about Sei UIs, wallet UX, and the
   official web properties. Frontend-focused variant — UI stack, wallet UX,
   dual-address UX, and site/docs awareness. For deeper smart-contract or
@@ -39,7 +39,7 @@ Use this Skill when the user asks for:
 - Network-add UX (`wallet_addEthereumChain` for Sei)
 - Fast-finality UX patterns (no multi-confirmation spinners)
 - Navigating sei.io and docs.sei.io to send users to the right page
-- Authoring or contributing pages to docs.sei.io (Nextra + MDX + `_meta.js`)
+- Authoring or contributing pages to docs.sei.io (Mintlify + MDX + `docs.json`)
 - Sei brand kit, logos, media assets, press contacts
 - Frontend-side reading from Sei precompiles (e.g., dual-address lookup via Addr precompile)
 
@@ -48,7 +48,7 @@ Use this Skill when the user asks for:
 These facts must inform every Sei answer:
 
 1. **400ms block time, instant finality** — use `tx.wait(1)` / `confirmations: 1`; no "safe"/"finalized" spinners
-2. **Use legacy `gasPrice` ≥ 50 gwei** — Sei does not use EIP-1559 priority fees; min 50 gwei
+2. **Use legacy `gasPrice`** — Sei does not use EIP-1559 priority fees; the minimum is governance-set and adjustable (currently ~50 gwei on mainnet — pacific-1 Proposal #112 / atlantic-2 #244; query `eth_gasPrice` for the live floor)
 3. **Dual address system** — every user has both `sei1...` and `0x...`; surface both when needed
 4. **Chain IDs:** Mainnet `pacific-1` / EVM `1329`; Testnet `atlantic-2` / EVM `1328`
 5. **EIP-6963 is the default** for wallet detection; Wagmi `injected()` discovers all participants automatically
@@ -59,7 +59,7 @@ These facts must inform every Sei answer:
 1. **Library**: Wagmi + Viem for React; Ethers.js v6 for non-React or Node scripts
 2. **Wallet (consumer)**: Sei Global Wallet (`@sei-js/sei-global-wallet`) — no install, social login, EIP-6963
 3. **Wallet UX shell**: RainbowKit or ConnectKit for polished connect modal
-4. **Chain config**: import `sei` / `seiTestnet` from `@sei-js/precompiles`
+4. **Chain config**: import `sei` / `seiTestnet` from `wagmi/chains` (or `viem/chains`) — `@sei-js/precompiles` only ships the `seiLocal` dev chain, not `sei`/`seiTestnet`
 5. **Always pin `chainId`** in writeContract calls
 6. **Always use legacy `gasPrice ≥ 50 gwei`**, never EIP-1559 fields
 7. **Default to testnet** in development; switch to mainnet only when explicitly requested
@@ -129,7 +129,7 @@ Use it for: address lookup, balance checks, contract reads from a frontend testb
 
 ### Site awareness and contribution
 - **sei.io / docs.sei.io site map:** [frontend/sites-map.md](references/frontend/sites-map.md)
-- **Contributing to docs.sei.io (Nextra + MDX + _meta.js):** [frontend/docs-contributing.md](references/frontend/docs-contributing.md)
+- **Contributing to docs.sei.io (Mintlify + MDX + docs.json):** [frontend/docs-contributing.md](references/frontend/docs-contributing.md)
 - **Brand kit, logos, media:** [frontend/branding-media.md](references/frontend/branding-media.md)
 
 ### Cross-domain references frontends will reach for

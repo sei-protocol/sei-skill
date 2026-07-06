@@ -58,7 +58,7 @@ Four top-level sections.
 - Bridging: LayerZero V2, Thirdweb
 - Oracles & VRF: API3, Chainlink, Pyth, RedStone, Pyth VRF
 - AI Tooling: Cambrian Agent Kit, **MCP Server**, Agentic Wallets, x402 Protocol
-- Reference: RPC, Tokens, **Ecosystem Contracts** (`/evm/reference/ecosystem-contracts`), Networks, USDC Integration, Ledger Setup
+- Reference: RPC, Tokens, **Ecosystem Contracts** (`/evm/ecosystem-contracts`), Networks, USDC Integration, Ledger Setup
 
 ### `/cosmos-sdk` — Cosmos-side development
 - **Status**: deprecated per SIP-03 — migrate to EVM-only
@@ -89,12 +89,12 @@ Four top-level sections.
 
 ## Sei docs build/repo
 
-- **Repository**: https://github.com/sei-protocol/sei-docs (despite the `-old` suffix used by some tooling, this is the live source)
-- **Framework**: Nextra (Next.js)
-- **Build tool**: Bun
-- **Format**: `.mdx` (Markdown + JSX) under `/content/`
-- **Nav config**: `_meta.js` files at each directory level
-- **Style guide**: `/STYLE_GUIDE.mdx` in the repo
+- **Repository**: https://github.com/sei-protocol/sei-docs
+- **Framework**: Mintlify (migrated off Nextra; auto-deploys from `main`)
+- **Local preview**: `mint dev` (Mintlify CLI)
+- **Format**: `.mdx` (Markdown + JSX) in top-level section dirs (`evm/`, `learn/`, `node/`, `ai/`)
+- **Nav config**: `docs.json` (single source of truth for navigation + redirects)
+- **Style guide**: `STYLE_GUIDE.md` in the repo
 
 For contributing to the docs, see [docs-contributing.md](docs-contributing.md).
 

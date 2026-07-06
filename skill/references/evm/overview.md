@@ -66,7 +66,7 @@ const tx = {
 ### SSTORE and Storage Writes
 ```solidity
 // SSTORE costs differ by network:
-// - Both mainnet & testnet: 72,000 gas per cold write (governance proposal #240)
+// - Both mainnet & testnet: 72,000 gas per cold write (pacific-1 Proposal #109; testnet same value, no separate proposal)
 
 // Always verify with `forge test --gas-report` against your target network.
 

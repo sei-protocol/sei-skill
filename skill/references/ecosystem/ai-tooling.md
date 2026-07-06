@@ -167,6 +167,12 @@ await kit.rebalancePortfolio({
 
 ---
 
+## Payments and x402
+
+For agents that need to *pay* for resources or *charge* for them, Sei supports **x402** — HTTP-native micropayments settled in USDC. The `@sei-js/x402-*` packages wrap the 402 challenge/verify cycle for clients (`x402-fetch`, `x402-axios`) and servers (`x402-express`, `x402-hono`, `x402-next`). USDC on Sei is a standard ERC-20 with **6 decimals**. Full flow, addresses, and replay-protection requirements: [payments.md](payments.md).
+
+---
+
 ## Agent-Friendly Development Patterns
 
 ### Safety Guidelines for AI Agents Operating on Sei

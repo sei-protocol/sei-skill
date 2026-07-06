@@ -13,45 +13,11 @@ description: Chainlink, Pyth Network, API3, and RedStone oracle integrations on 
 | **Pyth Network** | Sub-second latency, NFTs, perps, high-frequency | Pull (user pushes update per tx) |
 | **API3** | First-party data, operational simplicity | Push (dAPI proxies) |
 | **RedStone** | On-demand, modular, custom feeds | Pull (wrap tx with price data) |
-| **Native Oracle** | Simple on-chain access to Sei's oracle module | Precompile (always available) |
+| **Native Oracle** (`0x…1008`) | ❌ **Retired (shut off July 2026) — queries revert; do not use** | — |
 
 > **NEVER use `block.prevrandao` or `block.timestamp` for randomness** — use Pyth VRF or Chainlink VRF instead.
 
----
-
-## Native Oracle Precompile
-
-**Address:** `0x0000000000000000000000000000000000001008`
-
-Sei has a built-in oracle module. Price data is submitted by validators each epoch.
-
-```solidity
-pragma solidity ^0.8.28;
-
-interface IOracle {
-    struct OracleData {
-        int64 price;    // price in micro-USD (divide by 1e6 to get USD)
-        uint64 denom;
-        uint64 timestamp;
-    }
-
-    function getExchangeRates() external view returns (OracleData[] memory);
-    function getOracleTwaps(uint64 lookbackSeconds) external view returns (OracleData[] memory);
-}
-
-contract PriceFeed {
-    address constant ORACLE = 0x0000000000000000000000000000000000001008;
-
-    function getSeiPrice() external view returns (int64) {
-        IOracle.OracleData[] memory rates = IOracle(ORACLE).getExchangeRates();
-        for (uint i = 0; i < rates.length; i++) {
-            // Find SEI/USD rate
-            return rates[i].price; // micro-USD
-        }
-        revert("SEI rate not found");
-    }
-}
-```
+> **❌ The native Oracle precompile (`0x…1008`) is retired (shut off July 2026) — every data query reverts with `oracle precompile is retired; oracle data queries are disabled`.** It's gone, not merely deprecated: the revert bubbles up, so any contract path that still reads it breaks. Use a third-party oracle (Chainlink, Pyth, API3, RedStone) for every feed — covered below.
 
 ---
 

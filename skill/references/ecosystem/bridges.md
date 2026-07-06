@@ -1,218 +1,116 @@
 ---
 title: Bridges to/from Sei
-description: Bridges live on Sei — LayerZero V2 (OFT), Wormhole, Axelar, IBC, ThirdWeb. Supported assets, source chains, contract addresses, and integration patterns for each.
+description: Bridges on Sei — LayerZero V2 (OFT) and Circle CCTP v2 (native USDC) are the documented EVM bridges, plus the official Sei bridge UI. Wormhole is verify-first (not Sei-documented); inbound IBC is disabled under SIP-3.
 ---
 
 # Bridges to/from Sei
 
-How users and contracts move assets between Sei and other chains. Sei supports three EVM-style bridges (LayerZero, Wormhole, Axelar) plus IBC for the Cosmos ecosystem.
+How users and contracts move assets and messages between Sei and other chains. The EVM bridges **Sei documents and recommends** are **LayerZero V2** (Sei is a full LayerZero V2 endpoint) and **Circle CCTP v2** (native USDC); the official UI is the **Sei bridge dashboard** / Thirdweb. Wormhole is supported at the protocol level but is **not documented by Sei** and its Sei CosmWasm side is legacy/exit-only — see the caveat below. Pick the bridge by the asset, not by habit.
 
-> **Always verify bridge contract addresses** against the bridge's official docs before sending real value. Bridges are high-value targets and addresses change during version upgrades.
+> **Inbound IBC is disabled under SIP-3** (pacific-1 [Proposal 116](https://www.mintscan.io/sei/proposals/116); atlantic-2 testnet **#247**). IBC assets from Cosmos chains can no longer arrive on Sei — treat IBC as legacy/exit-only and use an EVM bridge for new inbound transfers. See [ibc-bridging.md](ibc-bridging.md).
 
-## Quick decision: which bridge?
+> **Always verify bridge contract addresses, endpoint IDs, and CCTP domain IDs** against each bridge's official docs and on [Seiscan](https://seiscan.io) before sending real value. Bridges are high-value targets and addresses change across version upgrades — never hardcode them from memory.
 
-| Bridge | Best for | Avoid when |
-|---|---|---|
-| **LayerZero V2** | OFT-style omnichain tokens; cross-chain dApp messaging | You need maximum decentralization (LZ uses a configurable DVN model) |
-| **Wormhole** | Native asset transfers from Solana, Ethereum, Polygon | You want native LayerZero/CCTP routing |
-| **Axelar** | Generalized message passing + asset transfers from Cosmos and EVM | Lowest-fee swaps (Axelar adds infra cost) |
-| **IBC** | Cosmos ecosystem (Osmosis, Stride, Noble) | EVM source/dest chain |
-| **ThirdWeb Bridge** | Embedded bridge UX in your dApp | You need direct contract integration |
-| **Native USDC via CCTP** | USDC ↔ USDC across chains, no synthetic | Other assets |
+## Which bridge? (decision matrix)
+
+| You have / want | Use | Mechanism | Why |
+|---|---|---|---|
+| A **new token** native on Sei + other chains | **LayerZero V2 OFT** | burn-and-mint, unified supply | You control both ends; no wrapped IOU, one canonical supply |
+| **Native USDC** moved onto/off Sei | **Circle CCTP v2** | burn-and-mint native USDC | Canonical USDC, fewest trust assumptions, no synthetic |
+| An **existing asset** only Wormhole covers (some Solana-native tokens) | **Wormhole** (WTT/NTT) — *verify first* | wrapped / native-token transfer | Supported per Wormhole's network list, but **not documented by Sei**; confirm current support and prefer LayerZero V2 / CCTP where they cover the asset |
+| **Arbitrary cross-chain messages** / calls + transfers | **LayerZero** (OApp) | GMP messaging | Generalized message passing via Sei's LayerZero V2 endpoint |
+| **End users** bridging in a UI, no integration | **Sei bridge dashboard** / Thirdweb | aggregated routing | Drop-in UX, no contract work |
+| Assets coming **from a Cosmos chain via IBC** | **Not available inbound** | — | Inbound IBC disabled (pacific-1 Prop 116 / atlantic-2 #247, SIP-3) — bridge via an EVM route instead |
 
 ## LayerZero V2
 
-Live on Sei mainnet and testnet. Sei is fully integrated as a LayerZero V2 endpoint.
+Live on Sei mainnet and testnet — Sei is fully integrated as a LayerZero V2 endpoint.
 
-### Endpoints (mainnet)
-
-| Component | Address |
-|---|---|
-| LayerZero Endpoint | `0x1a44076050125825900e736c501f859c50fE728c` |
-| SendUln302 | `0xC39161c743D0307EB9BCc9FEF03eeb9Dc4802de7` |
-
-> Verify against https://docs.layerzero.network/v2/deployments/sei before deploying.
+> Sei LayerZero **Endpoint IDs (EIDs): mainnet `30280`, testnet `40455`.** Read the EndpointV2 address and all protocol contracts from https://docs.layerzero.network/v2/deployments/deployed-contracts?chains=sei — do not hardcode them from memory.
 
 ### OFT (Omnichain Fungible Token) pattern
 
-Deploying a token that exists on Sei + Ethereum + Arbitrum simultaneously, with native cross-chain transfers:
+A token that exists natively on Sei + other chains, with cross-chain sends that burn on the source and mint on the destination. Scaffold with `npx create-lz-oapp@latest` (choose the OFT example), deploy the same contract on each chain pointing at that chain's endpoint, then wire the peers.
 
 ```solidity
-// MyOFT.sol
-pragma solidity ^0.8.28;
-import "@layerzerolabs/oft-evm/contracts/OFT.sol";
+// MyOFT.sol — same contract deploys on Sei and every other chain.
+pragma solidity ^0.8.22;
+
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
+import { OFT } from "@layerzerolabs/oft-evm/contracts/OFT.sol";
 
 contract MyOFT is OFT {
-    constructor(string memory name, string memory symbol, address lzEndpoint, address owner)
-        OFT(name, symbol, lzEndpoint, owner)
-        Ownable(owner)
-    {}
+    // `endpoint` is the LayerZero EndpointV2 address for the chain you deploy on
+    // (Sei mainnet EID 30280 / testnet EID 40455) — read it from the deployments page.
+    constructor(string memory name, string memory symbol, address endpoint, address owner)
+        OFT(name, symbol, endpoint, owner) Ownable(owner) {}
 }
 ```
 
-Deploy on each chain with the local LayerZero endpoint. Then wire the peers:
+Wire peers, quote the fee, then send (the cross-chain fee is paid in native gas and must be quoted first):
 
 ```ts
-// Set Sei as a peer of Ethereum's MyOFT
-await ethOft.setPeer(SEI_EID, addressToBytes32(seiOftAddress));
-// And vice versa
-await seiOft.setPeer(ETH_EID, addressToBytes32(ethOftAddress));
-```
+import { Options, addressToBytes32 } from "@layerzerolabs/lz-v2-utilities";
+import { parseUnits } from "ethers";
 
-Cross-chain send:
+// Tell Sei's OFT about the peer on the other chain (and vice versa on that chain).
+await seiOft.setPeer(DST_EID, addressToBytes32(remoteOftAddress));
 
-```ts
-import { Options } from "@layerzerolabs/lz-v2-utilities";
-
-const options = Options.newOptions().addExecutorLzReceiveOption(200_000n, 0n).toHex();
+const options = Options.newOptions().addExecutorLzReceiveOption(80_000n, 0n).toHex();
 const sendParam = {
-  dstEid: SEI_EID,
-  to: addressToBytes32(recipient),
-  amountLD: parseEther("100"),
-  minAmountLD: parseEther("99"),
+  dstEid: DST_EID,
+  to: addressToBytes32(recipient0x),   // 0x recipient on the destination chain
+  amountLD: parseUnits("100", 18),
+  minAmountLD: parseUnits("99", 18),   // slippage floor
   extraOptions: options,
   composeMsg: "0x",
   oftCmd: "0x",
 };
 
-const { nativeFee } = await oft.read.quoteSend([sendParam, false]);
-await oft.write.send([sendParam, { nativeFee, lzTokenFee: 0n }, refundAddr], { value: nativeFee });
+const { nativeFee } = await seiOft.quoteSend(sendParam, false); // quote BEFORE sending
+const tx = await seiOft.send(sendParam, { nativeFee, lzTokenFee: 0n }, refund0x, { value: nativeFee });
+await tx.wait(1); // one confirmation — Sei finalizes fast
 ```
 
-See https://docs.layerzero.network/v2/concepts/intro for full OFT walkthrough.
+For an *already-deployed* ERC-20 you can't reissue, use an **OFT Adapter** (locks the existing token instead of minting) rather than `OFT`. Full walkthrough, EIDs, and deployed contracts: https://docs.sei.io/evm/bridging/layerzero and https://docs.layerzero.network/v2/concepts/intro.
 
-### Sei Endpoint IDs
+## Wormhole (verify first — not documented by Sei)
 
-| Network | EID |
-|---|---|
-| Sei mainnet | (verify via LZ docs — values change) |
-| Sei testnet | (verify via LZ docs) |
+Wormhole's [supported-networks list](https://wormhole.com/docs/products/reference/supported-networks/) shows a **SeiEVM** entry (chain id 1329) with NTT, WTT (wrapped token transfers), and CCTP routing on mainnet. **But Sei's own docs provide no Wormhole EVM integration guide — the documented, recommended EVM bridges are LayerZero V2 and Circle CCTP.** Treat Wormhole as verify-first:
 
-## Wormhole
+- **The Wormhole *CosmWasm* side on Sei is legacy/exit-only.** Wrapped assets that arrived on the Cosmos side (e.g. `USDCso`, Wormhole-bridged `WETH`, `USDCet`) must be **bridged out** via the legacy [Portal Bridge](https://legacy.portalbridge.com) under SIP-3 — see https://docs.sei.io/learn/sip-03-migration. Do not route new inbound transfers through it.
+- **For your own multichain token,** Wormhole **NTT** is the analogue of LayerZero's OFT; **WTT** is the lock/mint wrapped path. If you specifically need Wormhole (coverage LayerZero/CCTP lack), **verify the current SeiEVM contract addresses and the exact SDK chain handle** on https://wormhole.com/docs/products/reference/supported-networks/ before integrating — do not assume them from memory.
 
-Live on Sei mainnet. Supports native token transfers, ERC-20 wrapping, NFT bridging, and generic messaging.
+When LayerZero V2 (OFT / messaging) or CCTP (USDC) cover your case, prefer them: they have first-class Sei documentation and deployed-contract tables.
 
-### Use cases
+## Native USDC via Circle CCTP v2
 
-- Transfer USDC from Solana to Sei.
-- Bridge ETH from Ethereum to Sei (becomes wrapped wETH).
-- Cross-chain governance messages.
-
-### Integration
-
-Wormhole's TokenBridge contract on Sei has a fixed address — **verify via https://docs.wormhole.com/wormhole/reference/constants before integrating**.
+CCTP moves *native* USDC (no wrapper): burn on the source chain, Circle attests off-chain, mint on Sei. **USDC is 6 decimals on Sei** — convert with `parseUnits(value, 6)`. The recipient is passed as a 32-byte value (`mintRecipient` is the `0x...` Sei address left-padded to bytes32).
 
 ```ts
-import {
-  wormhole,
-  Wormhole,
-  TokenId,
+import { parseUnits, pad } from "viem";
+
+// 1) Approve + burn on the SOURCE chain. SEI_DOMAIN comes from Circle's CCTP
+//    supported-chains/domain table — verify, do not hardcode.
+const amount = parseUnits("100", 6); // 100 USDC, 6 decimals
+await sourceUsdc.write.approve([TOKEN_MESSENGER, amount]);
+await sourceTokenMessenger.write.depositForBurn([
   amount,
-} from "@wormhole-foundation/sdk";
-import evm from "@wormhole-foundation/sdk/platforms/evm";
-
-const wh = await wormhole("Mainnet", [evm]);
-const sei = wh.getChain("Sei");
-const eth = wh.getChain("Ethereum");
-
-const xfer = await wh.tokenTransfer(
-  Wormhole.tokenId("Ethereum", "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"), // USDC on ETH
-  amount.units(amount.parse("100", 6)),
-  Wormhole.chainAddress("Ethereum", senderEth),
-  Wormhole.chainAddress("Sei", recipientSei),
-  false, // not automatic
-);
-
-const txids = await xfer.initiateTransfer(ethSigner);
-// Wait, then:
-const vaa = await xfer.fetchAttestation();
-const completeTxids = await xfer.completeTransfer(seiSigner);
-```
-
-## Axelar
-
-Live on Sei. Generalized message passing + asset transfers via the Axelar Network.
-
-```solidity
-import "@axelar-network/axelar-gmp-sdk-solidity/contracts/executable/AxelarExecutable.sol";
-
-contract MyAxelarApp is AxelarExecutable {
-    constructor(address gateway) AxelarExecutable(gateway) {}
-
-    function sendMessage(string calldata destChain, string calldata destAddress, bytes calldata payload) external payable {
-        gateway.callContract(destChain, destAddress, payload);
-    }
-
-    function _execute(string calldata sourceChain, string calldata sourceAddress, bytes calldata payload) internal override {
-        // Handle inbound message
-    }
-}
-```
-
-Sei Axelar gateway address: verify via https://docs.axelar.dev/dev/reference/mainnet-contract-addresses.
-
-## IBC (Cosmos ecosystem)
-
-For asset transfers between Sei and Cosmos chains (Osmosis, Stride, Noble, etc.). IBC operates on the **Cosmos side** of Sei — uses `sei1...` addresses, not `0x...`.
-
-To bridge an EVM-side asset (e.g., a pointer-wrapped ERC20) to a Cosmos chain via IBC:
-
-1. **Bridge EVM → Cosmos via the pointer/precompile bridge** — the asset becomes a Cosmos-side `ibc/...` denom.
-2. **Send via `seid tx ibc-transfer transfer`** — standard IBC transfer to the destination chain.
-
-```bash
-seid tx ibc-transfer transfer \
-  transfer channel-X \
-  sei1recipient... \
-  100usei \
-  --from mywallet \
-  --node https://rpc.sei-apis.com \
-  --chain-id pacific-1
-```
-
-Channel IDs and counterparties: https://www.mintscan.io/sei/relayers.
-
-See [ibc-bridging.md](ibc-bridging.md) for full IBC mechanics.
-
-## ThirdWeb Bridge
-
-ThirdWeb's bridge UI integrates as a drop-in widget for dApps. Supports Sei mainnet.
-
-```ts
-import { Bridge } from "@thirdweb-dev/react";
-
-<Bridge
-  client={thirdwebClient}
-  chains={["sei", "ethereum", "arbitrum"]}
-  defaultChain="sei"
-/>
-```
-
-See https://docs.sei.io/evm/bridging/thirdweb.
-
-## Native USDC via CCTP
-
-Circle's Cross-Chain Transfer Protocol (CCTP) is the canonical way to move **native USDC** between supported chains, including Sei (verify support status at https://www.circle.com/cross-chain-transfer-protocol). CCTP burns USDC on the source chain and mints fresh USDC on Sei — no synthetic, no wrapped IOU.
-
-```ts
-// Burn USDC on source chain (e.g., Ethereum)
-await sourceUsdc.write.approve([CCTP_TOKEN_MESSENGER, amount]);
-await ethCctp.write.depositForBurn([
-  amount,
-  SEI_DOMAIN_ID,
-  addressToBytes32(seiRecipient),
-  USDC_ETH_ADDRESS,
+  SEI_DOMAIN,                            // Circle domain id for Sei
+  pad(seiRecipient0x, { size: 32 }),     // mintRecipient as bytes32
+  sourceUsdcAddress,
 ]);
 
-// Wait for Circle attestation, then mint on Sei
-await seiCctp.write.receiveMessage([message, attestation]);
+// 2) Poll Circle's attestation API, then mint on Sei.
+const tx = await seiMessageTransmitter.write.receiveMessage([message, attestation]);
+await tx.wait(1); // mint confirms in ~one Sei block
 ```
 
-CCTP attestation is off-chain (Circle's API); typical end-to-end time is 15-30 minutes due to attestation finalization on the source chain (independent of Sei's 400ms finality).
+End-to-end time is dominated by **source-chain** finality + Circle's attestation (often 15+ min), independent of Sei's sub-second finality. Get testnet USDC from the [Circle Faucet](https://faucet.circle.com). Addresses/domains: https://developers.circle.com/cctp. USDC on Sei: https://docs.sei.io/evm/usdc-on-sei.
 
-## Bridging from EVM-side Sei to Cosmos-side Sei (cross-VM)
+## End-user bridging UI
 
-This is **not a bridge** but rather an in-chain pointer/association mechanism. See [pointers/overview.md](../pointers/overview.md) for ERC20↔CW20 routing within Sei itself.
+For users (not contract integrations), point them at the official **[Sei bridge dashboard](https://dashboard.sei.io/bridge)** — it aggregates routes onto Sei. To embed bridging in your own dApp, use Thirdweb Payments (onramp/swap/bridge widget): https://docs.sei.io/evm/bridging/thirdweb. The dashboard's transfer tool also handles native↔EVM asset movement during SIP-3 migration: https://dashboard.sei.io/evm-upgrade.
 
 ## Comparison: time to finality
 
@@ -220,27 +118,24 @@ This is **not a bridge** but rather an in-chain pointer/association mechanism. S
 |---|---|---|
 | LayerZero V2 | ~2-5 min | Depends on DVN config + source-chain finality |
 | Wormhole | ~10-15 min | Guardian set attestation + source finality |
-| Axelar | ~5-15 min | Validator set attestation |
 | CCTP (native USDC) | ~15-30 min | Source-chain finality is the bottleneck |
-| IBC | ~30-60s | Cosmos-to-Cosmos only |
 
-Sei's instant finality on the **destination side** is fast; the bottleneck for cross-chain transfers is always the source chain's finality.
+Sei's instant finality on the **destination side** is fast; the bottleneck for cross-chain transfers is always the source chain's finality + the bridge's attestation.
 
 ## Bridge security risks
 
-- **DVN/oracle compromise** (LayerZero) — review the DVN set the bridge uses.
-- **Guardian set compromise** (Wormhole) — historically targeted; check current guardian status.
-- **Validator set compromise** (Axelar) — Axelar is a separate L1 with its own validator economic security.
-- **Smart-contract risk** — every bridge has a contract that holds locked or burnable assets. Audit history matters.
+- **DVN/oracle set** (LayerZero) — review the DVN set the pathway uses; if `quoteSend` reverts, the pathway/DVNs aren't wired.
+- **Guardian set** (Wormhole) — historically targeted; check current guardian status.
+- **Smart-contract risk** — every bridge holds locked or burnable value. Audit history matters.
 
 For high-value transfers, prefer:
-1. CCTP for USDC (fewest trust assumptions).
-2. Native LayerZero V2 OFT if you control both ends of the token.
-3. Multiple-bridge redundancy for arbitrarily large value.
+1. **CCTP** for USDC (fewest trust assumptions).
+2. A self-controlled **LayerZero V2 OFT** if you control both ends of the token.
 
 ## Sei-specific notes
 
-- **All EVM bridges accept `0x...` addresses on the Sei side.** Don't pass `sei1...` addresses to LayerZero/Wormhole/Axelar — they expect EVM format.
-- **For IBC, use the user's `sei1...` address.** If the user only knows their `0x...`, derive the Cosmos-side via [addresses-wallets.md](../addresses-wallets.md).
-- **Pointer contracts** let bridged assets exist as both ERC20 (for EVM dApps) and CW20/native denom (for Cosmos modules). See [pointers/overview.md](../pointers/overview.md).
-- **Min gas price 50 gwei** applies to bridge claim/redemption transactions on Sei — under-priced redemptions just sit in mempool.
+- **EVM bridges accept `0x...` addresses on the Sei side.** Don't pass `sei1...` addresses to LayerZero / CCTP — they expect EVM format. (Wormhole lists Sei twice — a CosmWasm `Sei` side and an EVM `SeiEVM` side; if you use it, confirm the exact SDK handle on Wormhole's docs.)
+- **Use legacy `gasPrice` for Sei-side claim/redeem/mint transactions.** Sei has no EIP-1559 base-fee burn — set a single `gasPrice`, not `maxFeePerGas`/`maxPriorityFeePerGas`. The minimum gas price is governance-adjustable (currently ~50 gwei on mainnet — query `eth_gasPrice` for the live floor); an under-priced redemption just sits in the mempool. See https://docs.sei.io/evm/differences-with-ethereum.
+- **Inbound IBC is disabled (SIP-3).** Don't route assets onto Sei via IBC; holders of legacy `ibc/...` assets must bridge *out* (e.g. swap USDC.n → native USDC via CCTP) before activation. See [ibc-bridging.md](ibc-bridging.md) and https://docs.sei.io/learn/sip-03-migration.
+- **CosmWasm is deprecated for new development (SIP-3).** Deploy ERC-20 / OFT contracts directly; pointer contracts and the IBC precompile are legacy migration tooling.
+- **Verify every contract address, EID, and CCTP domain ID** against the bridge's official docs and on Seiscan before deploying.

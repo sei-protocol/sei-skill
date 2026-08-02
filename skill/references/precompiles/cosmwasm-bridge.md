@@ -166,7 +166,7 @@ interface ICosmWasm {
 
 ## IBC Precompile (`0x1009`) — do not use
 
-**This precompile cannot perform a transfer.** IBC is closed on Sei in both directions — inbound by Props 116/120, outbound by [Proposal 121](https://seistream.app/proposals/121) (2026-07-31). `IIBC.transfer` reverts regardless of arguments.
+**This precompile cannot perform a transfer.** IBC is closed on Sei in both directions — inbound by Props 116/120, outbound by [Proposal 121](https://seistream.app/proposals/121) (2026-07-31). Both entrypoints (`transfer` and `transferWithDefaultTimeout`) call the transfer keeper, which now rejects the message, so both revert regardless of arguments.
 
 Do not include it in new contracts. Existing contracts that call it will revert on that path and need an alternative route — see [../ecosystem/bridges.md](../ecosystem/bridges.md) for the EVM bridges.
 

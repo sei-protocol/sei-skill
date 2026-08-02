@@ -1,11 +1,13 @@
 ---
 title: Sei Ecosystem Participation Roles
-description: How to participate in the Sei ecosystem as a validator, RPC provider, indexer operator, oracle relayer, IBC relayer, or grant recipient. Pointers into deeper references for each role.
+description: How to participate in the Sei ecosystem as a validator, RPC provider, indexer operator, oracle relayer, or grant recipient. Pointers into deeper references for each role. Running an IBC relayer is no longer viable — IBC is closed on Sei.
 ---
 
 # Sei Ecosystem Participation Roles
 
-Beyond building dApps, the Sei ecosystem has operational roles that earn revenue or influence: validators, RPC providers, indexer operators, oracle relayers, IBC relayers, and grants/builder programs. This page is a router — most roles have dedicated reference files; this is the index.
+Beyond building dApps, the Sei ecosystem has operational roles that earn revenue or influence: validators, RPC providers, indexer operators, oracle relayers, and grants/builder programs. This page is a router — most roles have dedicated reference files; this is the index.
+
+> **IBC relaying is no longer a Sei role.** IBC is closed in both directions (Props 116/120 inbound, [121](https://seistream.app/proposals/121) outbound), so there are no packets to relay. See [ibc-bridging.md](ibc-bridging.md).
 
 ## Quick decision: which role?
 
@@ -15,7 +17,6 @@ Beyond building dApps, the Sei ecosystem has operational roles that earn revenue
 | **RPC provider** | Hardware (high-spec node) | Medium-high | Paid endpoints, infrastructure SLAs |
 | **Indexer operator** | Hardware (DB + node) | Medium | Per-query / subscription fees |
 | **Oracle relayer** | Operational | Medium | Off-chain operator role; revenue depends on the oracle network |
-| **IBC relayer** | Infrastructure + transaction fees on both chains | Medium | Optional fee-routing or altruistic |
 | **Grants / Builder program** | Building a dApp | Varies | One-time or milestone-based grant |
 
 ## Validator
@@ -77,19 +78,6 @@ Publish off-chain data (prices, randomness, weather, etc.) on-chain via an oracl
 
 → Oracle integration patterns: [oracles.md](oracles.md)
 
-## IBC relayer
-
-Run a relayer between Sei and another Cosmos chain (Osmosis, Stride, Noble, etc.). Relayers ferry IBC packets — without them, IBC transfers stall.
-
-**Software**: `hermes` (Rust) or `rly` (Go).
-
-**Operational**: must hold gas tokens on both chains to pay submission fees; profits are typically thin or altruistic.
-
-**Why bother**: ecosystem service; some chains offer fee subsidies for major routes.
-
-→ See [ibc-bridging.md](ibc-bridging.md) for relayer overview.
-→ Channel topology: https://www.mintscan.io/sei/relayers
-
 ## Grants and builder programs
 
 Sei Foundation operates several funding programs:
@@ -114,7 +102,7 @@ Sei Foundation operates several funding programs:
 - Indexer setup: [indexers.md](indexers.md)
 - Oracles: [oracles.md](oracles.md)
 - RPC endpoint list: [rpc-providers.md](rpc-providers.md)
-- IBC overview: [ibc-bridging.md](ibc-bridging.md)
+- IBC status (closed, and what that means for existing balances): [ibc-bridging.md](ibc-bridging.md)
 - Staking from a wallet (delegators, not validators): [staking-governance.md](staking-governance.md)
 
 ## Sei-specific notes

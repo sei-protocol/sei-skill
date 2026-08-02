@@ -55,7 +55,7 @@ Integration tip: see [integration-defi.md](integration-defi.md) for router/comet
 | Project | Category | Site | Notes |
 |---|---|---|---|
 | **Kryptonite** | LST + DeFi | varies | Stake SEI for sSEI |
-| **Stride** | Cross-chain LST | https://stride.zone | LST via IBC; bridge to EVM via pointer |
+| **Stride** | Cross-chain LST | https://stride.zone | LST arrived via IBC; no new inbound route (IBC closed). Existing denoms bridge to EVM via pointer |
 
 ## NFT & Marketplaces
 
@@ -111,9 +111,9 @@ See [addresses-wallets.md](../addresses-wallets.md) for setup and dual-address h
 | Bridge | Site | Notes |
 |---|---|---|
 | **LayerZero V2** | https://layerzero.network | OFT standard; Sei is a LayerZero V2 endpoint |
-| **Wormhole** | https://wormhole.com | SeiEVM supported per Wormhole (NTT/WTT); not documented by Sei — verify. CosmWasm side legacy/exit-only |
+| **Wormhole** | https://wormhole.com | SeiEVM supported per Wormhole (NTT/WTT); not documented by Sei — verify. CosmWasm side closed |
 | **Circle CCTP v2** | https://developers.circle.com/cctp | Native USDC, burn-and-mint |
-| **IBC** | — | Legacy/exit-only — **inbound IBC disabled** (SIP-3, pacific-1 Prop 116 / atlantic-2 #247) |
+| **IBC** | — | **Closed both directions** — inbound Props 116/120, outbound Prop 121. Not a route for any transfer. |
 
 See [bridges.md](bridges.md) for integration details and addresses.
 

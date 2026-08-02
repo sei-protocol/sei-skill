@@ -110,7 +110,7 @@ Native tokens (not smart contracts) that live in the Cosmos bank module:
 | Token | Denom | Notes |
 |---|---|---|
 | SEI | `usei` | Gas token, staking |
-| IBC USDC | `ibc/...` | Via IBC from noble, etc. |
+| IBC USDC | `ibc/...` | Arrived via IBC from Noble, etc.; IBC is now closed, so no new inbound and no route out |
 | Factory tokens | `factory/<addr>/<subdenom>` | Created via TokenFactory |
 
 ## Token Visibility by Wallet Type

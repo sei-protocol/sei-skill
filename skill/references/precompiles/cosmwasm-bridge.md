@@ -1,11 +1,11 @@
 ---
 title: CosmWasm Bridge Precompiles
-description: Addr, Bank, CosmWasm, IBC, Pointer, and PointerView precompiles for cross-VM interaction between the EVM and Cosmos layer on Sei. Legacy/compatibility focused — CosmWasm is deprecated per SIP-3.
+description: Addr, Bank, CosmWasm, Pointer, and PointerView precompiles for cross-VM interaction between the EVM and Cosmos layer on Sei. Legacy/compatibility focused — CosmWasm is deprecated per SIP-3. The IBC precompile is unusable: IBC is closed in both directions.
 ---
 
 # CosmWasm Bridge Precompiles
 
-> **Deprecation notice**: CosmWasm is deprecated per SIP-3 (initiated by mainnet [Proposal #99](https://www.mintscan.io/sei/proposals/99); new uploads/instantiation disabled by mainnet #115 / atlantic-2 testnet #246). These precompiles remain functional for existing integrations and legacy support, but new projects should use EVM-only with pointer contracts for cross-VM asset representation.
+> **Deprecation notice**: CosmWasm is deprecated per SIP-3 (initiated by mainnet [Proposal #99](https://www.mintscan.io/sei/proposals/99); new uploads/instantiation disabled by mainnet #115 / atlantic-2 testnet #246). These precompiles remain functional for existing integrations and legacy support, but new projects should use EVM-only with pointer contracts for cross-VM asset representation. **Exception: the IBC precompile (`0x1009`) is not functional** — IBC is closed in both directions (Props 116/120 inbound, [121](https://seistream.app/proposals/121) outbound), so its `transfer` reverts.
 
 ## Address Summary
 
@@ -14,7 +14,7 @@ description: Addr, Bank, CosmWasm, IBC, Pointer, and PointerView precompiles for
 | Bank | `0x0000000000000000000000000000000000001001` | Send native tokens from EVM contracts |
 | CosmWasm | `0x0000000000000000000000000000000000001002` | Execute CW contracts from EVM |
 | Addr | `0x0000000000000000000000000000000000001004` | Address conversion + account association |
-| IBC | `0x0000000000000000000000000000000000001009` | Initiate IBC transfers from EVM |
+| IBC | `0x0000000000000000000000000000000000001009` | **Do not use** — IBC closed both directions; `transfer` reverts |
 | Pointer | `0x000000000000000000000000000000000000100B` | Register pointer contracts |
 | PointerView | `0x000000000000000000000000000000000000100A` | Query pointer registrations |
 
@@ -124,7 +124,7 @@ contract Distributor {
 
     // Query how much USDC a Cosmos address holds
     function getUSDCBalance(string memory account) external view returns (uint256) {
-        string memory usdcDenom = "ibc/..."; // IBC denom for USDC
+        string memory usdcDenom = "ibc/..."; // legacy IBC denom, still held and transferable within Sei
         return IBank(BANK).balance(account, usdcDenom);
     }
 }
@@ -164,25 +164,13 @@ interface ICosmWasm {
 
 ---
 
-## IBC Precompile (`0x1009`) — Legacy
+## IBC Precompile (`0x1009`) — do not use
 
-Initiate IBC transfers from EVM contracts.
+**This precompile cannot perform a transfer.** IBC is closed on Sei in both directions — inbound by Props 116/120, outbound by [Proposal 121](https://seistream.app/proposals/121) (2026-07-31). `IIBC.transfer` reverts regardless of arguments.
 
-```solidity
-interface IIBC {
-    function transfer(
-        string memory toAddress,
-        string memory port,
-        string memory channel,
-        string memory denom,
-        uint256 amount,
-        uint64 revisionNumber,
-        uint64 revisionHeight,
-        uint64 timeoutTimestamp,
-        string memory memo
-    ) external payable returns (uint64 sequence);
-}
-```
+Do not include it in new contracts. Existing contracts that call it will revert on that path and need an alternative route — see [../ecosystem/bridges.md](../ecosystem/bridges.md) for the EVM bridges.
+
+To move native SEI, factory tokens, or existing `ibc/...` denoms between the EVM and Cosmos layers *within* Sei, use the Bank precompile (`0x1001`) and pointer contracts above; those still work. Full context in [../ecosystem/ibc-bridging.md](../ecosystem/ibc-bridging.md).
 
 ---
 

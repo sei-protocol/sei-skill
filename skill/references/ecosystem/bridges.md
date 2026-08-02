@@ -1,13 +1,13 @@
 ---
 title: Bridges to/from Sei
-description: Bridges on Sei — LayerZero V2 (OFT) and Circle CCTP v2 (native USDC) are the documented EVM bridges, plus the official Sei bridge UI. Wormhole is verify-first (not Sei-documented); inbound IBC is disabled under SIP-3.
+description: Bridges on Sei — LayerZero V2 (OFT) and Circle CCTP v2 (native USDC) are the documented EVM bridges, plus the official Sei bridge UI. Wormhole is verify-first (not Sei-documented); IBC is closed in both directions.
 ---
 
 # Bridges to/from Sei
 
-How users and contracts move assets and messages between Sei and other chains. The EVM bridges **Sei documents and recommends** are **LayerZero V2** (Sei is a full LayerZero V2 endpoint) and **Circle CCTP v2** (native USDC); the official UI is the **Sei bridge dashboard** / Thirdweb. Wormhole is supported at the protocol level but is **not documented by Sei** and its Sei CosmWasm side is legacy/exit-only — see the caveat below. Pick the bridge by the asset, not by habit.
+How users and contracts move assets and messages between Sei and other chains. The EVM bridges **Sei documents and recommends** are **LayerZero V2** (Sei is a full LayerZero V2 endpoint) and **Circle CCTP v2** (native USDC); the official UI is the **Sei bridge dashboard** / Thirdweb. Wormhole is supported at the protocol level but is **not documented by Sei** and its Sei CosmWasm side is closed — see the caveat below. Pick the bridge by the asset, not by habit.
 
-> **Inbound IBC is disabled under SIP-3** (pacific-1 [Proposal 116](https://www.mintscan.io/sei/proposals/116); atlantic-2 testnet **#247**). IBC assets from Cosmos chains can no longer arrive on Sei — treat IBC as legacy/exit-only and use an EVM bridge for new inbound transfers. See [ibc-bridging.md](ibc-bridging.md).
+> **IBC is closed on Sei in both directions.** Inbound was disabled by pacific-1 [Proposal 116](https://www.mintscan.io/sei/proposals/116) (atlantic-2 testnet **#247**); outbound was disabled by [Proposal 121](https://seistream.app/proposals/121) on 2026-07-31. Assets can neither arrive on Sei nor leave it via IBC. Existing `ibc/...` balances remain usable *within* Sei. Use an EVM bridge for all transfers. See [ibc-bridging.md](ibc-bridging.md).
 
 > **Always verify bridge contract addresses, endpoint IDs, and CCTP domain IDs** against each bridge's official docs and on [Seiscan](https://seiscan.io) before sending real value. Bridges are high-value targets and addresses change across version upgrades — never hardcode them from memory.
 
@@ -20,7 +20,7 @@ How users and contracts move assets and messages between Sei and other chains. T
 | An **existing asset** only Wormhole covers (some Solana-native tokens) | **Wormhole** (WTT/NTT) — *verify first* | wrapped / native-token transfer | Supported per Wormhole's network list, but **not documented by Sei**; confirm current support and prefer LayerZero V2 / CCTP where they cover the asset |
 | **Arbitrary cross-chain messages** / calls + transfers | **LayerZero** (OApp) | GMP messaging | Generalized message passing via Sei's LayerZero V2 endpoint |
 | **End users** bridging in a UI, no integration | **Sei bridge dashboard** / Thirdweb | aggregated routing | Drop-in UX, no contract work |
-| Assets coming **from a Cosmos chain via IBC** | **Not available inbound** | — | Inbound IBC disabled (pacific-1 Prop 116 / atlantic-2 #247, SIP-3) — bridge via an EVM route instead |
+| Assets moving **to or from a Cosmos chain via IBC** | **Not available — either direction** | — | Inbound disabled (Prop 116 / #247), outbound disabled (Prop 121). No EVM alternative reaches Cosmos chains; there is no route. |
 
 ## LayerZero V2
 
@@ -78,7 +78,7 @@ For an *already-deployed* ERC-20 you can't reissue, use an **OFT Adapter** (lock
 
 Wormhole's [supported-networks list](https://wormhole.com/docs/products/reference/supported-networks/) shows a **SeiEVM** entry (chain id 1329) with NTT, WTT (wrapped token transfers), and CCTP routing on mainnet. **But Sei's own docs provide no Wormhole EVM integration guide — the documented, recommended EVM bridges are LayerZero V2 and Circle CCTP.** Treat Wormhole as verify-first:
 
-- **The Wormhole *CosmWasm* side on Sei is legacy/exit-only.** Wrapped assets that arrived on the Cosmos side (e.g. `USDCso`, Wormhole-bridged `WETH`, `USDCet`) must be **bridged out** via the legacy [Portal Bridge](https://legacy.portalbridge.com) under SIP-3 — see https://docs.sei.io/learn/sip-03-migration. Do not route new inbound transfers through it.
+- **The Wormhole *CosmWasm* side on Sei is closed.** Wrapped assets that arrived on the Cosmos side (e.g. `USDCso`, Wormhole-bridged `WETH`, `USDCet`) are still held in the bank module and still move within Sei, but the exit route via the legacy Portal Bridge depended on outbound IBC and no longer works — see https://docs.sei.io/learn/sip-03-migration. Do not route transfers through it in either direction.
 - **For your own multichain token,** Wormhole **NTT** is the analogue of LayerZero's OFT; **WTT** is the lock/mint wrapped path. If you specifically need Wormhole (coverage LayerZero/CCTP lack), **verify the current SeiEVM contract addresses and the exact SDK chain handle** on https://wormhole.com/docs/products/reference/supported-networks/ before integrating — do not assume them from memory.
 
 When LayerZero V2 (OFT / messaging) or CCTP (USDC) cover your case, prefer them: they have first-class Sei documentation and deployed-contract tables.
@@ -136,6 +136,6 @@ For high-value transfers, prefer:
 
 - **EVM bridges accept `0x...` addresses on the Sei side.** Don't pass `sei1...` addresses to LayerZero / CCTP — they expect EVM format. (Wormhole lists Sei twice — a CosmWasm `Sei` side and an EVM `SeiEVM` side; if you use it, confirm the exact SDK handle on Wormhole's docs.)
 - **Use legacy `gasPrice` for Sei-side claim/redeem/mint transactions.** Sei has no EIP-1559 base-fee burn — set a single `gasPrice`, not `maxFeePerGas`/`maxPriorityFeePerGas`. The minimum gas price is governance-adjustable (currently ~50 gwei on mainnet — query `eth_gasPrice` for the live floor); an under-priced redemption just sits in the mempool. See https://docs.sei.io/evm/differences-with-ethereum.
-- **Inbound IBC is disabled (SIP-3).** Don't route assets onto Sei via IBC; holders of legacy `ibc/...` assets must bridge *out* (e.g. swap USDC.n → native USDC via CCTP) before activation. See [ibc-bridging.md](ibc-bridging.md) and https://docs.sei.io/learn/sip-03-migration.
-- **CosmWasm is deprecated for new development (SIP-3).** Deploy ERC-20 / OFT contracts directly; pointer contracts and the IBC precompile are legacy migration tooling.
+- **IBC is closed in both directions.** Don't route assets onto Sei via IBC, and don't tell holders of legacy `ibc/...` assets to bridge, migrate, or exit — there is no route off the chain. Their balances are intact and still transfer within Sei, including through ERC-20 pointers. See [ibc-bridging.md](ibc-bridging.md).
+- **CosmWasm is deprecated for new development (SIP-3).** Deploy ERC-20 / OFT contracts directly. Pointer contracts remain useful for cross-VM access to existing denoms; the IBC precompile does not — its `transfer` cannot succeed with outbound IBC disabled.
 - **Verify every contract address, EID, and CCTP domain ID** against the bridge's official docs and on Seiscan before deploying.

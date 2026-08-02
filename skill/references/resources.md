@@ -89,7 +89,6 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 
 | Bridge | Docs |
 |---|---|
-| IBC channels | https://seiscan.io or https://www.mintscan.io/sei/relayers |
 | LayerZero | https://layerzero.network |
 | ThirdWeb Bridge | https://portal.thirdweb.com/connect/blockchain-api |
 
@@ -156,7 +155,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 | Staking precompile | `0x0000000000000000000000000000000000001005` | same |
 | Governance precompile | `0x0000000000000000000000000000000000001006` | same |
 | Oracle precompile (❌ retired July 2026 — queries revert) | `0x0000000000000000000000000000000000001008` | same |
-| IBC precompile | `0x0000000000000000000000000000000000001009` | same |
+| IBC precompile (❌ closed both directions — `transfer` reverts) | `0x0000000000000000000000000000000000001009` | same |
 | Multicall3 | `0xcA11bde05977b3631167028862bE2a173976CA11` | same |
 | Permit2 | `0xB952578f3520EE8Ea45b7914994dcf4702cEe578` | same |
 | USDC | `0xe15fC38F6D8c56aF07bbCBe3BAf5708A2Bf42392` | `0x4fCF1784B31630811181f670Aea7A7bEF803eaED` |

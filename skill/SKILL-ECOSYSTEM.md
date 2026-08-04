@@ -8,7 +8,7 @@ description: >
   Chainlink oracles on Sei", "set up The Graph / Goldsky subgraph for Sei",
   "set up a Sei full node", "how do I delegate SEI to a validator", "submit a
   governance proposal on Sei", "how do I become a Sei validator / RPC provider
-  / indexer operator / oracle relayer / IBC relayer", "apply for a Sei grant",
+  / indexer operator / oracle relayer", "apply for a Sei grant",
   "Sei Foundation grants / Ecosystem Fund / Creator Fund", "Sei MCP Server",
   "Cambrian Agent Kit", or any ecosystem participation, integration, or
   infrastructure question on Sei. Ecosystem-focused variant — apps directory,
@@ -35,14 +35,14 @@ Use this Skill when the user asks for:
 
 - Sei dApps directory by category (DEX, lending, perps, RWA, NFT, gaming, infra, AI)
 - Integration patterns for DeFi protocols (DragonSwap, Yei, Takara, Saphyre)
-- Bridges (LayerZero V2, Circle CCTP v2; Wormhole legacy/verify-first); inbound IBC disabled (SIP-3, legacy/exit-only)
+- Bridges (LayerZero V2, Circle CCTP v2; Wormhole verify-first); IBC closed in both directions
 - RPC endpoints — public, community, and paid providers + failover patterns
 - Oracle integration (Chainlink, Pyth, API3, RedStone, VRF — the native oracle precompile is shut off)
 - Indexer setup (The Graph, Goldsky, Dune, Moralis, Goldrush)
 - Node operations (full node setup, state sync, snapshots, `seid` CLI)
 - Validator setup (key management, HSM, slashing, monitoring)
 - Staking, delegation, governance proposals
-- Participation roles (validator, RPC provider, indexer operator, oracle relayer, IBC relayer)
+- Participation roles (validator, RPC provider, indexer operator, oracle relayer)
 - Grants and builder programs (Sei Foundation, Ecosystem Fund, Creator Fund)
 - AI tooling (Sei MCP Server, Cambrian Agent Kit)
 - Payments (USDC transfers, x402 HTTP-native micropayments)
@@ -66,7 +66,7 @@ These facts must inform every Sei ecosystem answer:
 
 1. **Oracles**: Pyth (pull) for sub-second latency; Chainlink (push) for production DeFi defaults; API3 / RedStone as alternatives. The native oracle precompile is **retired (shut off July 2026)** — queries revert; do not use it
 2. **Indexers**: The Graph for custom query workloads; Goldsky for real-time CDC; Dune for analytics
-3. **Bridges**: LayerZero V2 OFT for omnichain tokens; CCTP for native USDC. Wormhole (NTT/WTT) is supported per Wormhole but **not documented by Sei** — verify first. Inbound IBC is disabled (SIP-3) — not a path for new transfers
+3. **Bridges**: LayerZero V2 OFT for omnichain tokens; CCTP for native USDC. Wormhole (NTT/WTT) is supported per Wormhole but **not documented by Sei** — verify first. IBC is closed in both directions — not a path for any transfer
 4. **RPC**: Sei Foundation primary + community fallback for free; paid SaaS (QuickNode, Alchemy, dRPC) with multi-provider failover for production
 5. **Networks**: Default to testnet (`atlantic-2`, chain ID 1328) unless explicitly mainnet
 6. **Validators**: HSM-backed key management; uptime monitoring; participation in governance
@@ -141,8 +141,8 @@ For agent-grade RPC patterns, see the 17 canonical skills in [ecosystem/rpc-agen
 ### Apps + integrations
 - **dApps directory by category:** [ecosystem/apps-directory.md](references/ecosystem/apps-directory.md)
 - **DeFi integration patterns (DEXes, lending):** [ecosystem/integration-defi.md](references/ecosystem/integration-defi.md)
-- **Bridges (LayerZero V2, CCTP; Wormhole verify-first; IBC legacy/exit-only):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
-- **IBC (legacy / exit-only — inbound disabled, SIP-3):** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
+- **Bridges (LayerZero V2, CCTP; Wormhole verify-first):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
+- **IBC (closed both directions — Props 116/120 inbound, 121 outbound):** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
 
 ### Infrastructure
 - **RPC endpoints — public, community, paid:** [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
@@ -154,7 +154,7 @@ For agent-grade RPC patterns, see the 17 canonical skills in [ecosystem/rpc-agen
 - **Staking & governance:** [ecosystem/staking-governance.md](references/ecosystem/staking-governance.md)
 
 ### Participation
-- **Participation roles (validator / RPC / indexer / oracle / IBC / grants):** [ecosystem/participation-roles.md](references/ecosystem/participation-roles.md)
+- **Participation roles (validator / RPC / indexer / oracle / grants):** [ecosystem/participation-roles.md](references/ecosystem/participation-roles.md)
 - **AI tooling (Sei MCP Server, Cambrian, x402):** [ecosystem/ai-tooling.md](references/ecosystem/ai-tooling.md)
 - **Payments (USDC + x402):** [ecosystem/payments.md](references/ecosystem/payments.md)
 

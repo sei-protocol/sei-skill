@@ -195,17 +195,16 @@ forge verify-contract \
 
 ## IBC Errors
 
-### IBC packet timeout
-**Cause**: The IBC packet was not relayed within the timeout window.  
-**Fix**: Implement a reclaim flow. After timeout, the user can reclaim their tokens:
-```bash
-seid tx ibc-transfer timeout-packet [timeout-packet-details] --from mykey
-```
-Always communicate to users that IBC transfers can timeout (rare, but possible).
+### An IBC transfer fails or reverts
+**Cause**: IBC is closed on Sei in both directions — inbound by Props 116/120, outbound by [Proposal 121](https://seistream.app/proposals/121) (2026-07-31). The `ibc` module rejects the transfer regardless of channel, recipient, or amount. This applies to `seid tx ibc-transfer transfer` and to the IBC precompile (`0x…1009`) equally.
+
+**Fix**: There is no IBC route on or off Sei. Do not retry, adjust the timeout, or try another channel. Use an EVM bridge instead — see [../ecosystem/bridges.md](../ecosystem/bridges.md).
+
+Existing `ibc/...` balances are **not** stuck: they remain in the bank module and still transfer between Sei accounts and through their ERC-20 pointers. Only the route off the chain is closed. See [../ecosystem/ibc-bridging.md](../ecosystem/ibc-bridging.md).
 
 ### `IBC denom not recognized`
-**Cause**: The receiving chain doesn't know the `ibc/HASH` denom.  
-**Fix**: Query the denom trace to find the original denom:
+**Cause**: A consumer doesn't know what an `ibc/HASH` denom represents. These denoms still exist and are still valid on Sei.  
+**Fix**: Query the denom trace — this is a local query and still works:
 ```bash
 seid q ibc-transfer denom-trace <IBC_HASH> --node https://rpc.sei-apis.com
 ```

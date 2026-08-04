@@ -33,7 +33,7 @@ Use this Skill when the user asks for:
 
 - EVM smart contract development on Sei (Solidity, Hardhat, Foundry)
 - Using Sei precompiles (Staking, Governance, Distribution, Oracle, JSON, P256)
-- CosmWasm bridge precompiles (Addr, Bank, CosmWasm, IBC, Pointer, PointerView)
+- CosmWasm bridge precompiles (Addr, Bank, CosmWasm, Pointer, PointerView; IBC is closed)
 - Pointer contracts and cross-VM asset bridging (ERC20↔CW20, ERC721↔CW721, ERC20↔native)
 - Token creation (ERC20/721/1155, TokenFactory native denoms)
 - Contract verification on Seiscan

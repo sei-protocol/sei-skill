@@ -41,7 +41,7 @@ This Skill covers three overlapping domains. Use it when the user asks for:
 ### Contracts (smart contracts + tooling)
 - EVM smart contract development on Sei (Solidity, Hardhat, Foundry)
 - Using Sei precompiles (Staking, Governance, Distribution, Oracle, JSON, P256)
-- CosmWasm bridge precompiles (Addr, Bank, CosmWasm, IBC, Pointer, PointerView)
+- CosmWasm bridge precompiles (Addr, Bank, CosmWasm, Pointer, PointerView; IBC is closed)
 - Pointer contracts and cross-VM asset bridging (ERC20↔CW20, ERC721↔CW721, ERC20↔native)
 - Token creation (ERC20/721/1155, TokenFactory native denoms)
 - Contract verification on Seiscan
@@ -65,11 +65,11 @@ This Skill covers three overlapping domains. Use it when the user asks for:
 ### Ecosystem (apps + integration + participation)
 - Sei dApps directory by category (DEX, lending, perps, RWA, NFT, gaming, infra)
 - Integration patterns for DeFi protocols (DragonSwap, Yei, Takara, Saphyre)
-- Bridges (LayerZero V2, Circle CCTP v2 for native USDC; Wormhole legacy/verify-first); inbound IBC disabled (SIP-3)
+- Bridges (LayerZero V2, Circle CCTP v2 for native USDC; Wormhole verify-first); IBC closed in both directions
 - RPC endpoints — public, community, and paid providers
 - Oracle integration (Chainlink, Pyth, API3, RedStone, VRF; native precompile is shut off)
 - Indexer setup (The Graph, Goldsky, Dune, Moralis, Goldrush)
-- Participation roles (validator, RPC provider, indexer operator, oracle relayer, IBC relayer)
+- Participation roles (validator, RPC provider, indexer operator, oracle relayer)
 - Grants and builder programs (Sei Foundation, Ecosystem Fund, Creator Fund)
 - Node operations and validator setup
 - Staking, governance, and delegation
@@ -207,8 +207,8 @@ When implementing changes, provide:
 ### Ecosystem — apps, integration, participation
 - **dApps directory by category:** [ecosystem/apps-directory.md](references/ecosystem/apps-directory.md)
 - **DeFi integration patterns (DEXes, lending):** [ecosystem/integration-defi.md](references/ecosystem/integration-defi.md)
-- **Bridges (LayerZero V2, CCTP; Wormhole verify-first; IBC legacy/exit-only):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
-- **IBC (legacy / exit-only — inbound disabled, SIP-3):** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
+- **Bridges (LayerZero V2, CCTP; Wormhole verify-first):** [ecosystem/bridges.md](references/ecosystem/bridges.md)
+- **IBC (closed both directions — Props 116/120 inbound, 121 outbound):** [ecosystem/ibc-bridging.md](references/ecosystem/ibc-bridging.md)
 - **Payments (USDC + x402):** [ecosystem/payments.md](references/ecosystem/payments.md)
 - **RPC endpoints — public, community, paid:** [ecosystem/rpc-providers.md](references/ecosystem/rpc-providers.md)
 - **RPC agent skills (17 canonical patterns, retry, response shapes):** [ecosystem/rpc-agent-skills.md](references/ecosystem/rpc-agent-skills.md)
@@ -217,7 +217,7 @@ When implementing changes, provide:
 - **Node operations:** [ecosystem/node-operations.md](references/ecosystem/node-operations.md) — setup, sync, snapshots, seictl
 - **Validators:** [ecosystem/validators.md](references/ecosystem/validators.md) — key management, HSM, slashing, monitoring
 - **Staking & governance:** [ecosystem/staking-governance.md](references/ecosystem/staking-governance.md) — delegation, proposals
-- **Participation roles (validator, RPC, indexer, oracle, IBC relayer, grants):** [ecosystem/participation-roles.md](references/ecosystem/participation-roles.md)
+- **Participation roles (validator, RPC, indexer, oracle, grants):** [ecosystem/participation-roles.md](references/ecosystem/participation-roles.md)
 - **AI tooling:** [ecosystem/ai-tooling.md](references/ecosystem/ai-tooling.md) — Sei MCP Server, Cambrian Agent Kit
 
 ### CLI — seid and JSON-RPC

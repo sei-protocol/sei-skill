@@ -8,7 +8,7 @@ This skill provides AI coding assistants with deep knowledge of the Sei ecosyste
 
 ### Contracts — smart contracts and tooling
 - **EVM Contracts**: Foundry + Hardhat setup, deployment, fork testing
-- **Precompiles**: All 11 Sei precompiles (Staking, Governance, Bank, Addr, Oracle, IBC, Pointer, P256, etc.)
+- **Precompiles**: All 11 Sei precompiles (Staking, Governance, Bank, Addr, Pointer, P256, etc.; Oracle and IBC are retired/closed)
 - **Pointer Contracts**: Cross-VM asset bridging between EVM and Cosmos
 - **Verification**: Seiscan (Sourcify) verification flows for Foundry and Hardhat
 - **Performance**: Load testing, OCC-aware design, Sei-specific gas optimization
@@ -27,11 +27,11 @@ This skill provides AI coding assistants with deep knowledge of the Sei ecosyste
 ### Ecosystem — apps, integration, participation
 - **dApps directory**: DEX, lending, perps, RWA, NFT, gaming, infra
 - **DeFi integrations**: DragonSwap, Yei, Takara, Saphyre, Pyth oracles, USDC
-- **Bridges**: LayerZero V2 (OFT), Wormhole, Axelar, IBC, CCTP, ThirdWeb
+- **Bridges**: LayerZero V2 (OFT), Wormhole, Axelar, CCTP, ThirdWeb (IBC is closed in both directions)
 - **RPC endpoints**: public, community, paid SaaS providers with failover patterns
 - **Oracles**: Chainlink, Pyth (+ VRF), API3, RedStone, native oracle precompile
 - **Indexers**: The Graph, Goldsky, Dune Analytics, Moralis, Goldrush
-- **Participation roles**: validator, RPC provider, indexer operator, oracle relayer, IBC relayer
+- **Participation roles**: validator, RPC provider, indexer operator, oracle relayer
 - **Grants**: Sei Foundation Grants, Ecosystem Fund, Creator Fund
 - **AI Tooling**: Sei MCP Server, Cambrian Agent Kit, x402
 
@@ -199,8 +199,8 @@ skill/
     └── ecosystem/                        # ── Domain: Ecosystem ──────────────────
         ├── apps-directory.md             # dApps grouped by category
         ├── integration-defi.md           # DEX/lending integration patterns
-        ├── bridges.md                    # LayerZero, Wormhole, Axelar, IBC, CCTP
-        ├── ibc-bridging.md               # IBC + legacy bridging deep dive
+        ├── bridges.md                    # LayerZero, Wormhole, Axelar, CCTP
+        ├── ibc-bridging.md               # IBC closed-state reference
         ├── rpc-providers.md              # Public + paid RPC endpoints
         ├── rpc-agent-skills.md           # 17 canonical RPC skills, retry, response shapes
         ├── oracles.md                    # Chainlink, Pyth, API3, RedStone, VRF

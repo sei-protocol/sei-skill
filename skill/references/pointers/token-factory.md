@@ -140,7 +140,6 @@ seid q evm pointer NATIVE factory/sei1.../MYTOKEN
 # Token is now usable in:
 # - Cosmos wallets via factory/sei1.../MYTOKEN denom
 # - EVM wallets via the ERC20 pointer address
-# - IBC transfers as a native asset
 # - DeFi protocols that accept ERC20
 ```
 
@@ -167,5 +166,5 @@ interface IBank {
 - **Decimals**: native denoms don't have enforced decimals — you define them in metadata and must be consistent in your frontend
 - **ERC20 pointer decimals**: the ERC20 pointer uses the decimals you set in denom metadata; default is 0 if not set — always set decimals before registering the pointer
 - **Admin = creator by default**: the address that runs `create-denom` is the admin; transfer admin to a multisig or smart contract for production
-- **IBC-native**: TokenFactory tokens can be sent via IBC immediately without any extra setup, unlike ERC20 tokens
+- **No IBC route**: IBC is closed on Sei in both directions, so TokenFactory denoms cannot leave the chain over IBC. They are still native bank denoms and move freely *within* Sei, in Cosmos wallets and through their ERC-20 pointers.
 - **Supply tracking**: total supply lives in the Cosmos bank module; the ERC20 pointer reflects this same supply

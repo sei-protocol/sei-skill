@@ -172,7 +172,20 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
   sc-keys-to-migrate-per-block = 1024
   ```
 
-  The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules.
+  The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules. `sc-keys-to-migrate-per-block` must be `> 0` (defaults to `1024` when unset); lower it to spread the in-flight migration across more blocks.
+
+  Poll migration completion per validator with the `seidb migrate-evm-status` subcommand, which reads the on-disk FlatKV migration state and prints it as JSON:
+
+  ```bash
+  seid migrate-evm-status --db-dir /root/.sei/data/state_commit/flatkv [--height <n>]
+  ```
+
+  | Flag | Default | Purpose |
+  |---|---|---|
+  | `--db-dir` / `-d` | *(required)* | FlatKV database directory |
+  | `--height` | `0` (latest) | FlatKV target version; `0` selects the latest available version |
+
+  Output fields: `version_at`, `migration_version`, `migrate_evm_complete` (true once `migration_version >= 1`), and `boundary_present` (true while the migration is still in flight). It reads through a read-only temp clone of the snapshot + WAL, so it is safe to run against a live node — operators/test drivers poll it until `migrate_evm_complete: true` on every validator before flipping `sc-write-mode` to `evm_migrated`.
 - **Giga Executor** (`[giga_executor] enabled`) is a *separate* feature — an evmone-based EVM interpreter for throughput. Don't conflate it with Giga Storage.
 
 > Minimum gas price, block gas limit, and SSTORE/storage gas are governance-adjustable — confirm live values at https://docs.sei.io/evm/differences-with-ethereum, and set `minimum-gas-prices` at or above the mainnet floor (`0usei` is local-dev only).

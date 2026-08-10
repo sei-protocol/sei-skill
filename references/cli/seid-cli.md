@@ -298,6 +298,59 @@ seidb memiavl-latest-version --data-dir <dir> [--home <home>]
 seidb memiavl-latest-version --data-dir /root/.sei/data
 ```
 
+
+
+## seidb migrate-evm-status
+
+Reports the on-disk FlatKV EVM migration state of a FlatKV directory as JSON. Intended for integration test drivers polling for migration completion from the host: the tool reads the migration bookkeeping keys directly from FlatKV instead of adding a custom RPC or grepping node logs.
+
+```bash
+seidb migrate-evm-status --db-dir <flatkv-dir> [--height <n>]
+```
+
+### Flags
+
+- `--db-dir` / `-d` (**required**) — FlatKV database directory. Panics if omitted.
+- `--height` — FlatKV target version. `0` (default) selects the latest available version.
+
+The store is opened read-only via a temporary snapshot + WAL clone, so it does not contend with a live node for the FlatKV writer lock and gives a stable view even if the live writer rolls snapshots mid-run.
+
+### What it reads
+
+It reads two reserved keys from the FlatKV `migration` store:
+
+- `migration-version` — an 8-byte big-endian `uint64` written exactly once on the migration bump block. Absent or `0` means the FlatKV EVM migration (MigrateEVM, version 1) has not yet completed.
+- `migration-boundary` — the in-flight resume cursor `(module, key)`. Present iff the boundary is strictly between not-started and complete.
+
+### JSON output
+
+```json
+{
+  "version_at": 12345,
+  "migration_version": 1,
+  "migrate_evm_complete": true,
+  "boundary_present": false,
+  "boundary_hex": "...",
+  "version_raw_hex": "0000000000000001"
+}
+```
+
+- `version_at` — the FlatKV version the read resolved against.
+- `migration_version` — decoded `migration-version` value (`0` when the key is absent).
+- `migrate_evm_complete` — `true` when `migration_version >= 1` (Version1_MigrateEVM). This is the field test drivers poll on.
+- `boundary_present` — whether the in-flight boundary key exists.
+- `boundary_hex` — hex of the boundary bytes, present only when `boundary_present` is true.
+- `version_raw_hex` — hex of the raw `migration-version` bytes, present only when the key exists.
+
+### Example
+
+```bash
+# poll until migration completes
+seidb migrate-evm-status --db-dir /root/.sei/data/state_commit/flatkv \
+  | jq -r '.migrate_evm_complete'
+```
+
+
 ### Example
 
 ```bash

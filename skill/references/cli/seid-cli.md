@@ -324,6 +324,38 @@ The import moves only SC-layer EVM data into FlatKV; SS history for EVM stays in
 
 See `sei-db/state_db/sc/migration/OPERATIONS.md` for the full operational roadmap.
 
+
+#### `seidb migrate-evm-status`
+
+Reports the on-disk FlatKV EVM migration state of a FlatKV directory as JSON. Use it to poll for migration completion from the host during the in-flight FlatKV EVM migration (`sc-write-mode = migrate_evm`), without needing a custom RPC handler or grepping node logs. Reads the `migration-version` and `migration-boundary` keys from the FlatKV migration store via a read-only clone (hardlink-clones the latest snapshot + copies the WAL into a temp dir), so it can run concurrently with a live node.
+
+```bash
+# Report status against the latest available FlatKV version
+seidb migrate-evm-status --db-dir /root/.sei/data/state_commit/flatkv
+
+# Report status at a specific FlatKV version
+seidb migrate-evm-status --db-dir /root/.sei/data/state_commit/flatkv --height <n>
+```
+
+Flags:
+- `--db-dir` / `-d` — FlatKV database directory (required).
+- `--height` — FlatKV target version; `0` (default) selects the latest available version.
+
+JSON output fields:
+- `version_at` — the FlatKV version the status was read at.
+- `migration_version` — the on-disk migration version (`0` = MemiavlOnly / not yet complete, `1` = MigrateEVM complete).
+- `migrate_evm_complete` — `true` once the EVM migration has finished (`migration_version >= 1`).
+- `boundary_present` — `true` while the migration is in flight (boundary cursor still present).
+- `boundary_hex` / `version_raw_hex` — raw hex of the boundary and version keys when present.
+
+Example poll loop against a validator's FlatKV dir:
+
+```bash
+seidb migrate-evm-status --db-dir /root/.sei/data/state_commit/flatkv \
+  | jq -r '.migrate_evm_complete'
+```
+
+
 ## Agent Workflow
 
 1. Classify the task: install · wallet · read query · payload generation · pointer lookup · tx lookup · transaction submission · raw JSON-RPC.

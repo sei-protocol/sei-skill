@@ -152,3 +152,70 @@ seid tendermint gen-autobahn-config \
 ```
 
 Then set `autobahn-config-file` in `config.toml` to that path (placed before any `[section]` header). The generated config includes each validator's `validator_key`, `node_key`, and `address`, plus defaults such as `max_gas_per_block = 50000000`, `max_txs_per_block = 5000`, `mempool_size = 5000`, `block_interval = 400ms`, `view_timeout = 1500ms`, and `dial_interval = 10s`.
+
+
+
+## FlatKV EVM in-flight migration
+
+SeiDB supports an in-flight (online) migration of EVM state from memiavl into FlatKV, driven by the `sc-write-mode` config under `[state-commit]`. The in-flight migration modes are `migrate_evm`, `migrate_bank`, and `migrate_all_but_bank`; each drains keys from the old backend (memiavl) into the new backend (FlatKV) over multiple blocks.
+
+### app.toml: [state-commit] migration fields
+
+```toml
+[state-commit]
+# sc-write-mode selects the SC backend routing. In-flight migration modes:
+#   migrate_evm | migrate_bank | migrate_all_but_bank
+# (also: memiavl_only, evm_migrated, flatkv_only, test_only_dual_write, etc.)
+sc-write-mode = "migrate_evm"
+
+# sc-keys-to-migrate-per-block controls how many keys the in-flight migration
+# drains from memiavl into FlatKV per block. Must be > 0; defaults to 1024
+# when unset. Default 1024 is appropriate for production drains; lower it
+# (e.g. 256) to spread the migration across more blocks.
+sc-keys-to-migrate-per-block = 1024
+```
+
+Notes:
+
+- `sc-keys-to-migrate-per-block` must be `> 0`. An absent app.toml entry preserves the default of `1024`; explicitly setting it to `0` fails `StateCommitConfig.Validate` ("keys-to-migrate-per-block must be > 0") and brings the node down at startup when write-mode is a migration mode.
+- Flipping `sc-write-mode` into a migration mode across a validator quorum changes how EVM data contributes to the AppHash, so it must be done with a coordinated stop / edit / restart across all validators — flipping one node while the rest stay in the old mode diverges the AppHash and halts consensus.
+- Once the migration completes, operators flip `sc-write-mode` from `migrate_evm` to `evm_migrated` so subsequent restarts do not spin up the migration manager. This flip is lossless (same version, same FlatKV root, same reads).
+
+### Behavior during in-flight migration
+
+While a migration is in flight (`NotStarted` / `InProgress`):
+
+- **Reads** for unmigrated keys consult the old DB first and fall back to the new DB if not found — brand-new keys created after migration starts are routed to the new DB, so read transparency holds across the boundary.
+- **Writes** to existing not-yet-migrated keys stay in the old DB until the iterator reaches them; writes to already-migrated keys and to brand-new keys go to the new DB (avoids the migration chasing an ever-growing key tail).
+- **Iteration** is forwarded to the old-DB iterator. Caveat: keys already migrated out of the old DB are silently skipped, so iteration results may be incomplete during `InProgress` and must only be used for best-effort work (this self-heals once migration completes). Once migration is `Complete`, iteration is refused (the old DB has been retired).
+
+### Polling migration status with `seidb migrate-evm-status`
+
+Use the `seidb migrate-evm-status` subcommand to poll on-disk FlatKV migration state as JSON, without a custom RPC or grepping node logs:
+
+```bash
+seidb migrate-evm-status --db-dir <flatkv-dir> [--height <n>]
+```
+
+- `--db-dir` / `-d` (**required**): FlatKV database directory (e.g. `/root/.sei/data/state_commit/flatkv`).
+- `--height` (default `0`): FlatKV target version; `0` selects the latest available version.
+
+The tool hardlink-clones the latest snapshot + WAL into a temp dir before opening, so it can read concurrently with a live node without contending for the FlatKV writer lock. Example output:
+
+```json
+{
+  "version_at": 1234,
+  "migration_version": 1,
+  "migrate_evm_complete": true,
+  "boundary_present": false
+}
+```
+
+- `migrate_evm_complete` is `true` once the `migration-version` key reaches `1` (Version1_MigrateEVM).
+- `boundary_present` is `true` while the migration cursor is still in flight (strictly between not-started and complete).
+
+This is the recommended way to poll for migration completion from the host across a multi-validator cluster: repeatedly run `migrate-evm-status` against each validator's FlatKV dir until every node reports `migrate_evm_complete: true`.
+
+### Relationship to the offline import workflow
+
+The offline `seidb import-flatkv-from-memiavl` path bulk-imports FlatKV from a memiavl snapshot before startup. The in-flight `migrate_evm` mode plus `migrate-evm-status` polling is the **online** alternative: the node keeps producing blocks while draining keys per block, and operators watch progress with `migrate-evm-status` rather than waiting for an offline import to finish.

@@ -119,6 +119,49 @@ const [pointerAddress, version, exists] = await pointerView.getNativePointer(
 console.log("ERC20 pointer at:", pointerAddress);
 ```
 
+
+## Query Denoms by Creator
+
+List all TokenFactory denoms created by a given address. Results are paginated via standard Cosmos pagination flags.
+
+```bash
+# List denoms created by an address
+seid q tokenfactory denoms-from-creator sei1abc...xyz \
+  --node https://rpc-testnet.sei-apis.com
+
+# Paginate: first 10 results
+seid q tokenfactory denoms-from-creator sei1abc...xyz \
+  --limit 10 \
+  --node https://rpc-testnet.sei-apis.com
+
+# Fetch the next page using the returned next_key
+seid q tokenfactory denoms-from-creator sei1abc...xyz \
+  --limit 10 \
+  --page-key <NEXT_KEY_FROM_PREVIOUS_RESPONSE> \
+  --node https://rpc-testnet.sei-apis.com
+
+# Get a page-numbered result and the total count
+seid q tokenfactory denoms-from-creator sei1abc...xyz \
+  --page 2 \
+  --limit 10 \
+  --count-total \
+  --node https://rpc-testnet.sei-apis.com
+```
+
+### Pagination flags
+
+- `--limit` — max number of denoms per page (a default page limit applies if omitted)
+- `--page` — page number to fetch (1-indexed); mutually exclusive with `--page-key`
+- `--offset` — number of denoms to skip; mutually exclusive with `--page-key`
+- `--page-key` — key-based cursor; pass the `next_key` from the previous response for efficient paging over large result sets
+- `--count-total` — include the total denom count in the response `pagination.total`
+- `--reverse` — iterate results in reverse order
+
+The gRPC/REST `DenomsFromCreator` query is now paginated as well: the request accepts a `pagination` PageRequest and the response returns a `pagination` PageResponse (with `next_key` and, when `--count-total` is set, `total`).
+
+<!-- Note: the wasm query path uses an unbounded GetAllDenomsFromCreator that returns every denom for a creator (gas metering bounds cost), so CosmWasm callers still receive all denoms in one response rather than a paginated page. -->
+
+
 ## Complete Token Launch Workflow
 
 ```bash

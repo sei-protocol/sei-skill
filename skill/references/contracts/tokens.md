@@ -113,6 +113,23 @@ Native tokens (not smart contracts) that live in the Cosmos bank module:
 | IBC USDC | `ibc/...` | Arrived via IBC from Noble, etc.; IBC is now closed, so no new inbound and no route out |
 | Factory tokens | `factory/<addr>/<subdenom>` | Created via TokenFactory |
 
+
+### Listing a Creator's TokenFactory Denoms
+
+Query all denoms created by an address via CLI, gRPC, or REST. Results are **paginated** (a default page limit applies) using the standard Cosmos SDK pagination flags:
+
+```bash
+seid query tokenfactory denoms-from-creator <creator-address> \
+  --page 1 --limit 100 --count-total
+```
+
+Supported pagination flags: `--page`, `--limit`, `--offset`, `--page-key`, `--count-total`, `--reverse`.
+
+- gRPC/REST `DenomsFromCreator` accepts a `pagination` (`PageRequest`) and returns a `pagination` (`PageResponse`) alongside `denoms`. To page through large result sets, pass the returned `next_key` back as `--page-key` (or `PageRequest.Key`).
+- REST endpoint accepts pagination query parameters (e.g. `?pagination.limit=100&pagination.key=...`).
+- The same standard pagination caps apply as documented in [common-errors.md](../common-errors.md) — requesting more than the max page limit is clamped.
+- The CosmWasm query path (`GetAllDenomsFromCreator`) is unbounded and returns **all** denoms in a single call, relying on gas metering rather than page limits.
+
 ## Token Visibility by Wallet Type
 
 | Token type | EVM wallets (MetaMask) | Cosmos wallets (Compass) |

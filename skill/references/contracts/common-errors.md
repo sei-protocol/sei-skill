@@ -202,6 +202,47 @@ forge verify-contract \
 
 Existing `ibc/...` balances are **not** stuck: they remain in the bank module and still transfer between Sei accounts and through their ERC-20 pointers. Only the route off the chain is closed. See [../ecosystem/ibc-bridging.md](../ecosystem/ibc-bridging.md).
 
+
+---
+
+## Pagination / Query Errors
+
+Sei enforces hard caps on pagination parameters for module (gRPC/REST/`seid q ...`) queries. Requests exceeding these bounds are rejected with an `InvalidArgument` error.
+
+| Bound | Value | Meaning |
+|-------|-------|---------|
+| `MaxLimit` | `1000` | Max results per page |
+| `MaxOffset` | `10000` | Max offset for offset-based paging |
+| `MaxScanLimit` | `10000` | Max store entries scanned past the page end |
+
+### `limit N exceeds maximum allowed limit 1000`
+**Cause**: `pagination.limit` set above `MaxLimit` (1000). `limit` is no longer effectively unbounded.  
+**Fix**: Set `pagination.limit` to `1000` or less and page through results using the returned `next_key`.
+```bash
+# Wrong: limit too large
+seid q bank total --page-limit 5000 --node https://rpc.sei-apis.com
+
+# Correct: page in chunks of <= 1000 and follow next_key
+seid q bank total --page-limit 1000 --node https://rpc.sei-apis.com
+```
+
+### `offset N exceeds maximum allowed offset 10000`
+**Cause**: `pagination.offset` set above `MaxOffset` (10000). Deep offset paging is no longer allowed.  
+**Fix**: Do not skip past 10000 entries with `offset`. Use **key-based pagination** instead — follow the `next_key` (`pagination.key`) returned by each page rather than incrementing `offset`.
+
+### `scanned more than 10000 entries ... use key-based pagination instead`
+**Cause**: Offset-based (lazy) pagination walked more than `MaxScanLimit` (10000) store entries without filling the page — typically a sparse filter, a large offset, or `count_total=true` over a large store.  
+**Fix**: Switch to **key-based pagination** (`pagination.key` / follow `next_key`), narrow the query with a more specific key prefix, and avoid `count_total=true` on large datasets.
+```bash
+# Wrong: forces a full-store scan to count everything
+seid q bank total --count-total --node https://rpc.sei-apis.com
+
+# Correct: page with next_key, no total count
+seid q bank total --page-limit 1000 --page-key <NEXT_KEY> --node https://rpc.sei-apis.com
+```
+
+> **Note**: `count_total` is no longer auto-enabled when `limit` is omitted. If you need `total` populated, you must explicitly set `pagination.count_total=true` (subject to the scan-limit cap above); otherwise `total` is `0`.
+
 ### `IBC denom not recognized`
 **Cause**: A consumer doesn't know what an `ibc/HASH` denom represents. These denoms still exist and are still valid on Sei.  
 **Fix**: Query the denom trace — this is a local query and still works:

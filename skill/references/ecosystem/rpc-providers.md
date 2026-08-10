@@ -167,5 +167,33 @@ Self-hosting archive: see [node-operations.md](node-operations.md). Disk require
 - **`eth_getTransactionByBlockHashAndIndex` and `eth_getTransactionByBlockNumberAndIndex` return `result: null` for an out-of-range index** (as of v6.5, sei-chain [#3367](https://github.com/sei-protocol/sei-chain/pull/3367)). Earlier builds could error or return unexpected data when the transaction index exceeded the number of transactions in the block; current builds return `null`. Handle a `null` result rather than expecting an error when probing indices at or beyond the block's transaction count.
 - **`eth_getProof` now works across more node/store configurations.** Proof lookup unwraps additional KVStore wrappers (cachekv, Giga cache, tracekv, and prefix stores) to reach any proof-capable queryable store, so it succeeds beyond just classic IAVL nodes. Older builds returned error `-32000 "cannot find EVM IAVL store"` on non-IAVL backends; current builds resolve any proof-capable queryable KV store (classic IAVL, store/v2 memiavl, etc.).
 - **`eth_getProof` storage keys must be hex-encoded, and are capped at 1024 per request.** Each storage key in the `storageKeys` array must be a valid hex string (e.g. `"0x0000...0001"`); it is decoded and left-padded to 32 bytes. Raw byte-string keys are no longer accepted — a non-hex key returns an `invalid storage key "<key>": ...` error. Requests with more than `MaxStorageKeysPerProof` (1024) keys are rejected with `too many storage keys: got <n>, max 1024`. Example: `eth_getProof(address, ["0x0000000000000000000000000000000000000000000000000000000000000001"], blockTag)`.
+
+
+## Cosmos pagination hard caps (`PageRequest`)
+
+Cosmos REST/LCD (`rest.sei-apis.com`), gRPC (`grpc.sei-apis.com`), and Tendermint-RPC-backed queries that accept a `PageRequest` (`pagination.limit`, `pagination.offset`, `pagination.key`, `pagination.count_total`, `pagination.reverse`) now enforce **hard caps**. Requests that exceed them fail with a gRPC `InvalidArgument` error (HTTP 400 over REST) — they are *not* silently clamped.
+
+| Cap | Value | Field | Error on exceed |
+|---|---|---|---|
+| `MaxLimit` | **1000** (per page) | `pagination.limit` | `limit <n> exceeds maximum allowed limit 1000` |
+| `MaxOffset` | **10000** | `pagination.offset` | `offset <n> exceeds maximum allowed offset 10000` |
+| `MaxScanLimit` | **10000** | (internal store-scan cap) | `scanned more than 10000 entries ...; use key-based pagination instead` |
+
+Key behavior changes (breaking):
+
+- **`limit` is capped at 1000 per page.** Previously `MaxLimit` was effectively unbounded (`math.MaxUint64`). A `pagination.limit` above 1000 is now **rejected**, not truncated. To retrieve a full dataset, page through it with `pagination.key` set to the previous response's `next_key`, using `limit=1000` each request — do not ask for everything in one call.
+- **`offset` is capped at 10000.** Deep offset-based paging is no longer possible; switch to key-based (cursor) pagination via `pagination.key` for anything beyond the first ~10k records.
+- **Offset-based (lazy) pagination caps its store scan.** For sparse filters or `count_total`, the query walks at most `MaxScanLimit` (10000) entries past the page start/end. Exceeding this returns `InvalidArgument` and the `next_key` may be `nil` even when more results exist. Use **key-based pagination** for reliable traversal of sparse or large datasets.
+- **`count_total` is no longer auto-enabled.** Previously, omitting `limit` (or `limit=0`) implicitly counted all records and populated `pagination.total`. Now `total` is **`0` unless you explicitly set `pagination.count_total=true`**. Code that relied on a populated `total` from a default/empty page request will now read `0` — add `count_total=true` (and expect the scan cost + `MaxScanLimit` cap it incurs).
+
+Example — REST query paging by key at the max page size, explicitly counting totals:
+
+```bash
+curl "https://rest.sei-apis.com/cosmos/bank/v1beta1/supply?pagination.limit=1000&pagination.count_total=true"
+# follow next_key from the response for subsequent pages:
+curl "https://rest.sei-apis.com/cosmos/bank/v1beta1/supply?pagination.limit=1000&pagination.key=<base64 next_key>"
+```
+
+> A bare request like `.../supply` (no `count_total`) returns at most `DefaultLimit` (100) records with `total: 0` — set `pagination.count_total=true` if you actually need the count.
 - **Endpoint freshness**: Sei is a fast-moving project — verify endpoints monthly against [docs.sei.io/learn/rpc-providers](https://docs.sei.io/learn/rpc-providers).
 - For agent-driven RPC usage, see [rpc-agent-skills.md](rpc-agent-skills.md) for the canonical 17 RPC skills, retry/backoff patterns, and response-shape expectations.

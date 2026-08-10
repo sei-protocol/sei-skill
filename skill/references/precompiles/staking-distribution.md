@@ -56,6 +56,25 @@ function delegatorUnbondingDelegations(address delegatorAddress, uint32 pageLimi
     external view returns (UnbondingDelegation[] memory);
 ```
 
+
+### Pagination limits
+
+Underlying Cosmos pagination now enforces hard caps on all paginated staking queries (`validators`, `delegatorDelegations`, `delegatorUnbondingDelegations`, etc.):
+
+| Bound | Cap | On exceed |
+|---|---|---|
+| Per-page limit | `1000` (`MaxLimit`) | `InvalidArgument`: `limit N exceeds maximum allowed limit 1000` |
+| Offset | `10000` (`MaxOffset`) | `InvalidArgument`: `offset N exceeds maximum allowed offset 10000` |
+| Scan iterations | `10000` (`MaxScanLimit`) | `InvalidArgument`: `scanned more than 10000 entries...` |
+
+Key/cursor-based behavior for these precompiles:
+
+- Keep per-page `pageLimit` at **≤ 1000**. Passing a larger limit returns an `InvalidArgument` error, not a truncated page.
+- **Prefer cursor-based iteration** (pass `nextKey`/`pageKey` from the previous response) rather than large offsets. Offset-based paging is capped at `10000` and lazy scans are capped at `MaxScanLimit` (10000) entries past the page end.
+- To iterate the full validator/delegation set, loop on `nextKey` until it returns empty (`""`/`0x`), requesting up to 1000 per page each time — do not attempt to fetch everything in one large-limit call.
+- **`count_total` is no longer implicit.** A total record count is only returned when the caller explicitly requests it; otherwise the total is `0`. On sparse datasets, a full-page response with a non-nil `nextKey` may still be returned even if the scan window was reached, so always drive iteration off `nextKey` rather than a total count.
+
+
 ### Events
 
 ```solidity

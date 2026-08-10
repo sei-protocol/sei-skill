@@ -109,6 +109,7 @@ const balance = await provider.getBalance(address); // always accurate
 
 ### JSON-RPC Method Notes
 - `eth_getBlockByNumber` returns `result: null` (per the Ethereum JSON-RPC spec) for numeric block heights above the node's safe latest watermark or otherwise non-existent — it no longer returns JSON-RPC error `-32000` (e.g. `requested height 1000 is not yet available; safe latest is 128`) for future/unknown numeric block numbers
+- `eth_getTransactionByBlockHashAndIndex` and `eth_getTransactionByBlockNumberAndIndex` return `result: null` (per the Ethereum JSON-RPC spec) when the transaction index is out of range for the block (v6.5+) — they no longer error or return unexpected data. Handle `null` in dApp/indexer code rather than expecting an error when probing indices beyond the block's transaction count
 
 ## What Works Unchanged
 

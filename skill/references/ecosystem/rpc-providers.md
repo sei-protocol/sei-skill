@@ -162,6 +162,9 @@ Self-hosting archive: see [node-operations.md](node-operations.md). Disk require
 
 
 - **`eth_getBlockByNumber` for future / non-existent numeric heights returns `result: null`** (per the Ethereum JSON-RPC spec), not a JSON-RPC error. Earlier builds returned error `-32000` (e.g. `requested height 1000 is not yet available; safe latest is 128`); current builds map a numeric block number above the node's safe latest watermark to `null`. Handle a `null` block result rather than expecting an error for out-of-range numeric heights.
+
+
+- **`eth_getTransactionByBlockHashAndIndex` and `eth_getTransactionByBlockNumberAndIndex` return `result: null` for an out-of-range index** (as of v6.5, sei-chain [#3367](https://github.com/sei-protocol/sei-chain/pull/3367)). Earlier builds could error or return unexpected data when the transaction index exceeded the number of transactions in the block; current builds return `null`. Handle a `null` result rather than expecting an error when probing indices at or beyond the block's transaction count.
 - **`eth_getProof` now works across more node/store configurations.** Proof lookup unwraps additional KVStore wrappers (cachekv, Giga cache, tracekv, and prefix stores) to reach any proof-capable queryable store, so it succeeds beyond just classic IAVL nodes. Older builds returned error `-32000 "cannot find EVM IAVL store"` on non-IAVL backends; current builds resolve any proof-capable queryable KV store (classic IAVL, store/v2 memiavl, etc.).
 - **Endpoint freshness**: Sei is a fast-moving project — verify endpoints monthly against [docs.sei.io/learn/rpc-providers](https://docs.sei.io/learn/rpc-providers).
 - For agent-driven RPC usage, see [rpc-agent-skills.md](rpc-agent-skills.md) for the canonical 17 RPC skills, retry/backoff patterns, and response-shape expectations.

@@ -158,7 +158,7 @@ ss-prune-interval = 600
 SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds Cosmos module state and computes the app hash — and **State Store (SS)** — versioned raw key/values for historical queries (`ss-enable = true` is required for any RPC node).
 
 - **RocksDB SS backend** (optional): faster for iteration-heavy work (`debug_trace*`, large archive queries). Build with `make build-rocksdb && make install-rocksdb`, then set `ss-backend = "rocksdb"`. RocksDB RPC nodes must state-sync on first start.
-- **Giga SS Store** (optional, RPC nodes): splits the **State Store** so EVM state lives in its own SS DB. Controlled by a single bool — `evm-ss-split = true` (Sei v6.5+; older releases used per-key `evm-ss-write-mode`/`evm-ss-read-mode`). Requires a **fresh state sync** — flipping it on a node with existing data fails startup safety checks. **SC config is left untouched.** See the [Giga SS Store Migration Guide](https://docs.sei.io/node/giga-storage-migration).
+- **Giga SS Store** (optional, RPC nodes): splits the **State Store** so EVM state lives in its own SS DB. As of Sei v6.5+ this is controlled by a single consolidated `evm-ss-mode` config field (the previously separate SS write/read mode settings — `evm-ss-write-mode`/`evm-ss-read-mode` — have been merged into this one field). Requires a **fresh state sync** — flipping it on a node with existing data fails startup safety checks. **SC config is left untouched.** See the [Giga SS Store Migration Guide](https://docs.sei.io/node/giga-storage-migration).
 - **Giga Storage (SC FlatKV routing)** is a *separate*, broader option that routes EVM **State Commit** data through FlatKV, controlled by the single `sc-write-mode` key:
 
   ```toml

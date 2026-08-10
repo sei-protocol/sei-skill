@@ -279,6 +279,51 @@ For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a walle
 
   Flags: `--endpoint` (RPC URL, required), `--start-block`/`--end-block` (positive block numbers, required), `--output-dir`/`-o` (output directory, required), `--concurrency`/`-c` (concurrent requests, default 4), `--trace-config-json` (JSON trace config, default `{}`), `--max-transactions` (optional cap, `0` = no cap).
 
+
+### seidb FlatKV Import (memiavl → FlatKV migration)
+
+Offline tooling for migrating the EVM module's SC-layer data from memiavl into FlatKV storage. Run these only while `seid` is stopped (they open the node's data directory directly).
+
+#### `seidb memiavl-latest-version`
+
+Read-only. Prints the latest committed memiavl version of a stopped node. Use it to pick a single, uniform import height across a multi-validator cluster.
+
+```bash
+seidb memiavl-latest-version --data-dir /root/.sei/data
+```
+
+Flags:
+- `--home` — Sei home directory. Defaults to `$HOME/.sei`.
+- `--data-dir` — Sei data directory or home directory. If the basename is `data`, its parent is used as home.
+
+#### `seidb import-flatkv-from-memiavl`
+
+Imports selected memiavl modules into FlatKV. Initial production scope is **evm-only** — any other module name is rejected. This is a restore-style import: it **resets FlatKV** before loading the imported rows and refuses to run over existing committed FlatKV data unless `--force` is supplied.
+
+```bash
+seidb import-flatkv-from-memiavl --modules=evm --data-dir /root/.sei/data --height <h>
+
+# Overwrite an existing committed FlatKV store
+seidb import-flatkv-from-memiavl --modules=evm --data-dir /root/.sei/data --height <h> --force
+```
+
+Flags:
+- `--home` — Sei home directory. Defaults to `$HOME/.sei`.
+- `--data-dir` — Sei data directory or home directory. If the basename is `data`, its parent is used as home.
+- `--modules` — Comma-separated module names to import. Default `evm`; only `evm` is supported in the initial scope.
+- `--height` — memiavl version to import. `0` means latest.
+- `--force` — overwrite existing committed FlatKV data.
+
+**Import must run at the memiavl latest height.** If `--height H` is below the latest committed memiavl version, the command refuses to run: a subsequent `GIGA_STORAGE` startup would call `CompositeCommitStore.reconcileVersions` and silently roll memiavl back to `H`, truncating every cosmos block in `(H, latest]`. To import at an older `H`, first roll memiavl back to `H` yourself (`seid rollback`), then re-run the import. A height above latest is also rejected. Use `seidb memiavl-latest-version` to determine the correct height. On failure the import aborts without finalizing, so FlatKV is left at its pre-import version and can be retried without `--force`.
+
+#### Post-import startup constraints (MigrateEVM V0 → V1)
+
+The import moves only SC-layer EVM data into FlatKV; SS history for EVM stays in the existing combined cosmos pebbledb. Across the import boundary, keep the following in `app.toml` to avoid AppHash / startup panics:
+- `evm-ss-split = false` — otherwise rootmulti panics with `EVM SS directory ... does not exist but Cosmos SS already has history`.
+- `sc-enable-lattice-hash = false` — turning it on would fold the FlatKV LtHash into the AppHash and fail the replay check (`state.AppHash does not match AppHash after replay`). `dual_write` does not require lattice hash; only `split_write` does.
+
+See `sei-db/state_db/sc/migration/OPERATIONS.md` for the full operational roadmap.
+
 ## Agent Workflow
 
 1. Classify the task: install · wallet · read query · payload generation · pointer lookup · tx lookup · transaction submission · raw JSON-RPC.

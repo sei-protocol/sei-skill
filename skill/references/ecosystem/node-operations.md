@@ -265,6 +265,61 @@ Console output notes (as of this change): modules are printed alphabetically for
 
 
 
+### Offline EVM memiavl→FlatKV migration (`import-flatkv-from-memiavl`)
+
+Moving the EVM module's State Commit data from memIAVL into FlatKV can be done offline with two seidb subcommands. This is the operator workflow behind the staged Giga Storage `migrate_evm` → `evm_migrated` transition when performed as a coordinated offline import.
+
+#### `memiavl-latest-version` — read the latest committed memiavl version
+
+Read-only. Prints the latest committed memiavl version of a **stopped** node. Use it to pick a single, uniform import height across a multi-validator cluster (read each validator after stopping `seid`, then take the minimum).
+
+```bash
+seid memiavl-latest-version --data-dir /root/.sei/data
+# or: seid memiavl-latest-version --home /root/.sei
+```
+
+| Flag | Purpose |
+|---|---|
+| `--home` | Sei home directory. Defaults to `$HOME/.sei` |
+| `--data-dir` | Sei data directory or home directory. If the basename is `data`, its parent is used as home |
+
+#### `import-flatkv-from-memiavl` — import selected modules into FlatKV
+
+Imports selected memIAVL modules into FlatKV. **Initial scope is EVM-only** — `--modules=evm` is the only accepted value; any other module name is rejected at the CLI boundary. The import **resets FlatKV** before loading the rows and **refuses to overwrite committed FlatKV data unless `--force` is supplied**.
+
+```bash
+# Node MUST be stopped first (pkill / systemctl stop seid).
+seid import-flatkv-from-memiavl \
+  --modules=evm \
+  --data-dir /root/.sei/data \
+  --height <memiavl-latest-version> \
+  [--force]
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--home` | `$HOME/.sei` | Sei home directory |
+| `--data-dir` | *(unset)* | Sei data directory or home directory (basename `data` ⇒ parent is home) |
+| `--modules` | `evm` | Comma-separated module names; only `evm` is supported |
+| `--height` | `0` (latest) | memiavl version to import; `0` resolves to memiavl latest |
+| `--force` | `false` | Overwrite existing committed FlatKV data |
+
+#### Operational constraints (critical)
+
+1. **Import at memiavl latest height only.** The CLI refuses to import at `H < memiavl-latest`: a subsequent GIGA_STORAGE startup would call `CompositeCommitStore.reconcileVersions` and **silently roll memiavl back to `H`, truncating every cosmos block in `(H, memiavl-latest]`**. If you genuinely need a non-latest `H`, roll memiavl back to `H` yourself first (`seid rollback --home <home> --num-blocks <n>`) — this tool never rolls memiavl back on your behalf. Importing at `H > memiavl-latest` is also refused.
+
+   For a multi-validator cluster, read every validator's `memiavl-latest-version` after stopping, pick the **minimum** as the uniform import height, roll any validator that committed extra blocks back to that height, then run the import on all validators at the same height. (When rolling back after a `pkill -9`, also drop the consensus WAL — `rm -rf <data>/cs.wal <data>/tendermint/cs.wal` — or restart panics with `last height in WAL is N, want N-1`.)
+
+2. **Keep `evm-ss-split = false` across the import boundary.** The import moves only **SC-layer** EVM data into FlatKV; EVM **SS** history stays in the combined cosmos pebbledb. Switching SS to split mode mid-life triggers the rootmulti startup panic `EVM SS directory ... does not exist but Cosmos SS already has history`. A split-SS transition is a separate state-sync workflow.
+
+3. **Keep `sc-enable-lattice-hash = false` across the import boundary.** Pre-import the chain persisted `AppHash = memiavl-only` for every block up to the import height. Turning lattice hash on now would fold the FlatKV LtHash into the AppHash, and the startup replay check would fail with `state.AppHash does not match AppHash after replay`. (`dual_write` does not require lattice hash; only `split_write` does. A real production rollout coordinates this transition via a chain upgrade at an agreed height.)
+
+4. **Import is one-way and abortable, not partial.** On any error the tool aborts without finalizing — FlatKV is left at its pre-import committed version, so you can re-run without `--force`. A successful import writes a FlatKV snapshot so the imported data survives restart.
+
+> Post-import startup: apply your Giga Storage `sc-write-mode` (e.g. `dual_write`/`evm_migrated` per your rollout) but keep `evm-ss-split = false` and `sc-enable-lattice-hash = false` as above. See `sei-db/state_db/sc/migration/OPERATIONS.md` for the full MigrateEVM (V0→V1) failure-mode catalog and recovery tooling roadmap.
+
+
+
 ---
 
 ## Legacy `sei_*` / `sei2_*` JSON-RPC gating (`app.toml [evm]`)

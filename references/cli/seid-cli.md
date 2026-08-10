@@ -228,6 +228,76 @@ seidb dump-flatkv \
   --bucket storage
 ```
 
+
+
+## seidb import-flatkv-from-memiavl
+
+Imports selected memIAVL modules into FlatKV. This is the offline migration tool for moving the EVM module's SC-layer data from memIAVL into FlatKV. It is a restore-style import: it **resets the FlatKV directory before loading** the imported rows and refuses to run over existing committed FlatKV data unless `--force` is supplied.
+
+```bash
+seidb import-flatkv-from-memiavl \
+  --modules=evm \
+  --data-dir <dir> \
+  --height <h> \
+  [--home <home>] \
+  [--force]
+```
+
+### Flags
+
+- `--modules` — comma-separated module names to import (default `evm`). **Initial production scope is evm-only**; any other module name is rejected at the CLI boundary.
+- `--data-dir` — Sei data directory or home directory. If the basename is `data`, its parent is used as home.
+- `--home` — Sei home directory. Defaults to `$HOME/.sei`. Takes precedence over `--data-dir` when both are set.
+- `--height` — memIAVL version to import. `0` (default) means the latest committed memIAVL version.
+- `--force` — overwrite existing committed FlatKV data. Without it, the command refuses to run when FlatKV already has a committed version.
+
+### Constraints
+
+- **Import must run at the memiavl latest height.** Importing at `H < memiavl latest` is refused, because a subsequent `GIGA_STORAGE` startup would call `CompositeCommitStore.reconcileVersions` and silently roll memIAVL back to `H`, truncating every cosmos block in `(H, memiavlLatest]`. To import at a lower height, roll memIAVL back to `H` first (this CLI never does that rollback for you). Importing at `H > memiavl latest` is also refused.
+- On failure the import is **aborted, not finalized** — FlatKV is left at its pre-import committed version so the operation can be retried without `--force`.
+- After a successful import, the offline migration workflow requires keeping `evm-ss-split = false` and `sc-enable-lattice-hash = false` across the import boundary on restart, to avoid AppHash-mismatch and rootmulti startup panics. See `sei-db/state_db/sc/migration/OPERATIONS.md`.
+
+### Multi-validator workflow
+
+For a cluster, stop every validator, read each node's latest memIAVL version with `memiavl-latest-version`, pick the minimum as a uniform import height, roll any node that committed extra blocks back to that height, then run the import on every node at the same `--height`.
+
+### Example
+
+```bash
+# import the evm module at the latest memiavl height
+seidb import-flatkv-from-memiavl \
+  --modules=evm \
+  --data-dir /root/.sei/data \
+  --height 12345678
+
+# overwrite an existing committed FlatKV store
+seidb import-flatkv-from-memiavl \
+  --modules=evm \
+  --data-dir /root/.sei/data \
+  --height 12345678 \
+  --force
+```
+
+
+## seidb memiavl-latest-version
+
+Prints the latest committed memIAVL version of a stopped node to stdout. This is the read-only companion to `import-flatkv-from-memiavl`: orchestration scripts read each validator's version to pick a single uniform import height across a multi-validator cluster.
+
+```bash
+seidb memiavl-latest-version --data-dir <dir> [--home <home>]
+```
+
+### Flags
+
+- `--data-dir` — Sei data directory or home directory. If the basename is `data`, its parent is used as home.
+- `--home` — Sei home directory. Defaults to `$HOME/.sei`. Takes precedence over `--data-dir` when both are set.
+
+### Example
+
+```bash
+seidb memiavl-latest-version --data-dir /root/.sei/data
+```
+
 ### Example
 
 ```bash

@@ -367,6 +367,57 @@ seidb migrate-evm-status --db-dir /root/.sei/data/state_commit/flatkv \
 ```
 
 
+
+#### `seidb evm-logical-digest`
+
+Computes a **backend-independent digest of EVM logical state** (account / code / storage canonical buckets) so a memIAVL node and a FlatKV node can be compared at the same chain height. It strips each value's serialization-version + per-key `blockHeight` header and digests only the logical payload (storage word / bytecode / balance+nonce+codeHash), so a freshly migrated FlatKV node and a memIAVL-only node produce the same digest when the underlying EVM state matches. Run only while `seid` is stopped (FlatKV opens a read-only clone; memIAVL reads snapshot/`current` directly).
+
+The per-bucket accumulator is an order-independent XOR of `sha256(len(key)||key||len(val)||val)`, so iteration order does not matter. Output includes per-bucket `bucket_digest` lines and one `FINAL_DIGEST account+code+storage+legacy ... digest=<hex>` line for cross-backend comparison. FlatKV's internal `migration/migration-version` marker (which a memIAVL-only node never owns) is omitted from the final comparison.
+
+```bash
+# FlatKV digest at a height (WAL-replays to it)
+seidb evm-logical-digest --backend flatkv \
+    --db-dir /root/.sei/data/state_commit/flatkv --height 213200000
+
+# memIAVL digest at the same height (0 = current symlink), default semantic mode.
+# memIAVL does NOT replay WAL here; it opens snapshot-<height>/evm or current/evm.
+seidb evm-logical-digest --backend memiavl \
+    --db-dir /root/.sei/data/state_commit/memiavl --height 213200000
+
+# Translator-based memIAVL digest (runs leaves through flatkv.ImportTranslator)
+seidb evm-logical-digest --backend memiavl \
+    --db-dir /root/.sei/data/state_commit/memiavl --height 213200000 \
+    --memiavl-normalization translator
+
+# Inspect one bucket instead of the global digest (e.g. shard storage rows by next 2 bytes)
+seidb evm-logical-digest --backend flatkv -d /root/.sei/data/state_commit/flatkv --height 213200000 \
+    --inspect-bucket storage --key-prefix 03 --shard-next-bytes 2
+
+# List account rows with backend version metadata
+seidb evm-logical-digest --backend flatkv -d /root/.sei/data/state_commit/flatkv --height 213200000 \
+    --inspect-bucket account --list --list-limit 50 --details
+
+# Hunt the single diverging entry: when two bucket_digest values differ by exactly one
+# row, XOR those two 32-byte hex values and pass the result; matching rows print as FOUND-HASH.
+seidb evm-logical-digest --backend flatkv -d /root/.sei/data/state_commit/flatkv --height 213200000 \
+    --find-hash <32-byte-hex>
+```
+
+Flags:
+- `--backend` — backend to read: `flatkv` | `memiavl` (required).
+- `--db-dir` / `-d` — for `flatkv`, the FlatKV data dir; for `memiavl`, the memiavl root dir (contains `current/` and `snapshot-*`) (required).
+- `--height` — target version. `flatkv` WAL-replays to it; `memiavl` resolves `snapshot-<height>/evm` (`0` = `current` symlink).
+- `--memiavl-normalization` — memiavl digest/inspect normalization: `semantic` (default; independent raw EVM key/value decoder, does not call `flatkv.ImportTranslator`) | `independent` (alias of `semantic`) | `translator` (routes each leaf through `flatkv.ImportTranslator`, i.e. the current migration mapping).
+- `--inspect-bucket` — inspect one normalized bucket (`account` | `code` | `storage` | `legacy`) instead of printing the global digest.
+- `--key-offset` — inspect mode: byte offset into the physical key before applying `--key-prefix` / sharding (non-negative).
+- `--key-prefix` — inspect mode: hex prefix, relative to `--key-offset`, used to filter physical keys.
+- `--shard-next-bytes` — inspect mode: group matching keys by this many bytes after `--key-prefix` (non-negative).
+- `--list` — inspect mode: list matching key / logical-value pairs instead of per-shard `bucket_digest` values.
+- `--list-limit` — inspect mode: maximum pairs to print with `--list` (default `1000`; `<=0` means unlimited).
+- `--details` — inspect list mode: include backend-specific version metadata (e.g. `block_height` / `leaf_version`).
+- `--find-hash` — optional 32-byte hex per-entry hash to hunt for; prints every entry whose `sha256(len(key)||key||len(val)||val)` matches (as `FOUND-HASH`).
+
+
 ## Agent Workflow
 
 1. Classify the task: install · wallet · read query · payload generation · pointer lookup · tx lookup · transaction submission · raw JSON-RPC.

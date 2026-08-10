@@ -104,7 +104,11 @@ const balance = await provider.getBalance(address); // always accurate
 ### State Storage (AVL vs MPT)
 - Sei uses a single global AVL-tree state root — there are no per-account state roots
 - `eth_getProof` (EIP-1186) returns proofs against the global state root, not per-account roots
+- `eth_getProof` support is not limited to the classic IAVL store: the RPC unwraps known KVStore wrappers (`cachekv`, Giga cache, `tracekv`, prefix stores) to reach any proof-capable queryable store (classic IAVL, store/v2 memiavl, future proof-capable roots). This means `eth_getProof` now works across more node configurations rather than failing with `cannot find EVM IAVL store`
 - Block hash encoding differs from Ethereum — BLOCKHASH returns Tendermint header hash, not Ethereum keccak header hash
+
+### JSON-RPC Method Notes
+- `eth_getBlockByNumber` returns `result: null` (per the Ethereum JSON-RPC spec) for numeric block heights above the node's safe latest watermark or otherwise non-existent — it no longer returns JSON-RPC error `-32000` (e.g. `requested height 1000 is not yet available; safe latest is 128`) for future/unknown numeric block numbers
 
 ## What Works Unchanged
 

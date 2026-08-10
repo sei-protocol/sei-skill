@@ -159,5 +159,9 @@ Self-hosting archive: see [node-operations.md](node-operations.md). Disk require
 - **Always set `gasPrice ≥ 50 gwei`** in calls submitted via these endpoints; under-priced txs will be rejected by the RPC or evicted from mempool.
 - **Cosmos and EVM RPCs are separate.** A `sei1...`-targeted operation needs the Cosmos Tendermint RPC (`rpc.sei-apis.com`); a `0x...`-targeted call needs the EVM RPC (`evm-rpc.sei-apis.com`).
 - **Block tags**: `latest`, `pending`, `earliest` are supported; `safe` and `finalized` are not (Sei has instant finality, so `latest` is functionally equivalent to `finalized`).
+
+
+- **`eth_getBlockByNumber` for future / non-existent numeric heights returns `result: null`** (per the Ethereum JSON-RPC spec), not a JSON-RPC error. Earlier builds returned error `-32000` (e.g. `requested height 1000 is not yet available; safe latest is 128`); current builds map a numeric block number above the node's safe latest watermark to `null`. Handle a `null` block result rather than expecting an error for out-of-range numeric heights.
+- **`eth_getProof` now works across more node/store configurations.** Proof lookup unwraps additional KVStore wrappers (cachekv, Giga cache, tracekv, and prefix stores) to reach any proof-capable queryable store, so it succeeds beyond just classic IAVL nodes. Older builds returned error `-32000 "cannot find EVM IAVL store"` on non-IAVL backends; current builds resolve any proof-capable queryable KV store (classic IAVL, store/v2 memiavl, etc.).
 - **Endpoint freshness**: Sei is a fast-moving project — verify endpoints monthly against [docs.sei.io/learn/rpc-providers](https://docs.sei.io/learn/rpc-providers).
 - For agent-driven RPC usage, see [rpc-agent-skills.md](rpc-agent-skills.md) for the canonical 17 RPC skills, retry/backoff patterns, and response-shape expectations.

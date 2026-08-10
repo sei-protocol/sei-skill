@@ -76,6 +76,158 @@ seidb trace-profile-report \
 
 The underlying `debug_traceTransactionProfile(hash, config)` method returns `{ "trace": ..., "profile": { "totalNanos", "historicalDbLookupNanos", "otherNanos", "phases": {...}, "store": { "modules": {...}, "stats": {...} } } }`.
 
+
+
+## seidb state-size
+
+Scans a memIAVL database and reports per-module state size (key/value/total bytes, key counts, prefix breakdown, and top EVM contracts). Can optionally scan a FlatKV store alongside memIAVL and fold the result into the same output.
+
+```bash
+seidb state-size \
+  --db-dir <memiavl-dir> \
+  [--height <n>] \
+  [--module <name>] \
+  [--flatkv-dir <flatkv-dir>] \
+  [--export-dynamodb] \
+  [--dynamodb-table <table>] \
+  [--aws-region <region>]
+```
+
+### Flags
+
+- `--db-dir` / `-d` — memIAVL database directory. (Help text is now "memIAVL database directory".)
+- `--height` — block height to analyze (`0` = latest available version).
+- `--module` / `-m` — restrict analysis to a single module. Default: all modules.
+- `--flatkv-dir` — FlatKV data directory. **Optional.** When omitted, the tool auto-detects a sibling `flatkv/` directory next to `--db-dir` (i.e. `<db-dir>/../flatkv`, the standard `seid` shadow-node layout: `<home>/data/committer.db` -> `<home>/data/flatkv`). Set explicitly to point at a FlatKV dir elsewhere.
+- `--export-dynamodb` — export results to DynamoDB instead of printing to console.
+- `--dynamodb-table` — DynamoDB table name (default `state_size_analysis`).
+- `--aws-region` — AWS region for the DynamoDB export.
+
+### FlatKV integration
+
+FlatKV analysis is strictly additive and only runs when `--module` is empty or `evm` (FlatKV in production holds only evm keys; everything else is bucketed into a `legacy` DB). If the FlatKV directory is missing, its snapshot is unavailable, or the store fails to open, the tool logs the reason and continues — the memIAVL path always still succeeds.
+
+When a FlatKV directory is present:
+
+- **Console output** gains a `=== FlatKV state size (version N) ===` section with totals, a per-DB breakdown (`account`, `code`, `storage`, `legacy`), and a top EVM contracts table (top 100 by storage size).
+- **DynamoDB export** appends a FlatKV row (module name `flatkv`) to the same batch as the memIAVL module rows. Its `PrefixBreakdown` is a JSON map keyed by bucket name (`{"account": {...}, "storage": {...}}`), matching the shape memIAVL uses.
+
+The FlatKV store is opened read-only via a temporary snapshot + WAL clone, so it does not contend with a live node for the FlatKV writer lock.
+
+### Console output notes
+
+- Modules are printed in alphabetical order so successive runs produce diffable output.
+- Each module's prefix breakdown is marshaled as a single combined map (key/value/total bytes and key count per prefix byte).
+- The top-contracts table is skipped for modules with no `0x03` (contract storage) entries.
+- Progress logging cadence is every 10M keys (previously every 1M).
+
+### Example
+
+```bash
+# memIAVL + auto-detected sibling flatkv/ at latest height
+seidb state-size --db-dir ~/.sei/data/committer.db
+
+# explicit FlatKV dir and a historical height, evm module only
+seidb state-size \
+  --db-dir ~/.sei/data/committer.db \
+  --flatkv-dir ~/.sei/data/flatkv \
+  --height 12345678 \
+  --module evm
+
+# export both memIAVL and FlatKV rows to DynamoDB
+seidb state-size \
+  --db-dir ~/.sei/data/committer.db \
+  --export-dynamodb \
+  --dynamodb-table state_size_analysis \
+  --aws-region us-east-1
+```
+
+
+## seidb dump-flatkv
+
+Iterates and dumps every physical FlatKV (key, value) pair into per-bucket files (`account`, `code`, `storage`, `legacy`), formatted to match `dump-iavl` so the same diff tooling works on both. Keys and values are emitted as `Key: <HEX>, Value: <HEX>`, one per line, under a `Bucket <name> at version <V>` header.
+
+```bash
+seidb dump-flatkv \
+  --db-dir <flatkv-dir> \
+  --output-dir <dir> \
+  [--height <n>] \
+  [--bucket account|code|storage|legacy]
+```
+
+### Flags
+
+- `--db-dir` / `-d` (**required**) — FlatKV database directory.
+- `--output-dir` / `-o` (**required**) — output directory; one file per bucket is written.
+- `--height` — FlatKV target version (`0` = latest available version).
+- `--bucket` / `-b` — restrict the dump to a single bucket (`account`, `code`, `storage`, or `legacy`). Default: all buckets. When set, only that bucket's file is created.
+
+The store is opened via a read-only temporary snapshot + WAL clone. The FlatKV `metadataDB` and internal `_meta/*` rows are excluded.
+
+### Example
+
+```bash
+seidb dump-flatkv \
+  --db-dir ~/.sei/data/flatkv \
+  --output-dir ./flatkv-dump \
+  --height 12345678 \
+  --bucket storage
+```
+
+
+
+## seidb dump-flatkv
+
+Iterates and dumps physical FlatKV `(key, value)` pairs into per-bucket files, formatted to match `dump-iavl` so the same diff tooling works on both. The tool operates on a temporary read-only clone of the selected snapshot + WAL, so it does not contend with a live node for the FlatKV writer lock.
+
+```bash
+seidb dump-flatkv \
+  --db-dir <flatkv-dir> \
+  --output-dir <dir> \
+  [--height <n>] \
+  [--bucket account|code|storage|legacy]
+```
+
+### Flags
+
+- `--db-dir` / `-d` (**required**) — FlatKV database directory. Panics if omitted.
+- `--output-dir` / `-o` (**required**) — output directory; one file is written per bucket. Panics if omitted.
+- `--height` — FlatKV target version. `0` (default) selects the latest available version.
+- `--bucket` / `-b` — restrict the dump to a single bucket (`account`, `code`, `storage`, or `legacy`). Default: all buckets. Invalid values panic.
+
+### Buckets
+
+Physical keys are classified into four buckets in this order (`account` → `code` → `storage` → `legacy`):
+
+- `account` — evm nonce and codehash rows (both canonicalize to the same account row per address).
+- `code` — evm contract bytecode.
+- `storage` — evm contract storage slots.
+- `legacy` — non-evm module keys and any evm keys with an unrecognized type prefix.
+
+The FlatKV metadata DB and per-DB `_meta/*` rows are intentionally excluded. Physical keys are emitted verbatim (including their `<module>/` + type-prefix header) because they are not byte-for-byte comparable with memIAVL logical keys.
+
+### Output format
+
+Each bucket file mirrors the `dump-iavl` format:
+
+```
+Bucket <name> at version <V>
+Key: <HEX>, Value: <HEX>
+...
+```
+
+When `--bucket` is set, only that bucket's file is created; unselected buckets produce no file.
+
+### Example
+
+```bash
+seidb dump-flatkv \
+  --db-dir ~/.sei/data/flatkv \
+  --output-dir ./flatkv-dump \
+  --height 0 \
+  --bucket storage
+```
+
 ### Example
 
 ```bash

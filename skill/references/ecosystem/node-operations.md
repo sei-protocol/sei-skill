@@ -212,6 +212,59 @@ Flags:
 
 
 
+
+### seidb FlatKV analysis tooling
+
+When a node runs Giga Storage (SC FlatKV routing — see `sc-write-mode` above), EVM State Commit data lives in a FlatKV store (a sibling `flatkv/` directory next to the memIAVL `committer.db`). Two seidb subcommands inspect it. Both operate on a **read-only temp clone** of the selected snapshot + changelog (snapshot files are hardlinked, changelog files are byte-copied) so they never contend for the live FlatKV writer lock — safe to run against a running node.
+
+#### `dump-flatkv` — dump physical (key, value) pairs per bucket
+
+Iterates every physical FlatKV (key, value) pair and writes one file per bucket (`account`, `code`, `storage`, `legacy`) into the output directory, formatted identically to `dump-iavl` so the same diff tooling works on both. Each file starts with a `Bucket <name> at version <V>` header followed by `Key: <HEX>, Value: <HEX>` lines. Physical keys are emitted verbatim (with their `<module>/` + type-prefix header). Internal metadata rows are excluded.
+
+```bash
+seid dump-flatkv \
+  --db-dir /path/to/data/flatkv \
+  --output-dir ./flatkv-dump \
+  --height 0 \
+  --bucket storage
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--db-dir` / `-d` | *(required)* | FlatKV database directory |
+| `--output-dir` / `-o` | *(required)* | Output directory (one file per bucket) |
+| `--height` | `0` (latest) | FlatKV target version; `0` selects the latest available version |
+| `--bucket` / `-b` | *(all)* | Restrict dump to a single bucket: `account`, `code`, `storage`, or `legacy` |
+
+Bucket classification of physical EVM keys: nonce + codehash → `account`, code → `code`, storage → `storage`; any non-EVM module (or unrecognized EVM type prefix) → `legacy`.
+
+#### `state-size --flatkv-dir` — fold FlatKV into state-size analysis
+
+The existing `state-size` command now scans FlatKV alongside memIAVL. Supply `--flatkv-dir` explicitly, or leave it unset to auto-detect a sibling `flatkv/` directory next to `--db-dir` (e.g. `<home>/data/committer.db` → `<home>/data/flatkv`). FlatKV is only scanned when `--module` is empty or `evm` (FlatKV holds only EVM keys). FlatKV analysis is strictly additive — any FlatKV open/scan failure is logged and skipped, leaving the memIAVL analysis intact.
+
+```bash
+seid state-size \
+  --db-dir /path/to/data/committer.db \
+  --flatkv-dir /path/to/data/flatkv \
+  --height 0
+```
+
+Relevant flags:
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--db-dir` / `-d` | *(required)* | memIAVL database directory |
+| `--flatkv-dir` | auto-detect `<db-dir>/../flatkv` | FlatKV data directory (empty + no sibling ⇒ FlatKV skipped) |
+| `--module` / `-m` | *(all)* | Module to analyze; FlatKV scanned only when empty or `evm` |
+| `--height` | `0` (latest) | Block height / version |
+| `--export-dynamodb` | `false` | Export to DynamoDB instead of printing; FlatKV is added as a `flatkv` module row in the same batch |
+
+Console output notes (as of this change): modules are printed alphabetically for diffable runs, the prefix breakdown is marshaled as a full map (key/value/total bytes + key count per prefix byte), and scan progress logs every **10M** keys (previously 1M). The FlatKV section reports total keys/size, a per-DB breakdown (`account`/`code`/`storage`/`legacy`), and the top EVM contracts by storage size.
+
+> Both commands are offline analysis tools. `--height 0` uses the latest snapshot; an explicit height selects the newest snapshot at or below that version.
+
+
+
 ---
 
 ## Legacy `sei_*` / `sei2_*` JSON-RPC gating (`app.toml [evm]`)

@@ -131,11 +131,14 @@ Use `seid tendermint gen-autobahn-config` to produce the JSON config. Each node 
 Syntax:
 
 ```bash
-seid tendermint gen-autobahn-config [node-dirs...] --output <path>
+seid tendermint gen-autobahn-config [node-dirs...] --output <path> [--persistent-state-dir <dir>]
 ```
 
 - `--output` / `-o` (**required**): output file path for the generated autobahn config.
+- `--persistent-state-dir` (default `data/autobahn`): directory to persist autobahn consensus and data WALs across restarts. Relative paths are resolved against the node's `--home` dir at load time; absolute paths pass through unchanged. Pass `--persistent-state-dir=` (empty) to disable persistence and run both consensus and data layers **in-memory only**.
 - Requires at least one node directory argument.
+
+By default (`data/autobahn`), Autobahn persists both the consensus and data layer WALs to disk under a shared on-disk root, with distinct subdirectories per layer, so state survives node restarts. Persistence is on without operator action.
 
 Example (4-node cluster):
 

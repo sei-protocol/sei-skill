@@ -265,6 +265,27 @@ Console output notes (as of this change): modules are printed alphabetically for
 
 
 
+
+
+### `seid tendermint gen-autobahn-config` (Autobahn/Giga consensus config)
+
+Generates an Autobahn consensus config file from one or more validator directories.
+
+```bash
+seid tendermint gen-autobahn-config <validator-dir>... \
+  --output autobahn.json \
+  --persistent-state-dir data/autobahn
+```
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--output` / `-o` | *(required)* | Output file path for the autobahn config |
+| `--persistent-state-dir` | `data/autobahn` | Directory to persist autobahn **consensus and data WALs** across restarts. Relative paths resolve against the node's `--home` dir at load time; absolute paths pass through unchanged. Pass `--persistent-state-dir=` (empty) to disable persistence and run **in-memory only**. |
+
+> **Persistence is on by default.** As of this change, Autobahn persists both the consensus and data-layer WALs to disk (a shared on-disk root under `data/autobahn` with distinct subdirectories per layer — `inner`/`blocks`/`commitqcs` for consensus, `globalblocks`/`fullcommitqcs` for data). Previously the data WAL ran in-memory only with no cross-restart persistence. To opt back into the old in-memory-only behavior, generate the config with `--persistent-state-dir=` (empty value).
+
+
+
 ### Offline EVM memiavl→FlatKV migration (`import-flatkv-from-memiavl`)
 
 Moving the EVM module's State Commit data from memIAVL into FlatKV can be done offline with two seidb subcommands. This is the operator workflow behind the staged Giga Storage `migrate_evm` → `evm_migrated` transition when performed as a coordinated offline import.

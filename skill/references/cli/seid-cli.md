@@ -247,6 +247,35 @@ For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a walle
 - **`sei2_*` namespace:** Seven block-related methods (`sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, plus `*ExcludeTraceFail` variants) mirror the `sei` block payloads but include bank transfers (HTTP only). There is no `sei2` transaction or filter API. These are gated by the same allowlist and off by default.
 - **`debug_traceTransaction`:** Only available if the RPC node exposes debug methods. If unavailable, fall back to standard RPC queries.
 
+
+- **`debug_traceTransactionProfile`:** Sei-specific debug method (`debug_traceTransactionProfile(hash, config)`, only when the node exposes debug methods). Returns the standard transaction trace plus a `profile` object for latency analysis. Params: transaction hash and a trace config object (same shape as `debug_traceTransaction`, e.g. `{"timeout":"60s"}`; pass `{}` for defaults). Response shape:
+  - `trace` — the normal trace result (identical to `debug_traceTransaction`).
+  - `profile.totalNanos` — total time spent handling the request.
+  - `profile.historicalDbLookupNanos` — time spent in historical DB lookups (sum of `get`/`has`/`iterator`/`iteratorNext` store access nanos).
+  - `profile.otherNanos` — `totalNanos` minus historical-lookup and execution time.
+  - `profile.phases` — per-phase timings: `lookupTransactionNanos`, `loadBlockNanos`, `replayHistoricalTxsNanos`, `buildBlockContextNanos`, `prepareTxNanos`, `executionNanos`, `traceResultNanos`.
+  - `profile.store.modules.<module>` — per-module store access with `stats` (per-op `count`/`totalNanos` for `get`/`has`/`set`/`delete`/`iterator`/`iteratorNext`/`iteratorValue`) and `iterators` (each with `start`, `end`, `ascending`, sampled `keys`, `nextCount`, `totalNanos`, `truncated`). Per-tx sampling is capped (16 iterators, 64 keys each) to bound the response size; overflow sets `truncated: true`.
+
+  ```bash
+  curl -s "$EVM_RPC" \
+    -H 'Content-Type: application/json' \
+    --data '{"jsonrpc":"2.0","method":"debug_traceTransactionProfile","params":["0x...",{"timeout":"60s"}],"id":1}' | jq
+  ```
+
+  To batch this across a block range and produce aggregate reports, use the `seidb trace-profile-report` command (writes `raw_profiles.jsonl` + `summary.json`):
+
+  ```bash
+  seidb trace-profile-report \
+    --endpoint http://localhost:8545 \
+    --start-block 100 --end-block 200 \
+    -o ./trace-report \
+    -c 4 \
+    --trace-config-json '{}' \
+    --max-transactions 0
+  ```
+
+  Flags: `--endpoint` (RPC URL, required), `--start-block`/`--end-block` (positive block numbers, required), `--output-dir`/`-o` (output directory, required), `--concurrency`/`-c` (concurrent requests, default 4), `--trace-config-json` (JSON trace config, default `{}`), `--max-transactions` (optional cap, `0` = no cap).
+
 ## Agent Workflow
 
 1. Classify the task: install · wallet · read query · payload generation · pointer lookup · tx lookup · transaction submission · raw JSON-RPC.

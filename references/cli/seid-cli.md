@@ -47,6 +47,50 @@ Use the SeiDB-based snapshot/restore tooling instead.
 
 
 
+## seidb trace-profile-report
+
+Runs the `debug_traceTransactionProfile` JSON-RPC method across a range of blocks and writes a raw JSONL dump plus an aggregated summary. Useful for offline profiling of transaction execution and historical DB (store) access across a block range.
+
+```bash
+seidb trace-profile-report \
+  --endpoint <rpc-url> \
+  --start-block <n> \
+  --end-block <n> \
+  --output-dir <dir>
+```
+
+### Flags
+
+- `--endpoint` (**required**) — RPC endpoint, e.g. `http://localhost:8545`. Must expose `eth_getBlockByNumber` and `debug_traceTransactionProfile`.
+- `--start-block` (**required**) — starting block number (must be positive).
+- `--end-block` (**required**) — ending block number (must be positive and `>= --start-block`).
+- `--output-dir` / `-o` (**required**) — directory for the output files `raw_profiles.jsonl` and `summary.json` (created if it does not exist).
+- `--concurrency` / `-c` — number of concurrent `debug_traceTransactionProfile` requests (default `4`; values `<= 0` are treated as `1`).
+- `--trace-config-json` — JSON object passed as the trace config to each request (default `{}`). Invalid JSON causes the command to error.
+- `--max-transactions` — optional cap on the total number of transactions processed (`0` = no cap).
+
+### Output
+
+- `raw_profiles.jsonl` — one JSON record per transaction with `blockNumber`, `blockHash`, `txHash`, and either the full `result` (trace + profile) or an `error` string.
+- `summary.json` — aggregated stats: tx/block/success/error counts, average and P50/P95 total & historical-DB-lookup latencies, per-phase totals (`lookupTransaction`, `loadBlock`, `replayHistoricalTxs`, `buildBlockContext`, `prepareTx`, `execution`, `traceResult`), per-module store operation totals, and top transactions/blocks by total time.
+
+The underlying `debug_traceTransactionProfile(hash, config)` method returns `{ "trace": ..., "profile": { "totalNanos", "historicalDbLookupNanos", "otherNanos", "phases": {...}, "store": { "modules": {...}, "stats": {...} } } }`.
+
+### Example
+
+```bash
+seidb trace-profile-report \
+  --endpoint http://localhost:8545 \
+  --start-block 1000 \
+  --end-block 1100 \
+  --output-dir ./trace-report \
+  --concurrency 8 \
+  --trace-config-json '{"timeout":"60s"}' \
+  --max-transactions 500
+```
+
+
+
 ## seid tendermint gen-autobahn-config
 
 Generates an Autobahn (GigaRouter) JSON config file from per-node pubkey/address files.

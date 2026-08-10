@@ -179,6 +179,39 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 
 
 
+### seidb `trace-profile-report` (batch transaction profiling)
+
+Batch-runs the `debug_traceTransactionProfile` JSON-RPC method across a block range and writes two files to the output directory: `raw_profiles.jsonl` (one JSON record per traced transaction) and `summary.json` (aggregate stats — average/p50/p95 total & historical-DB-lookup latencies, per-phase totals, per-module store-access totals, top transactions, and top blocks).
+
+`debug_traceTransactionProfile(hash, config)` returns `{ trace, profile }`, where `profile` includes `totalNanos`, `historicalDbLookupNanos`, `otherNanos`, per-phase timings (`lookupTransactionNanos`, `loadBlockNanos`, `replayHistoricalTxsNanos`, `buildBlockContextNanos`, `prepareTxNanos`, `executionNanos`, `traceResultNanos`), and per-module store access stats/iterators. Enable it as a `debug_*` method on the EVM JSON-RPC endpoint (`8545`).
+
+```bash
+seid trace-profile-report \
+  --endpoint http://localhost:8545 \
+  --start-block 1000000 \
+  --end-block 1000100 \
+  --output-dir ./trace-report \
+  --concurrency 4 \
+  --trace-config-json '{}' \
+  --max-transactions 0
+```
+
+Flags:
+
+| Flag | Default | Purpose |
+|---|---|---|
+| `--endpoint` | *(required)* | RPC endpoint, e.g. `http://localhost:8545` |
+| `--start-block` | *(required, >0)* | Starting block number |
+| `--end-block` | *(required, >=start)* | Ending block number |
+| `--output-dir` / `-o` | *(required)* | Directory for `raw_profiles.jsonl` and `summary.json` |
+| `--concurrency` / `-c` | `4` | Concurrent `traceTransactionProfile` requests |
+| `--trace-config-json` | `{}` | JSON object passed as the trace config |
+| `--max-transactions` | `0` (no cap) | Optional cap on the number of transactions processed |
+
+> Offline analysis tool — point it at an archive/RPC node with `debug_*` enabled. Each request has a 120s client timeout. The command collects tx hashes via `eth_getBlockByNumber` across the range, then traces them concurrently.
+
+
+
 ---
 
 ## Legacy `sei_*` / `sei2_*` JSON-RPC gating (`app.toml [evm]`)

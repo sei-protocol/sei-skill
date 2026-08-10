@@ -97,3 +97,55 @@ Removed `seid start` flags related to IAVL/orphan storage:
    ```bash
    seid start --home ~/.sei
    ```
+
+
+
+## Autobahn (GigaRouter) config
+
+Autobahn wiring is enabled by pointing the node at a generated JSON config via a **top-level** `autobahn-config-file` field in `config.toml`:
+
+```toml
+# Must appear before any [section] header so the TOML parser reads it as a top-level key.
+autobahn-config-file = "/root/.sei/config/autobahn.json"
+```
+
+When `autobahn-config-file` is set, the node loads the file at startup and wires up the GigaRouter. Currently only validator nodes are supported (a signing validator key must be present); observer/non-validator support is not yet available.
+
+### Pubkey side-effect files
+
+Saving keys now also writes autobahn-compatible pubkey text files alongside the key files, in the same directory:
+
+- Saving the validator private key (`priv_validator_key.json`) also writes **`validator_pubkey.txt`** in `validator:<pubkey>` format.
+- Saving the node key (`node_key.json`) also writes **`node_pubkey.txt`** in `node:ed25519:public:<hex>` format.
+
+These files are consumed by the config generator below.
+
+### Generating the config
+
+Use `seid tendermint gen-autobahn-config` to produce the JSON config. Each node directory passed as an argument must contain:
+
+- `validator_pubkey.txt` (`validator:<pubkey>`)
+- `node_pubkey.txt` (`node:ed25519:public:<hex>`)
+- `autobahn_address.txt` (a single `host:port` line, e.g. the node's P2P address)
+
+Syntax:
+
+```bash
+seid tendermint gen-autobahn-config [node-dirs...] --output <path>
+```
+
+- `--output` / `-o` (**required**): output file path for the generated autobahn config.
+- Requires at least one node directory argument.
+
+Example (4-node cluster):
+
+```bash
+seid tendermint gen-autobahn-config \
+  build/generated/node_0 \
+  build/generated/node_1 \
+  build/generated/node_2 \
+  build/generated/node_3 \
+  --output ~/.sei/config/autobahn.json
+```
+
+Then set `autobahn-config-file` in `config.toml` to that path (placed before any `[section]` header). The generated config includes each validator's `validator_key`, `node_key`, and `address`, plus defaults such as `max_gas_per_block = 50000000`, `max_txs_per_block = 5000`, `mempool_size = 5000`, `block_interval = 400ms`, `view_timeout = 1500ms`, and `dial_interval = 10s`.

@@ -105,6 +105,8 @@ const balance = await provider.getBalance(address); // always accurate
 - Sei uses a single global AVL-tree state root — there are no per-account state roots
 - `eth_getProof` (EIP-1186) returns proofs against the global state root, not per-account roots
 - `eth_getProof` support is not limited to the classic IAVL store: the RPC unwraps known KVStore wrappers (`cachekv`, Giga cache, `tracekv`, prefix stores) to reach any proof-capable queryable store (classic IAVL, store/v2 memiavl, future proof-capable roots). This means `eth_getProof` now works across more node configurations rather than failing with `cannot find EVM IAVL store`
+- `eth_getProof` storage keys must be valid **hex-encoded** values (e.g. `0x0000…0001`); they are decoded and padded to 32 bytes. Raw byte strings are no longer accepted — a malformed/non-hex key is rejected with `invalid storage key`
+- `eth_getProof` enforces a maximum of **1024 storage keys per request** (`MaxStorageKeysPerProof`); exceeding this returns a `too many storage keys` error
 - Block hash encoding differs from Ethereum — BLOCKHASH returns Tendermint header hash, not Ethereum keccak header hash
 
 ### JSON-RPC Method Notes

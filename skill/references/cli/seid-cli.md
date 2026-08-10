@@ -241,6 +241,16 @@ For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a walle
 
 - **Finality:** `safe`, `finalized`, and `latest` are equivalent on Sei (instant single-block finality).
 - **Proofs:** Sei uses IAVL trees, not Merkle Patricia Tries. Proofs returned by proof-bearing endpoints are IAVL proofs. `eth_getProof` now unwraps additional KVStore wrappers (`cachekv`, Giga cache, `tracekv`, and prefix stores) to reach the underlying proof-capable queryable store, so it succeeds across more node/store configurations (classic IAVL, store/v2 memiavl, and future proof-capable roots) rather than only classic IAVL. If no proof-capable store can be found it errors with `cannot find a proof-capable queryable KV store`.
+
+
+- **`eth_getProof` storage key input constraints:** Storage keys must be **hex-encoded** (e.g. `0x0000...0000616263`, a 32-byte slot). They are decoded and left-padded to 32 bytes internally. Raw byte strings are no longer accepted — a malformed (non-hex) key is rejected with `invalid storage key "<key>": ...`. A request may include at most **1024 storage keys** (`MaxStorageKeysPerProof`); exceeding this returns `too many storage keys: got <n>, max 1024`.
+
+  ```bash
+  # Hex-encode the storage slot before passing it to eth_getProof
+  curl -s "$EVM_RPC" \
+    -H 'Content-Type: application/json' \
+    --data '{"jsonrpc":"2.0","method":"eth_getProof","params":["0x<address>",["0x0000000000000000000000000000000000000000000000000000000000000001"],"latest"],"id":1}' | jq
+  ```
 - **`eth_getBlockByNumber` for future/unknown heights:** A numeric block number above the node's safe latest watermark (non-existent/future height) returns `result: null`, matching the Ethereum JSON-RPC spec — not a JSON-RPC error. (Previously this returned error `-32000`, e.g. `requested height 1000 is not yet available; safe latest is 128`.)
 
 

@@ -177,6 +177,43 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 
 > Minimum gas price, block gas limit, and SSTORE/storage gas are governance-adjustable — confirm live values at https://docs.sei.io/evm/differences-with-ethereum, and set `minimum-gas-prices` at or above the mainnet floor (`0usei` is local-dev only).
 
+
+
+---
+
+## Legacy `sei_*` / `sei2_*` JSON-RPC gating (`app.toml [evm]`)
+
+All `sei_*` and `sei2_*` JSON-RPC methods (EVM HTTP endpoint on `8545` only — not the Cosmos REST API on `1317`) are **deprecated and scheduled for removal**. New integrations should use `eth_*` / `debug_*` methods. Access to these gated methods is controlled by `[evm].enabled_legacy_sei_apis` in `app.toml`.
+
+```toml
+[evm]
+# Only methods listed here are served on the EVM HTTP endpoint.
+# seid init / DefaultConfig pre-fills just these three address/Cosmos helpers:
+enabled_legacy_sei_apis = ["sei_getSeiAddress", "sei_getEVMAddress", "sei_getCosmosTx"]
+```
+
+- **Env var / flag:** `evm.enabled_legacy_sei_apis`.
+- **Default:** only the three helpers `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx` are enabled out of the box. Every other gated `sei_*` and `sei2_*` method must be **explicitly added to the list**, or it fails closed.
+- **Behavior when a method is not allowlisted:** the node returns **HTTP 200** with a JSON-RPC error — code `-32601`, `data = "legacy_sei_deprecated"`, and a message noting the method is not enabled and is deprecated. The inner handler is never invoked. Unknown `sei_*` / `sei2_*` names (typos, future methods) also fail closed. Matching is case-insensitive against canonical method names.
+- **Behavior when a method is allowlisted:** the call passes through unchanged; the response may include the HTTP header `Sei-Legacy-RPC-Deprecation` as a deprecation signal (JSON body is not mutated).
+- **`sei2_*` namespace:** seven block-only methods that mirror `sei_*` block payloads but include bank transfers (HTTP only) — `sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` variants. There is no `sei2` transaction or filter API. They are gated by the same `enabled_legacy_sei_apis` list.
+
+To enable more legacy methods, add their exact names to the array, e.g.:
+
+```toml
+[evm]
+enabled_legacy_sei_apis = [
+  "sei_getSeiAddress",
+  "sei_getEVMAddress",
+  "sei_getCosmosTx",
+  "sei_getBlockByNumber",
+  "sei_getLogs",
+  "sei2_getBlockByNumber",
+]
+```
+
+> Because the list is an allowlist, upgrading a node keeps only the three default helpers enabled unless you explicitly re-add the legacy methods your integrations still depend on. Plan migrations to `eth_*` / `debug_*` accordingly.
+
 ---
 
 ## Commonly Used Ports

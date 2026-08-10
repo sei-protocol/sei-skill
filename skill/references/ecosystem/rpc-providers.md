@@ -117,8 +117,10 @@ Standard Ethereum JSON-RPC methods supported on Sei EVM:
 - `eth_estimateGas`, `eth_gasPrice` — note Sei's 50 gwei minimum.
 
 Sei-specific methods (varies by provider, check before relying):
-- `sei_getEVMAddress` / `sei_getSeiAddress` — dual-address lookup.
+- `sei_getEVMAddress` / `sei_getSeiAddress` / `sei_getCosmosTx` — the **three default-enabled** legacy helpers (dual-address + Cosmos tx lookup).
 - `debug_traceTransaction` — trace support depends on provider; archive providers have it.
+
+> **Legacy `sei_*` / `sei2_*` are gated and deprecated.** As of the `[evm].enabled_legacy_sei_apis` config (`evm.enabled_legacy_sei_apis` flag/env in `app.toml`), most `sei_*` and all `sei2_*` JSON-RPC methods are **gated behind an allowlist** and **default to disabled**. Only the three helpers above (`sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`) are enabled out of the box on a `seid init` node. Any other `sei_*`/`sei2_*` method not explicitly listed returns a JSON-RPC error `code: -32601` with `data: "legacy_sei_deprecated"` (HTTP 200) — and unknown `sei_*` names fail closed. **Do not assume `sei_*`/`sei2_*` methods are available on a given endpoint.** All of them are deprecated and scheduled for removal; migrate to `eth_*` / `debug_*` equivalents. Successful allowlisted responses may carry an `Sei-Legacy-RPC-Deprecation` HTTP header as a deprecation signal. (The `sei2_*` namespace mirrors `sei_*` block payloads but includes bank transfers; HTTP only, no `sei2` transaction or filter API.)
 
 Methods that may **not** be supported on every endpoint:
 - `eth_subscribe` (WebSockets) — provider-dependent; Sei Foundation supports WS at `wss://evm-ws.sei-apis.com` (verify).

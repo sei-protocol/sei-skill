@@ -77,6 +77,18 @@ address proposer = block.coinbase;
 
 Sei runs Pectra EVM but without blob transactions (`BLOBHASH` / `BLOBBASEFEE`). If your contract uses blobs, you need to refactor.
 
+The `eth_blobBaseFee` JSON-RPC endpoint **is** exposed, but it deliberately returns a JSON-RPC error instead of a fee value — do not expect a usable blob base fee:
+
+```json
+// Request
+{"jsonrpc":"2.0","id":1,"method":"eth_blobBaseFee"}
+
+// Response
+{"jsonrpc":"2.0","id":1,"error":{"code":-32000,"message":"blobs not supported on this chain"}}
+```
+
+Migrating apps that call `eth_blobBaseFee` must handle the `-32000` "blobs not supported on this chain" error rather than parsing a returned fee.
+
 ### 6. SSTORE Costs Are Higher Than Ethereum
 
 Storage writes are far costlier than Ethereum's 20,000 gas:

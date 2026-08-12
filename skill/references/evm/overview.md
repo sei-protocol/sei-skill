@@ -128,6 +128,60 @@ These methods are **registered** on Sei's EVM RPC but return JSON-RPC error code
 - `debug_getRaw*` — raw RLP block/header/receipt/tx payloads are not served on this surface.
 
 
+
+### Deprecated `sei_*` / `sei2_*` JSON-RPC Namespaces
+
+The `sei_*` and `sei2_*` JSON-RPC surfaces (EVM HTTP endpoint only — not the Cosmos REST API on port 1317) are **deprecated and scheduled for removal**. Do not build new integrations on them; migrate to standard `eth_*` / `debug_*` methods and documented replacements.
+
+**Gating by allowlist.** Which gated `sei_*` / `sei2_*` methods a node serves is controlled by `[evm] enabled_legacy_sei_apis` in `app.toml` (also settable via the AppOptions/CLI flag `evm.enabled_legacy_sei_apis`). Both prefixes share the same allowlist.
+
+- **Default allowlist** (from `seid init` / `DefaultConfig`) enables only the three address/Cosmos helpers: `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`. All other gated methods appear commented out in the generated template and must be explicitly enabled.
+- Names are matched **case-insensitively** against the canonical method names.
+
+**Behavior of gated calls (all responses are HTTP 200):**
+
+- **Disabled** (method not in the allowlist, or an unrecognized `sei_*` / `sei2_*` name — the gate fails closed): returns a JSON-RPC `error` object with code `-32601`, a message explaining the method is not enabled and deprecated, and `error.data` set to the string `"legacy_sei_deprecated"`.
+- **Allowed**: the call passes through to the handler **unchanged** (JSON body is not mutated); the response additionally sets the optional HTTP header `Sei-Legacy-RPC-Deprecation` signaling deprecation.
+
+Example disabled-method response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 42,
+  "error": {
+    "code": -32601,
+    "message": "sei_sign is not enabled on this node. The sei_* and sei2_* JSON-RPC surfaces are deprecated...",
+    "data": "legacy_sei_deprecated"
+  }
+}
+```
+
+Example `app.toml` to enable an additional gated method:
+
+```toml
+[evm]
+enabled_legacy_sei_apis = [
+  "sei_getSeiAddress",
+  "sei_getEVMAddress",
+  "sei_getCosmosTx",
+  "sei_getBlockByNumber",
+]
+```
+
+### `sei2_*` Block Namespace
+
+The `sei2` namespace exposes the same **block** JSON-RPC shape as `sei` blocks, but with **bank transfers included** in the block payloads (HTTP only). There are seven `sei2_*` methods — block, block receipts, and transaction-count getters plus `*ExcludeTraceFail` variants — and **no** `sei2` transaction or filter API. They are gated by the same `enabled_legacy_sei_apis` allowlist (and are commented out by default).
+
+- `sei2_getBlockByHash`
+- `sei2_getBlockByHashExcludeTraceFail`
+- `sei2_getBlockByNumber`
+- `sei2_getBlockByNumberExcludeTraceFail`
+- `sei2_getBlockReceipts`
+- `sei2_getBlockTransactionCountByHash`
+- `sei2_getBlockTransactionCountByNumber`
+
+
 - All Solidity syntax and version up to 0.8.x
 - OpenZeppelin contracts (ERC20, ERC721, ERC1155, UUPS, Transparent Proxy, AccessControl, etc.)
 - ABI encoding/decoding

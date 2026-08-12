@@ -120,6 +120,12 @@ Sei-specific methods (varies by provider, check before relying):
 - `sei_getEVMAddress` / `sei_getSeiAddress` — dual-address lookup.
 - `debug_traceTransaction` — trace support depends on provider; archive providers have it.
 
+> **Deprecation (Sei v6.6.0):** All `sei_*` and `sei2_*` JSON-RPC methods (EVM HTTP only) are **deprecated and scheduled for removal**. Migrate to standard `eth_*` / `debug_*` methods. These namespaces are now **gated** by the `[evm].enabled_legacy_sei_apis` allowlist in `app.toml` (also settable via the `evm.enabled_legacy_sei_apis` AppOptions flag). By default (`seid init` / `DefaultConfig`) only three methods are enabled: `sei_getSeiAddress`, `sei_getEVMAddress`, and `sei_getCosmosTx`. Any other gated `sei_*` / `sei2_*` method not in the allowlist returns a JSON-RPC error (HTTP 200, `code` `-32601`, `data` `"legacy_sei_deprecated"`, message explaining it is not enabled + deprecated). To enable more legacy methods, add their exact names to `enabled_legacy_sei_apis` under `[evm]`.
+>
+> Successful allowlisted `sei_*` / `sei2_*` calls pass through **unchanged** but may set the HTTP response header `Sei-Legacy-RPC-Deprecation` (JSON body is not mutated).
+>
+> The `sei2_*` namespace exposes the same block JSON-RPC shape as `sei` blocks but with bank transfers included in block payloads (HTTP only). There are seven `sei2_*` methods (`sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` block variants); there is no `sei2` transaction or filter API.
+
 Methods that may **not** be supported on every endpoint:
 - `eth_subscribe` (WebSockets) — provider-dependent; Sei Foundation supports WS at `wss://evm-ws.sei-apis.com` (verify).
 - `debug_*` and `trace_*` — typically only on archive nodes / paid tiers.

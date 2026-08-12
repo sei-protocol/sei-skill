@@ -119,6 +119,50 @@ const [pointerAddress, version, exists] = await pointerView.getNativePointer(
 console.log("ERC20 pointer at:", pointerAddress);
 ```
 
+
+## Query Denoms Created by a Creator
+
+List every denom created by a given creator address:
+
+```bash
+seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
+  --node https://rpc-testnet.sei-apis.com \
+  --output json | jq -r ".denoms"
+```
+
+### Pagination (as of v6.6.0)
+
+The `denoms-from-creator` query now supports standard pagination flags. Previously it returned all denoms for a creator unbounded; the gRPC/REST query now paginates by default.
+
+| Flag | Purpose |
+| --- | --- |
+| `--limit` | Max number of denoms per page |
+| `--offset` | Number of denoms to skip |
+| `--page` | Page number (1-based; combines with `--limit`) |
+| `--page-key` | Base64 next-key from a previous response's `pagination.next_key` |
+| `--count-total` | Include total count in `pagination.total` |
+
+```bash
+# First page of 100 denoms, with total count
+seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
+  --limit 100 --count-total \
+  --node https://rpc-testnet.sei-apis.com \
+  --output json
+
+# Next page using the returned next key
+seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
+  --page-key <NEXT_KEY> --limit 100 \
+  --node https://rpc-testnet.sei-apis.com \
+  --output json
+```
+
+### gRPC / REST
+
+The `DenomsFromCreator` gRPC/REST query accepts a `pagination` field (`PageRequest`) in the request and returns a `pagination` field (`PageResponse`) alongside `denoms` in the response. The REST endpoint also accepts standard `pagination.*` query parameters (e.g. `pagination.limit`, `pagination.offset`, `pagination.key`, `pagination.count_total`).
+
+<!-- Note: the CosmWasm/wasm binding path returns ALL denoms for a creator unbounded (gas metering bounds cost), so wasm queries are not affected by the default page cap. -->
+
+
 ## Complete Token Launch Workflow
 
 ```bash

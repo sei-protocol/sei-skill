@@ -35,7 +35,7 @@ description: How Sei's EVM differs from Ethereum — opcodes, gas model, finalit
 | `BLOCKHASH` | Hash of Tendermint header | Keccak of Ethereum block header | Different encoding; usable for recent blocks |
 | `GASLIMIT` | 12,500,000 | 60,000,000 | Block gas limit |
 | `TIMESTAMP` | Tendermint block time | Proposer-chosen block time | Do not use as randomness source |
-| Blob opcodes | Not supported | Supported (post-Cancun) | No EIP-4844 blob transactions on Sei |
+| Blob opcodes | Not supported | Supported (post-Cancun) | No EIP-4844 blob transactions on Sei. `eth_blobBaseFee` is exposed but returns JSON-RPC error code -32000, `"blobs not supported on this chain"` (not -32601 method-not-found) |
 
 ## Key Developer Rules
 

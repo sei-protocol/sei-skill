@@ -124,6 +124,9 @@ Methods that may **not** be supported on every endpoint:
 - `eth_subscribe` (WebSockets) — provider-dependent; Sei Foundation supports WS at `wss://evm-ws.sei-apis.com` (verify).
 - `debug_*` and `trace_*` — typically only on archive nodes / paid tiers.
 
+Exposed-but-unsupported:
+- `eth_blobBaseFee` — exposed but always returns a JSON-RPC error (code `-32000`, message `"blobs not supported on this chain"`) because Sei does not support EIP-4844 blob transactions. Do not expect a fee value from this method.
+
 ## Rate limits — typical (verify per provider)
 
 | Provider | Free RPS | Paid RPS |

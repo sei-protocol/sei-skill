@@ -237,6 +237,73 @@ Decode helpers:
 
 For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a wallet, `cast send`, or another signing tool over hand-crafting RLP.
 
+
+
+## seidb Tool
+
+`seidb` is the SeiDB maintenance/analysis tool (built from `sei-db/tools/cmd/seidb`). Use it for inspecting on-disk state stores — not for chain queries. Two commands cover FlatKV analysis.
+
+### dump-flatkv
+
+Iterates a FlatKV store and dumps every physical `(key, value)` pair into per-bucket files, one file per bucket, formatted to match `dump-iavl` so the same diff tooling works on both.
+
+```bash
+seidb dump-flatkv --db-dir <flatkv-data-dir> --output-dir <dir> [--height <n>] [--bucket account|code|storage|legacy]
+```
+
+| Flag | Short | Purpose | Default |
+|---|---|---|---|
+| `--db-dir` | `-d` | FlatKV database directory (required) | — |
+| `--output-dir` | `-o` | Output directory; one file per bucket (required) | — |
+| `--height` | | FlatKV target version; `0` selects the latest available version | `0` |
+| `--bucket` | `-b` | Restrict dump to a single bucket (`account`, `code`, `storage`, or `legacy`) | all buckets |
+
+Notes:
+- Valid `--bucket` values are exactly `account`, `code`, `storage`, `legacy`. `metadata` is intentionally excluded and module names (e.g. `evm`) are not valid buckets.
+- When `--bucket` is set, only that bucket's file is created under `--output-dir`; the others are not written.
+- Each output file begins with a `Bucket <name> at version <V>` header, followed by `Key: <HEX>, Value: <HEX>` lines. Physical keys are emitted verbatim (including their `<module>/` + type-prefix header).
+- The tool operates on a read-only temp clone of the selected snapshot + changelog, so it does not contend with a live node for the FlatKV writer lock.
+
+Example:
+
+```bash
+seidb dump-flatkv \
+  --db-dir /root/.sei/data/flatkv \
+  --output-dir /tmp/flatkv-dump \
+  --height 0 \
+  --bucket storage
+```
+
+### state-size (--flatkv-dir)
+
+The `state-size` command analyzes memIAVL state size. It now accepts an optional `--flatkv-dir` flag to fold FlatKV analysis into the same console output and DynamoDB batch.
+
+```bash
+seidb state-size --db-dir <memiavl-db-dir> [--flatkv-dir <flatkv-data-dir>] [--height <n>] [--module <name>]
+```
+
+| Flag | Short | Purpose | Default |
+|---|---|---|---|
+| `--db-dir` | `-d` | memIAVL database directory | — |
+| `--flatkv-dir` | | FlatKV data directory | auto-detect `<db-dir>/../flatkv` |
+| `--height` | | Block height (`0` = latest) | `0` |
+| `--module` | `-m` | Module to export | all modules |
+
+Notes:
+- If `--flatkv-dir` is omitted, the tool auto-detects a sibling `flatkv/` directory next to `--db-dir` (e.g. `<home>/data/committer.db` → `<home>/data/flatkv`). If none exists, FlatKV analysis is skipped.
+- FlatKV analysis is only attempted when `--module` is empty or `evm` (FlatKV in production holds only evm keys; everything else is bucketed into `legacy`).
+- FlatKV analysis is strictly additive: any failure to open or scan FlatKV is logged and skipped, and the memIAVL analysis still completes.
+- With `--export-dynamodb`, the FlatKV result is pushed to the same DynamoDB batch under module name `flatkv`.
+
+Example:
+
+```bash
+seidb state-size \
+  --db-dir /root/.sei/data/committer.db \
+  --flatkv-dir /root/.sei/data/flatkv \
+  --height 0
+```
+
 ### Sei-Specific JSON-RPC Behaviour
 
 - **Finality:** `safe`, `finalized`, and `latest` are equivalent on Sei (instant single-block finality).

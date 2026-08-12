@@ -127,6 +127,23 @@ Methods that may **not** be supported on every endpoint:
 Exposed-but-unsupported:
 - `eth_blobBaseFee` — exposed but always returns a JSON-RPC error (code `-32000`, message `"blobs not supported on this chain"`) because Sei does not support EIP-4844 blob transactions. Do not expect a fee value from this method.
 
+
+
+The following methods are also **registered but explicitly unsupported** on Sei EVM RPC. Each returns a JSON-RPC error with code `-32000` (not `-32601` method not found), so clients get a stable, documented failure. Do not expect a result from any of them:
+
+| Method | `error.message` |
+|---|---|
+| `eth_syncing` | `eth_syncing is not supported on Sei EVM RPC` |
+| `eth_newPendingTransactionFilter` | `eth_newPendingTransactionFilter is not supported on Sei EVM RPC` |
+| `debug_getRawBlock` | `debug_getRawBlock is not supported on Sei EVM RPC` |
+| `debug_getRawHeader` | `debug_getRawHeader is not supported on Sei EVM RPC` |
+| `debug_getRawReceipts` | `debug_getRawReceipts is not supported on Sei EVM RPC` |
+| `debug_getRawTransaction` | `debug_getRawTransaction is not supported on Sei EVM RPC` |
+
+- `eth_syncing` — Sei's consensus model differs from Ethereum's sync semantics; do not rely on this method (Ethereum returns `false` or a sync object).
+- `eth_newPendingTransactionFilter` — Sei has instant finality and does not expose Ethereum-style pending-tx filters.
+- `debug_getRaw*` — raw RLP block/header/receipt/tx payloads are not served on this surface.
+
 ## Rate limits — typical (verify per provider)
 
 | Provider | Free RPS | Paid RPS |

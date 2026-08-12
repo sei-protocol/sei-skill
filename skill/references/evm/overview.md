@@ -108,6 +108,26 @@ const balance = await provider.getBalance(address); // always accurate
 
 ## What Works Unchanged
 
+
+### Explicitly Unsupported JSON-RPC Methods
+
+These methods are **registered** on Sei's EVM RPC but return JSON-RPC error code `-32000` with a clear message instead of `-32601` method-not-found. Clients get a stable, documented failure rather than a missing-method error.
+
+| Method | `error.message` |
+|---|---|
+| `eth_blobBaseFee` | `blobs not supported on this chain` |
+| `eth_syncing` | `eth_syncing is not supported on Sei EVM RPC` |
+| `eth_newPendingTransactionFilter` | `eth_newPendingTransactionFilter is not supported on Sei EVM RPC` |
+| `debug_getRawBlock` | `debug_getRawBlock is not supported on Sei EVM RPC` |
+| `debug_getRawHeader` | `debug_getRawHeader is not supported on Sei EVM RPC` |
+| `debug_getRawReceipts` | `debug_getRawReceipts is not supported on Sei EVM RPC` |
+| `debug_getRawTransaction` | `debug_getRawTransaction is not supported on Sei EVM RPC` |
+
+- `eth_syncing` — Sei's consensus model differs from Ethereum's sync semantics; do not rely on this method (Ethereum returns `false` or a sync object).
+- `eth_newPendingTransactionFilter` — Sei has instant finality and does not expose Ethereum-style pending tx filters on this RPC.
+- `debug_getRaw*` — raw RLP block/header/receipt/tx payloads are not served on this surface.
+
+
 - All Solidity syntax and version up to 0.8.x
 - OpenZeppelin contracts (ERC20, ERC721, ERC1155, UUPS, Transparent Proxy, AccessControl, etc.)
 - ABI encoding/decoding

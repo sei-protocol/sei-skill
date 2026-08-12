@@ -139,7 +139,11 @@ enable = true
 max-open-connections = 1000
 
 [state-commit]
-sc-enable = true                    # Enable SeiDB (recommended)
+sc-enable = true                    # Enable state-commit. As of Sei v6.6.0 SC is MANDATORY:
+                                    # the node PANICS at startup if sc-enable is false
+                                    # ("SeiDB state-commit (SC) must be enabled; IAVL
+                                    #  backend has been fully deprecated"). The legacy IAVL
+                                    # backend has been fully removed.
 sc-async-commit-buffer = 100
 sc-keep-recent = 1
 sc-snapshot-interval = 10000

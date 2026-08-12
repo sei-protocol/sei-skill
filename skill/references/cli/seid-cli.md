@@ -304,6 +304,63 @@ seidb state-size \
   --height 0
 ```
 
+
+### evm-logical-digest
+
+Computes a backend-independent digest of EVM *logical* state (account / code / storage canonical buckets) so a memIAVL node and a FlatKV node can be compared at the same chain height. Each FlatKV value embeds a per-key `blockHeight` stamp, so a raw physical byte-for-byte digest would diverge even when the underlying EVM state is identical; this command strips the serialization-version + blockHeight header on both sides and digests only the logical payload.
+
+```bash
+seidb evm-logical-digest --backend flatkv|memiavl --db-dir <dir> --height <H>
+```
+
+| Flag | Short | Purpose | Default |
+|---|---|---|---|
+| `--backend` | | Backend to read: `flatkv` or `memiavl` (required) | — |
+| `--db-dir` | `-d` | For flatkv: the flatkv data dir. For memiavl: the memiavl root dir (contains `current/` and `snapshot-*`) | — |
+| `--height` | | Target version. flatkv WAL-replays to it; memiavl resolves `snapshot-<height>/evm` (`0` = `current` symlink) | `0` |
+| `--memiavl-normalization` | | memiavl normalization: `semantic`/`independent` (raw EVM key/value decoder) or `translator` (current migration mapping via `flatkv.ImportTranslator`) | `semantic` |
+| `--inspect-bucket` | | Inspect one normalized bucket (`account`, `code`, `storage`, `legacy`) instead of printing the global digest | — |
+| `--key-offset` | | Inspect mode: byte offset into physical key before applying `--key-prefix` / sharding | `0` |
+| `--key-prefix` | | Inspect mode: hex prefix, relative to `--key-offset`, used to filter physical keys | — |
+| `--shard-next-bytes` | | Inspect mode: group matching keys by this many bytes after `--key-prefix` | `0` |
+| `--list` | | Inspect mode: list matching key/logical-value pairs instead of shard `bucket_digest` values | `false` |
+| `--list-limit` | | Inspect mode: maximum pairs to print with `--list`; `<=0` means unlimited | `1000` |
+| `--details` | | Inspect list mode: include backend-specific version metadata | `false` |
+| `--find-hash` | | 32-byte hex per-entry hash to hunt for; every entry whose `sha256(len(key)||key||len(val)||val)` matches is printed as `FOUND-HASH` | — |
+
+Notes:
+- The per-bucket accumulator is an order-independent XOR of `sha256(len(key)||key||len(val)||val)`, so it does not matter that flatkv iterates in pebble global order while memiavl is scanned by leaf index.
+- flatkv opens a read-only clone from snapshot + changelog WAL replay. memiavl does **not** replay WAL — it opens `snapshot-<height>/evm` or `current/evm`.
+- The primary comparison is `account+code+storage+legacy`, printed as one `FINAL_DIGEST` line. flatkv contains a flatkv-only migration-version marker row (`migration/migration-version`) that a memiavl-only node never owns; it is folded into the legacy bucket but XORed back out for the final comparison, and a `flatkv_marker_adjustment` line reports this. This makes the flatkv `FINAL_DIGEST` comparable apples-to-apples against memiavl-only output.
+- To hunt the single diverging entry when two `bucket_digest` values differ by exactly one row, XOR those two 32-byte hex values and pass the result to `--find-hash`.
+
+Compare a migrated FlatKV node against a memiavl-only node at height `H` — the two `FINAL_DIGEST` lines should match:
+
+```bash
+# FlatKV digest at a height (WAL-replays to it)
+seidb evm-logical-digest --backend flatkv \
+  --db-dir /root/.sei/data/state_commit/flatkv --height 213200000
+
+# memIAVL digest at the same height (default semantic mode)
+seidb evm-logical-digest --backend memiavl \
+  --db-dir /root/.sei/data/state_commit/memiavl --height 213200000
+
+# Translator-based memIAVL digest (proves FlatKV state matches the current
+# migration mapping; useful when debugging ImportTranslator)
+seidb evm-logical-digest --backend memiavl \
+  --db-dir /root/.sei/data/state_commit/memiavl --height 213200000 \
+  --memiavl-normalization translator
+
+# Inspect one bucket: list storage rows under a key prefix, sharded by next 2 bytes
+seidb evm-logical-digest --backend flatkv -d <dir> --height H \
+  --inspect-bucket storage --key-prefix 03 --shard-next-bytes 2
+
+# Hunt a diverging entry
+seidb evm-logical-digest --backend flatkv -d <dir> --height H \
+  --find-hash <32-byte-hex>
+```
+
+
 ### Sei-Specific JSON-RPC Behaviour
 
 - **Finality:** `safe`, `finalized`, and `latest` are equivalent on Sei (instant single-block finality).

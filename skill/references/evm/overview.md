@@ -104,6 +104,8 @@ const balance = await provider.getBalance(address); // always accurate
 ### State Storage (AVL vs MPT)
 - Sei uses a single global AVL-tree state root — there are no per-account state roots
 - `eth_getProof` (EIP-1186) returns proofs against the global state root, not per-account roots
+  - Storage keys must be **valid hex-encoded** values (e.g. `0x0000000000000000000000000000000000000000000000000000000000000001`). Malformed/non-hex keys are rejected with an error (`invalid storage key ...`) — they are no longer silently interpreted as raw bytes.
+  - A single request is capped at **1024 storage keys** (`MaxStorageKeysPerProof`); exceeding this returns an error (`too many storage keys: got N, max 1024`).
 - Block hash encoding differs from Ethereum — BLOCKHASH returns Tendermint header hash, not Ethereum keccak header hash
 
 ## What Works Unchanged

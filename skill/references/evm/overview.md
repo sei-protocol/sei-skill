@@ -171,6 +171,12 @@ enabled_legacy_sei_apis = [
 ]
 ```
 
+### Removed `sei_*` Trace-Block ExcludeTraceFail Endpoints
+
+As of sei-chain v6.6.0, the `sei_traceBlockByNumberExcludeTraceFail` and `sei_traceBlockByHashExcludeTraceFail` JSON-RPC endpoints (enhanced variants of `debug_traceBlockByNumber` / `debug_traceBlockByHash` that excluded pre-state-check failures) have been **removed entirely** from the EVM RPC server. They no longer appear in the `enabled_legacy_sei_apis` allowlist and are no longer registered on the `sei` namespace.
+
+Migrate to the standard `debug_traceBlockByNumber` / `debug_traceBlockByHash` methods. Note the corresponding `sei2_*ExcludeTraceFail` **block** getters (below) are unaffected — only the two `sei_*` trace-block endpoints were removed.
+
 ### `sei2_*` Block Namespace
 
 The `sei2` namespace exposes the same **block** JSON-RPC shape as `sei` blocks, but with **bank transfers included** in the block payloads (HTTP only). There are seven `sei2_*` methods — block, block receipts, and transaction-count getters plus `*ExcludeTraceFail` variants — and **no** `sei2` transaction or filter API. They are gated by the same `enabled_legacy_sei_apis` allowlist (and are commented out by default).

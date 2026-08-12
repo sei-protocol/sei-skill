@@ -200,7 +200,8 @@ enabled_legacy_sei_apis = [
 ]
 ```
 
-- **Default allowlist** (from `seid init` / `DefaultConfig`): only `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`. All other `sei_*` and `sei2_*` methods (block/receipt/count, traces, filters, logs, `sei_sign`, and the seven `sei2_*` block methods) are disabled until explicitly added to the array.
+- **Default allowlist** (from `seid init` / `DefaultConfig`): only `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`. All other `sei_*` and `sei2_*` methods (block/receipt/count, filters, logs, `sei_sign`, and the seven `sei2_*` block methods) are disabled until explicitly added to the array.
+- **Removed (as of Sei v6.6.0)**: the two `sei_*` block-trace endpoints `sei_traceBlockByHashExcludeTraceFail` and `sei_traceBlockByNumberExcludeTraceFail` have been fully removed from the EVM RPC server and dropped from the `enabled_legacy_sei_apis` allowlist — they can no longer be enabled. Use the standard `debug_traceBlockByHash` / `debug_traceBlockByNumber` endpoints instead. (The `sei2_*ExcludeTraceFail` block variants and `sei_getTransactionReceiptExcludeTraceFail` remain.)
 - **Also settable via CLI/AppOptions flag** `evm.enabled_legacy_sei_apis` (overrides the `app.toml` value when set).
 - **Enable more methods** by uncommenting / adding their names — the `seid`-generated template lists the optional `sei_*` and `sei2_*` methods as commented lines you can turn on. Names are matched case-insensitively.
 - **`sei2_*` namespace**: exposes the same block JSON-RPC shape as `sei_*` blocks but includes bank transfers in block payloads (HTTP only). Seven methods — `sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` variants — gated via this same allowlist. There is no `sei2` transaction or filter API.

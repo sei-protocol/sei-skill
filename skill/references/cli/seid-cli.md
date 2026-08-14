@@ -237,6 +237,19 @@ Decode helpers:
 
 For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a wallet, `cast send`, or another signing tool over hand-crafting RLP.
 
+### Sei-Specific JSON-RPC Behaviour
+
+- **Finality:** `safe`, `finalized`, and `latest` are equivalent on Sei (instant single-block finality).
+- **Proofs:** Sei stores state in SeiDB state-commit (SC), a memiavl-based tree, not Merkle Patricia Tries. The legacy IAVL backend has been fully removed and SeiDB SC is mandatory — a node started with `sc-enable = false` panics with `SeiDB state-commit (SC) must be enabled; IAVL backend has been fully deprecated`. Proofs returned by proof-bearing endpoints are IAVL-style (memiavl) proofs, not Merkle Patricia Trie proofs.
+
+
+- **`eth_getProof` storage keys:** Each storage key in an `eth_getProof` request must be a valid hex-encoded value (e.g. a 32-byte slot like `0x0000000000000000000000000000000000000000000000000000000000000001`). Keys are decoded as hex hashes — malformed (non-hex) keys are rejected with an error such as `invalid storage key "..."` rather than being silently interpreted as raw bytes. A single request may include at most `1024` storage keys (`MaxStorageKeysPerProof`); exceeding this returns `too many storage keys: got <n>, max 1024`.
+- **Filter limits:** Open-ended log queries return up to 10,000 logs; closed-range queries cover up to 2,000 blocks.
+- **Deprecated:** `sei_*` and `sei2_*` namespaced methods (EVM HTTP only) are deprecated and scheduled for removal — migrate to standard `eth_*` and `debug_*` methods. The `sei2_*` namespace is block-only (same block shape as `sei` blocks, with bank transfers included in block payloads): seven methods (`sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` variants); there is no `sei2` transaction or filter API.
+- **Removed block-trace endpoints:** As of v6.6.0 the `sei_traceBlockByNumberExcludeTraceFail` and `sei_traceBlockByHashExcludeTraceFail` JSON-RPC endpoints are fully removed — not merely deprecated or gated. They no longer exist in the EVM RPC server and have been dropped from the `enabled_legacy_sei_apis` allowlist; adding them there has no effect. Use the standard `debug_traceBlockByNumber` and `debug_traceBlockByHash` endpoints instead.
+- **Legacy `sei_*` / `sei2_*` gating:** These gated methods are governed by the `[evm].enabled_legacy_sei_apis` allowlist in `app.toml` (also settable via the `evm.enabled_legacy_sei_apis` AppOptions flag). The `seid init` / default allowlist enables only three methods: `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`; any other gated `sei_*` / `sei2_*` method must be added to the list explicitly. All responses return HTTP 200. A call to a gated method not on the allowlist returns a JSON-RPC error with code `-32601` and `data` `"legacy_sei_deprecated"` (message explains the method is not enabled and the surface is deprecated). Allowed calls pass through with an unchanged JSON body but may set the HTTP response header `Sei-Legacy-RPC-Deprecation`.
+- **`debug_traceTransaction`:** Only available if the RPC node exposes debug methods. If unavailable, fall back to standard RPC queries.
+
 
 
 ## seidb Tool
@@ -360,19 +373,6 @@ seidb evm-logical-digest --backend flatkv -d <dir> --height H \
   --find-hash <32-byte-hex>
 ```
 
-
-### Sei-Specific JSON-RPC Behaviour
-
-- **Finality:** `safe`, `finalized`, and `latest` are equivalent on Sei (instant single-block finality).
-- **Proofs:** Sei stores state in SeiDB state-commit (SC), a memiavl-based tree, not Merkle Patricia Tries. The legacy IAVL backend has been fully removed and SeiDB SC is mandatory — a node started with `sc-enable = false` panics with `SeiDB state-commit (SC) must be enabled; IAVL backend has been fully deprecated`. Proofs returned by proof-bearing endpoints are IAVL-style (memiavl) proofs, not Merkle Patricia Trie proofs.
-
-
-- **`eth_getProof` storage keys:** Each storage key in an `eth_getProof` request must be a valid hex-encoded value (e.g. a 32-byte slot like `0x0000000000000000000000000000000000000000000000000000000000000001`). Keys are decoded as hex hashes — malformed (non-hex) keys are rejected with an error such as `invalid storage key "..."` rather than being silently interpreted as raw bytes. A single request may include at most `1024` storage keys (`MaxStorageKeysPerProof`); exceeding this returns `too many storage keys: got <n>, max 1024`.
-- **Filter limits:** Open-ended log queries return up to 10,000 logs; closed-range queries cover up to 2,000 blocks.
-- **Deprecated:** `sei_*` and `sei2_*` namespaced methods (EVM HTTP only) are deprecated and scheduled for removal — migrate to standard `eth_*` and `debug_*` methods. The `sei2_*` namespace is block-only (same block shape as `sei` blocks, with bank transfers included in block payloads): seven methods (`sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` variants); there is no `sei2` transaction or filter API.
-- **Removed block-trace endpoints:** As of v6.6.0 the `sei_traceBlockByNumberExcludeTraceFail` and `sei_traceBlockByHashExcludeTraceFail` JSON-RPC endpoints are fully removed — not merely deprecated or gated. They no longer exist in the EVM RPC server and have been dropped from the `enabled_legacy_sei_apis` allowlist; adding them there has no effect. Use the standard `debug_traceBlockByNumber` and `debug_traceBlockByHash` endpoints instead.
-- **Legacy `sei_*` / `sei2_*` gating:** These gated methods are governed by the `[evm].enabled_legacy_sei_apis` allowlist in `app.toml` (also settable via the `evm.enabled_legacy_sei_apis` AppOptions flag). The `seid init` / default allowlist enables only three methods: `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`; any other gated `sei_*` / `sei2_*` method must be added to the list explicitly. All responses return HTTP 200. A call to a gated method not on the allowlist returns a JSON-RPC error with code `-32601` and `data` `"legacy_sei_deprecated"` (message explains the method is not enabled and the surface is deprecated). Allowed calls pass through with an unchanged JSON body but may set the HTTP response header `Sei-Legacy-RPC-Deprecation`.
-- **`debug_traceTransaction`:** Only available if the RPC node exposes debug methods. If unavailable, fall back to standard RPC queries.
 
 ## Agent Workflow
 

@@ -122,7 +122,7 @@ console.log("ERC20 pointer at:", pointerAddress);
 
 ## Query Denoms Created by a Creator
 
-List every denom created by a given creator address:
+List denoms created by a given creator address (first page, 100 by default):
 
 ```bash
 seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
@@ -139,7 +139,7 @@ The `denoms-from-creator` query now supports standard pagination flags. Previous
 | `--limit` | Max number of denoms per page |
 | `--offset` | Number of denoms to skip |
 | `--page` | Page number (1-based; combines with `--limit`) |
-| `--page-key` | Base64 next-key from a previous response's `pagination.next_key` |
+| `--page-key` | Raw next key for key-based paging — not the base64 `pagination.next_key` (see below) |
 | `--count-total` | Include total count in `pagination.total` |
 
 ```bash
@@ -149,12 +149,14 @@ seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
   --node https://rpc-testnet.sei-apis.com \
   --output json
 
-# Next page using the returned next key
+# Next page
 seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
-  --page-key <NEXT_KEY> --limit 100 \
+  --page 2 --limit 100 \
   --node https://rpc-testnet.sei-apis.com \
   --output json
 ```
+
+The CLI passes `--page-key` as raw bytes without base64 decoding, but the `pagination.next_key` in JSON output is base64-encoded — passing that value silently returns the first page again. Use `--page` or `--offset` for subsequent pages from the CLI. The base64 `pagination.next_key` works with the REST `pagination.key` query parameter (decoded server-side) and with gRPC clients, which pass the raw `next_key` bytes from the previous `PageResponse` directly.
 
 ### gRPC / REST
 

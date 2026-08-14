@@ -108,8 +108,7 @@ const balance = await provider.getBalance(address); // always accurate
   - A single request is capped at **1024 storage keys** (`MaxStorageKeysPerProof`); exceeding this returns an error (`too many storage keys: got N, max 1024`).
 - Block hash encoding differs from Ethereum — BLOCKHASH returns Tendermint header hash, not Ethereum keccak header hash
 
-## What Works Unchanged
-
+## JSON-RPC Method Availability
 
 ### Explicitly Unsupported JSON-RPC Methods
 
@@ -189,6 +188,7 @@ The `sei2` namespace exposes the same **block** JSON-RPC shape as `sei` blocks, 
 - `sei2_getBlockTransactionCountByHash`
 - `sei2_getBlockTransactionCountByNumber`
 
+## What Works Unchanged
 
 - All Solidity syntax and version up to 0.8.x
 - OpenZeppelin contracts (ERC20, ERC721, ERC1155, UUPS, Transparent Proxy, AccessControl, etc.)

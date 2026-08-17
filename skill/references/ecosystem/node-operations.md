@@ -139,7 +139,11 @@ enable = true
 max-open-connections = 1000
 
 [state-commit]
-sc-enable = true                    # Enable SeiDB (recommended)
+sc-enable = true                    # Enable state-commit. As of Sei v6.6.0 SC is MANDATORY:
+                                    # the node PANICS at startup if sc-enable is false
+                                    # ("SeiDB state-commit (SC) must be enabled; IAVL
+                                    #  backend has been fully deprecated"). The legacy IAVL
+                                    # backend has been fully removed.
 sc-async-commit-buffer = 100
 sc-keep-recent = 1
 sc-snapshot-interval = 10000
@@ -176,6 +180,38 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 - **Giga Executor** (`[giga_executor] enabled`) is a *separate* feature — an evmone-based EVM interpreter for throughput. Don't conflate it with Giga Storage.
 
 > Minimum gas price, block gas limit, and SSTORE/storage gas are governance-adjustable — confirm live values at https://docs.sei.io/evm/differences-with-ethereum, and set `minimum-gas-prices` at or above the mainnet floor (`0usei` is local-dev only).
+
+
+
+---
+
+## Legacy `sei_*` / `sei2_*` JSON-RPC gating (`[evm] enabled_legacy_sei_apis`)
+
+The `sei_*` and `sei2_*` JSON-RPC namespaces (EVM HTTP endpoint only, port `8545` — not the Cosmos REST API on `1317`) are **deprecated and scheduled for removal**. Build new integrations on `eth_*` / `debug_*` instead. Which gated legacy methods are served is controlled by the `enabled_legacy_sei_apis` allowlist under `[evm]` in `app.toml`:
+
+```toml
+[evm]
+# Only methods listed here are allowed. seid init / DefaultConfig pre-fill
+# the three address/Cosmos helpers; every other gated method is rejected.
+enabled_legacy_sei_apis = [
+  "sei_getSeiAddress",
+  "sei_getEVMAddress",
+  "sei_getCosmosTx",
+]
+```
+
+- **Default allowlist** (from `seid init` / `DefaultConfig`): only `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`. All other `sei_*` and `sei2_*` methods (block/receipt/count, filters, logs, `sei_sign`, and the seven `sei2_*` block methods) are disabled until explicitly added to the array.
+- **Removed (as of Sei v6.6.0)**: the two `sei_*` block-trace endpoints `sei_traceBlockByHashExcludeTraceFail` and `sei_traceBlockByNumberExcludeTraceFail` have been fully removed from the EVM RPC server and dropped from the `enabled_legacy_sei_apis` allowlist — they can no longer be enabled. Use the standard `debug_traceBlockByHash` / `debug_traceBlockByNumber` endpoints instead. (The `sei_getBlockByHashExcludeTraceFail` / `sei_getBlockByNumberExcludeTraceFail` and `sei2_*ExcludeTraceFail` block variants, and `sei_getTransactionReceiptExcludeTraceFail`, all remain.)
+- **Internally read through the AppOptions/viper key** `evm.enabled_legacy_sei_apis` (an environment-variable override via viper is possible; there is no dedicated `seid` CLI flag).
+- **Enable more methods** by uncommenting / adding their names — the `seid`-generated template lists the optional `sei_*` and `sei2_*` methods as commented lines you can turn on. Names are matched case-insensitively.
+- **`sei2_*` namespace**: exposes the same block JSON-RPC shape as `sei_*` blocks but includes bank transfers in block payloads (HTTP only). Seven methods — `sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` variants — gated via this same allowlist. There is no `sei2` transaction or filter API.
+
+### Behavior for gated calls (all HTTP 200)
+
+- **Not in the allowlist**: returns a JSON-RPC error — code `-32601`, message stating the method is not enabled and deprecated, and `data` `"legacy_sei_deprecated"`. The request never reaches the handler.
+- **Allowed**: passes through unchanged (JSON body identical), but the response may set the HTTP header `Sei-Legacy-RPC-Deprecation` signaling deprecation.
+
+> **Docker localnet** (`docker/localnode/config/app.toml`) enables every gated method **except `sei_sign`** so integration tests can exercise the disabled-method path. Production `seid init` defaults remain the three-method allowlist above — expand only if you must keep legacy consumers working during migration.
 
 ---
 

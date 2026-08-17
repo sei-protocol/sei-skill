@@ -120,9 +120,37 @@ Sei-specific methods (varies by provider, check before relying):
 - `sei_getEVMAddress` / `sei_getSeiAddress` — dual-address lookup.
 - `debug_traceTransaction` — trace support depends on provider; archive providers have it.
 
+> **Removed (Sei v6.6.0):** The `sei` namespace trace endpoints `sei_traceBlockByNumberExcludeTraceFail` and `sei_traceBlockByHashExcludeTraceFail` have been **removed** from the EVM RPC server and dropped from the `enabled_legacy_sei_apis` allowlist — adding them to the allowlist no longer has any effect. Use the standard `debug_traceBlockByNumber` / `debug_traceBlockByHash` instead. Note the `sei2_*ExcludeTraceFail` block variants were **not** removed and remain available (when allowlisted). The `sei_getBlockByHashExcludeTraceFail` / `sei_getBlockByNumberExcludeTraceFail` block variants and `sei_getTransactionReceiptExcludeTraceFail` also remain (when allowlisted).
+
+> **Deprecation (Sei v6.6.0):** All `sei_*` and `sei2_*` JSON-RPC methods (EVM HTTP only) are **deprecated and scheduled for removal**. Migrate to standard `eth_*` / `debug_*` methods. These namespaces are now **gated** by the `[evm].enabled_legacy_sei_apis` allowlist in `app.toml` (read internally through the `evm.enabled_legacy_sei_apis` AppOptions/viper key; there is no dedicated `seid` CLI flag). By default (`seid init` / `DefaultConfig`) only three methods are enabled: `sei_getSeiAddress`, `sei_getEVMAddress`, and `sei_getCosmosTx`. Any other gated `sei_*` / `sei2_*` method not in the allowlist returns a JSON-RPC error (HTTP 200, `code` `-32601`, `data` `"legacy_sei_deprecated"`, message explaining it is not enabled + deprecated). To enable more legacy methods, add their exact names to `enabled_legacy_sei_apis` under `[evm]`.
+>
+> Successful allowlisted `sei_*` / `sei2_*` calls pass through **unchanged** but may set the HTTP response header `Sei-Legacy-RPC-Deprecation` (JSON body is not mutated).
+>
+> The `sei2_*` namespace exposes the same block JSON-RPC shape as `sei` blocks but with bank transfers included in block payloads (HTTP only). There are seven `sei2_*` methods (`sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` block variants); there is no `sei2` transaction or filter API.
+
 Methods that may **not** be supported on every endpoint:
 - `eth_subscribe` (WebSockets) — provider-dependent; Sei Foundation supports WS at `wss://evm-ws.sei-apis.com` (verify).
 - `debug_*` and `trace_*` — typically only on archive nodes / paid tiers.
+
+Exposed-but-unsupported:
+- `eth_blobBaseFee` — exposed but always returns a JSON-RPC error (code `-32000`, message `"blobs not supported on this chain"`) because Sei does not support EIP-4844 blob transactions. Do not expect a fee value from this method.
+
+
+
+The following methods are also **registered but explicitly unsupported** on Sei EVM RPC. Each returns a JSON-RPC error with code `-32000` (not `-32601` method not found), so clients get a stable, documented failure. Do not expect a result from any of them:
+
+| Method | `error.message` |
+|---|---|
+| `eth_syncing` | `eth_syncing is not supported on Sei EVM RPC` |
+| `eth_newPendingTransactionFilter` | `eth_newPendingTransactionFilter is not supported on Sei EVM RPC` |
+| `debug_getRawBlock` | `debug_getRawBlock is not supported on Sei EVM RPC` |
+| `debug_getRawHeader` | `debug_getRawHeader is not supported on Sei EVM RPC` |
+| `debug_getRawReceipts` | `debug_getRawReceipts is not supported on Sei EVM RPC` |
+| `debug_getRawTransaction` | `debug_getRawTransaction is not supported on Sei EVM RPC` |
+
+- `eth_syncing` — Sei's consensus model differs from Ethereum's sync semantics; do not rely on this method (Ethereum returns `false` or a sync object).
+- `eth_newPendingTransactionFilter` — Sei has instant finality and does not expose Ethereum-style pending-tx filters.
+- `debug_getRaw*` — raw RLP block/header/receipt/tx payloads are not served on this surface.
 
 ## Rate limits — typical (verify per provider)
 

@@ -35,7 +35,7 @@ description: How Sei's EVM differs from Ethereum — opcodes, gas model, finalit
 | `BLOCKHASH` | Hash of Tendermint header | Keccak of Ethereum block header | Different encoding; usable for recent blocks |
 | `GASLIMIT` | 12,500,000 | 60,000,000 | Block gas limit |
 | `TIMESTAMP` | Tendermint block time | Proposer-chosen block time | Do not use as randomness source |
-| Blob opcodes | Not supported | Supported (post-Cancun) | No EIP-4844 blob transactions on Sei |
+| Blob opcodes | Not supported | Supported (post-Cancun) | No EIP-4844 blob transactions on Sei. `eth_blobBaseFee` is exposed but returns JSON-RPC error code -32000, `"blobs not supported on this chain"` (not -32601 method-not-found) |
 
 ## Key Developer Rules
 
@@ -104,7 +104,89 @@ const balance = await provider.getBalance(address); // always accurate
 ### State Storage (AVL vs MPT)
 - Sei uses a single global AVL-tree state root — there are no per-account state roots
 - `eth_getProof` (EIP-1186) returns proofs against the global state root, not per-account roots
+  - Storage keys must be **valid hex-encoded** values (e.g. `0x0000000000000000000000000000000000000000000000000000000000000001`). Malformed/non-hex keys are rejected with an error (`invalid storage key ...`) — they are no longer silently interpreted as raw bytes.
+  - A single request is capped at **1024 storage keys** (`MaxStorageKeysPerProof`); exceeding this returns an error (`too many storage keys: got N, max 1024`).
 - Block hash encoding differs from Ethereum — BLOCKHASH returns Tendermint header hash, not Ethereum keccak header hash
+
+## JSON-RPC Method Availability
+
+### Explicitly Unsupported JSON-RPC Methods
+
+These methods are **registered** on Sei's EVM RPC but return JSON-RPC error code `-32000` with a clear message instead of `-32601` method-not-found. Clients get a stable, documented failure rather than a missing-method error.
+
+| Method | `error.message` |
+|---|---|
+| `eth_blobBaseFee` | `blobs not supported on this chain` |
+| `eth_syncing` | `eth_syncing is not supported on Sei EVM RPC` |
+| `eth_newPendingTransactionFilter` | `eth_newPendingTransactionFilter is not supported on Sei EVM RPC` |
+| `debug_getRawBlock` | `debug_getRawBlock is not supported on Sei EVM RPC` |
+| `debug_getRawHeader` | `debug_getRawHeader is not supported on Sei EVM RPC` |
+| `debug_getRawReceipts` | `debug_getRawReceipts is not supported on Sei EVM RPC` |
+| `debug_getRawTransaction` | `debug_getRawTransaction is not supported on Sei EVM RPC` |
+
+- `eth_syncing` — Sei's consensus model differs from Ethereum's sync semantics; do not rely on this method (Ethereum returns `false` or a sync object).
+- `eth_newPendingTransactionFilter` — Sei has instant finality and does not expose Ethereum-style pending tx filters on this RPC.
+- `debug_getRaw*` — raw RLP block/header/receipt/tx payloads are not served on this surface.
+
+
+
+### Deprecated `sei_*` / `sei2_*` JSON-RPC Namespaces
+
+The `sei_*` and `sei2_*` JSON-RPC surfaces (EVM HTTP endpoint only — not the Cosmos REST API on port 1317) are **deprecated and scheduled for removal**. Do not build new integrations on them; migrate to standard `eth_*` / `debug_*` methods and documented replacements.
+
+**Gating by allowlist.** Which gated `sei_*` / `sei2_*` methods a node serves is controlled by `[evm] enabled_legacy_sei_apis` in `app.toml` (also settable via the AppOptions/CLI flag `evm.enabled_legacy_sei_apis`). Both prefixes share the same allowlist.
+
+- **Default allowlist** (from `seid init` / `DefaultConfig`) enables only the three address/Cosmos helpers: `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`. All other gated methods appear commented out in the generated template and must be explicitly enabled.
+- Names are matched **case-insensitively** against the canonical method names.
+
+**Behavior of gated calls (all responses are HTTP 200):**
+
+- **Disabled** (method not in the allowlist, or an unrecognized `sei_*` / `sei2_*` name — the gate fails closed): returns a JSON-RPC `error` object with code `-32601`, a message explaining the method is not enabled and deprecated, and `error.data` set to the string `"legacy_sei_deprecated"`.
+- **Allowed**: the call passes through to the handler **unchanged** (JSON body is not mutated); the response additionally sets the optional HTTP header `Sei-Legacy-RPC-Deprecation` signaling deprecation.
+
+Example disabled-method response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 42,
+  "error": {
+    "code": -32601,
+    "message": "sei_sign is not enabled on this node. The sei_* and sei2_* JSON-RPC surfaces are deprecated...",
+    "data": "legacy_sei_deprecated"
+  }
+}
+```
+
+Example `app.toml` to enable an additional gated method:
+
+```toml
+[evm]
+enabled_legacy_sei_apis = [
+  "sei_getSeiAddress",
+  "sei_getEVMAddress",
+  "sei_getCosmosTx",
+  "sei_getBlockByNumber",
+]
+```
+
+### Removed `sei_*` Trace-Block ExcludeTraceFail Endpoints
+
+As of sei-chain v6.6.0, the `sei_traceBlockByNumberExcludeTraceFail` and `sei_traceBlockByHashExcludeTraceFail` JSON-RPC endpoints (enhanced variants of `debug_traceBlockByNumber` / `debug_traceBlockByHash` that excluded pre-state-check failures) have been **removed entirely** from the EVM RPC server. They no longer appear in the `enabled_legacy_sei_apis` allowlist and are no longer registered on the `sei` namespace.
+
+Migrate to the standard `debug_traceBlockByNumber` / `debug_traceBlockByHash` methods. Note the corresponding `sei2_*ExcludeTraceFail` **block** getters (below) are unaffected — only the two `sei_*` trace-block endpoints were removed.
+
+### `sei2_*` Block Namespace
+
+The `sei2` namespace exposes the same **block** JSON-RPC shape as `sei` blocks, but with **bank transfers included** in the block payloads (HTTP only). There are seven `sei2_*` methods — block, block receipts, and transaction-count getters plus `*ExcludeTraceFail` variants — and **no** `sei2` transaction or filter API. They are gated by the same `enabled_legacy_sei_apis` allowlist (and are commented out by default).
+
+- `sei2_getBlockByHash`
+- `sei2_getBlockByHashExcludeTraceFail`
+- `sei2_getBlockByNumber`
+- `sei2_getBlockByNumberExcludeTraceFail`
+- `sei2_getBlockReceipts`
+- `sei2_getBlockTransactionCountByHash`
+- `sei2_getBlockTransactionCountByNumber`
 
 ## What Works Unchanged
 

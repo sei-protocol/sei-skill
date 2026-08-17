@@ -119,6 +119,52 @@ const [pointerAddress, version, exists] = await pointerView.getNativePointer(
 console.log("ERC20 pointer at:", pointerAddress);
 ```
 
+
+## Query Denoms Created by a Creator
+
+List denoms created by a given creator address (first page, 100 by default):
+
+```bash
+seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
+  --node https://rpc-testnet.sei-apis.com \
+  --output json | jq -r ".denoms"
+```
+
+### Pagination (as of v6.6.0)
+
+The `denoms-from-creator` query now supports standard pagination flags. Previously it returned all denoms for a creator unbounded; the gRPC/REST query now paginates by default.
+
+| Flag | Purpose |
+| --- | --- |
+| `--limit` | Max number of denoms per page |
+| `--offset` | Number of denoms to skip |
+| `--page` | Page number (1-based; combines with `--limit`) |
+| `--page-key` | Raw next key for key-based paging — not the base64 `pagination.next_key` (see below) |
+| `--count-total` | Include total count in `pagination.total` |
+
+```bash
+# First page of 100 denoms, with total count
+seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
+  --limit 100 --count-total \
+  --node https://rpc-testnet.sei-apis.com \
+  --output json
+
+# Next page
+seid q tokenfactory denoms-from-creator <CREATOR_ADDRESS> \
+  --page 2 --limit 100 \
+  --node https://rpc-testnet.sei-apis.com \
+  --output json
+```
+
+The CLI passes `--page-key` as raw bytes without base64 decoding, but the `pagination.next_key` in JSON output is base64-encoded — passing that value silently returns the first page again. Use `--page` or `--offset` for subsequent pages from the CLI. The base64 `pagination.next_key` works with the REST `pagination.key` query parameter (decoded server-side) and with gRPC clients, which pass the raw `next_key` bytes from the previous `PageResponse` directly.
+
+### gRPC / REST
+
+The `DenomsFromCreator` gRPC/REST query accepts a `pagination` field (`PageRequest`) in the request and returns a `pagination` field (`PageResponse`) alongside `denoms` in the response. The REST endpoint also accepts standard `pagination.*` query parameters (e.g. `pagination.limit`, `pagination.offset`, `pagination.key`, `pagination.count_total`).
+
+<!-- Note: the CosmWasm/wasm binding path returns ALL denoms for a creator unbounded (gas metering bounds cost), so wasm queries are not affected by the default page cap. -->
+
+
 ## Complete Token Launch Workflow
 
 ```bash

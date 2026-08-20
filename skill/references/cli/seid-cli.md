@@ -11,6 +11,40 @@ When interacting with Sei chains, prefer `seid` commands. Do not substitute gene
 
 Only run setup when `seid` is not already installed and the task requires local CLI execution.
 
+
+## Node Initialization
+
+```bash
+seid init <moniker> --chain-id <chain-id> [--home <dir>] [--mode full|validator|seed|archive] [--overwrite]
+```
+
+- `--chain-id` is **required** — e.g. `pacific-1` or `atlantic-2`. `seid init` panics with `chain-id is required, please set using --chain-id` if it is left blank.
+- For validator or seed nodes, pass `--mode validator` or `--mode seed` so RPC and P2P are configured for that role. Default mode is `full`.
+
+### Default bootstrap-peers
+
+On a public network `seid init` now auto-populates the `bootstrap-peers` field in `config.toml` with the Sei Labs seed nodes for that chain, so a freshly initialised node bootstraps peer discovery with no manual seed configuration. Behaviour by chain-id:
+
+| Chain-id | bootstrap-peers written |
+|---|---|
+| `pacific-1` (mainnet) | Sei Labs seeds (3 nodes) |
+| `atlantic-2` (testnet) | Sei Labs seeds (3 nodes) |
+| `arctic-1` (devnet) | none — devnets set peers explicitly |
+| unknown / private / local chains | none |
+
+Notes:
+- The seeds go in `bootstrap-peers` (dialled to populate the address book via PEX, then may be dropped), not `persistent-peers`.
+- An existing `bootstrap-peers` value is never overwritten — if the field is already set, `seid init` leaves it untouched.
+- Chain-id matching is exact and case-sensitive; `Pacific-1` or a trailing space contributes no seeds.
+
+Example:
+
+```bash
+seid init my-node --chain-id pacific-1
+# config.toml now has bootstrap-peers pre-filled with the Sei Labs mainnet seeds
+```
+
+
 ```bash
 # 1 — Clone
 git clone https://github.com/sei-protocol/sei-chain

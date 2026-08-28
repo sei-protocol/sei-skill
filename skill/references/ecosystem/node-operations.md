@@ -287,6 +287,42 @@ make install
 sudo systemctl restart seid
 ```
 
+
+
+---
+
+## Freeze Height (`--freeze-height` / `freeze-height`)
+
+Stops the node **before executing** a target block while **continuing to serve RPC** (the process and gRPC/JSON-RPC servers keep running). Unlike `halt-height`, which gracefully shuts the node down, freeze mode keeps the node alive and queryable at `freeze-height - 1`.
+
+Enable it via the start flag or the `app.toml` `BaseConfig` field (both default `0` = disabled):
+
+```bash
+# CLI flag on the start command
+seid start --chain-id pacific-1 --freeze-height 12345678
+```
+
+```toml
+# app.toml (BaseConfig section, alongside halt-height / halt-time)
+freeze-height = 12345678
+```
+
+### Behavior
+
+- Block sync and consensus stop before executing the block at `freeze-height` and never advance beyond it — the node settles at `freeze-height - 1`.
+- The node keeps serving RPC while frozen (no WAL writes, no new consensus rounds).
+- **State sync is disabled** when freeze mode is active and the node falls back to block sync.
+- Auto-remediation restart halts at the freeze boundary rather than restarting past it.
+
+### Validation constraints (startup fails if violated)
+
+- `freeze-height` **cannot be combined with `halt-height` or `halt-time`**.
+- `--freeze-height` **cannot be used with grpc-only mode**.
+- **Not supported in seed mode** (`mode = seed`).
+- **Not supported with Autobahn** (fails if `autobahn-config-file` is set).
+- Must **not exceed `MaxInt64`** (`9223372036854775807`).
+- Must be **above the genesis initial height** and **above the current application, block store, and state store heights** — you cannot freeze at a height the node has already reached or passed.
+
 ---
 
 ## Database Management

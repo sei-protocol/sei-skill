@@ -38,6 +38,10 @@ make build-frozen-rpc-router
 | `--frozen-node` | — | `freeze-height=ip:port` pair; repeat once per frozen node. |
 | `--max-request-body-bytes` | `5242880` (5 MiB) | Maximum JSON-RPC request body size. Must be positive. |
 | `--max-block-reference-depth` | `16` | Maximum nested block reference depth when parsing block references. Must be positive. |
+
+
+| `--batch-request-limit` | `1000` | Maximum number of calls in a JSON-RPC batch. Must be positive. |
+| `--write-timeout` | `30s` | Maximum duration for writing an HTTP response. Must be positive. |
 | `--shutdown-timeout` | `10s` | Graceful shutdown timeout. Must be positive. |
 
 - `--live-node` is required; omitting it fails with `--live-node is required`.

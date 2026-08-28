@@ -202,6 +202,38 @@ seid tx evm call-precompile <precompile-name> <method> [args...]
 
 Available precompile names: `distribution`, `json`, `p256`, `staking`. See [EVM Precompiles](https://docs.sei.io/evm/precompiles) for method signatures.
 
+
+
+## Node Start (`seid start`)
+
+### `--freeze-height`
+
+Stops the node *before* executing a target block while keeping the process and RPC servers running (unlike `--halt-height`, which gracefully shuts the node down). Block sync and consensus stop before executing the block at the configured height and do not advance beyond it.
+
+```bash
+seid start --freeze-height <uint64>
+```
+
+- Default `0` disables freeze mode.
+- Also settable via the `freeze-height` field in the `[base]` section of `app.toml` (`freeze-height = 0` by default).
+
+Constraints:
+- Must not exceed `MaxInt64`.
+- Cannot be combined with `--halt-height`/`halt-height` or `--halt-time`/`halt-time`.
+- Cannot be combined with grpc-only mode (`--grpc-only`).
+- State sync is disabled under freeze mode and falls back to block sync.
+- Not supported with seed mode or Autobahn.
+- The target height must be above the node's initial height and must not already be reached by the application, block store, or state store — otherwise the node refuses to start.
+- Auto-remediation restart halts at the freeze boundary rather than restarting past it.
+
+The freeze height is an *exclusive* boundary: a node started with `--freeze-height 100` serves blocks through height 99 and never executes block 100. This is the interval semantics the `frozen-rpc-router` relies on when routing requests by block number (see [Frozen RPC Router](frozen-rpc-router.md)).
+
+Example — freeze a node just before executing block 5,000,000 while continuing to serve RPC (the node serves blocks through height 4,999,999):
+
+```bash
+seid start --freeze-height 5000000
+```
+
 ## curl and JSON-RPC
 
 Use `curl` when the user wants raw EVM RPC access, debug methods, or JSON-RPC examples. Use `seid` for everything else.

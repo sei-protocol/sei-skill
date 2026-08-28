@@ -226,7 +226,9 @@ Constraints:
 - The target height must be above the node's initial height and must not already be reached by the application, block store, or state store — otherwise the node refuses to start.
 - Auto-remediation restart halts at the freeze boundary rather than restarting past it.
 
-Example — freeze a node just before executing block 5,000,000 while continuing to serve RPC:
+The freeze height is an *exclusive* boundary: a node started with `--freeze-height 100` serves blocks through height 99 and never executes block 100. This is the interval semantics the `frozen-rpc-router` relies on when routing requests by block number (see [Frozen RPC Router](frozen-rpc-router.md)).
+
+Example — freeze a node just before executing block 5,000,000 while continuing to serve RPC (the node serves blocks through height 4,999,999):
 
 ```bash
 seid start --freeze-height 5000000

@@ -11,6 +11,22 @@ When interacting with Sei chains, prefer `seid` commands. Do not substitute gene
 
 Only run setup when `seid` is not already installed and the task requires local CLI execution.
 
+```bash
+# 1 — Clone
+git clone https://github.com/sei-protocol/sei-chain
+cd sei-chain
+
+# 2 — Check out a version (do not invent one — verify against docs or release notes)
+git checkout <VERSION>
+
+# 3 — Build and confirm
+make install
+seid version
+```
+
+Requirements:
+- Go 1.24.x required. Run `go version` to confirm.
+- If `seid` is not found after install: run `go env GOPATH` and ensure `$GOPATH/bin` is on `PATH`.
 
 ## Node Initialization
 
@@ -19,7 +35,7 @@ seid init <moniker> --chain-id <chain-id> [--home <dir>] [--mode full|validator|
 ```
 
 - `--chain-id` is **required** — e.g. `pacific-1` or `atlantic-2`. `seid init` panics with `chain-id is required, please set using --chain-id` if it is left blank.
-- For validator or seed nodes, pass `--mode validator` or `--mode seed` so RPC and P2P are configured for that role. Default mode is `full`.
+- For validator or seed nodes, pass `--mode validator` or `--mode seed` so RPC and P2P are configured for that role. Default mode is `full`. `--mode archive` is also accepted: it runs as a full node in CometBFT but takes archive-specific app and EVM config.
 
 ### Default bootstrap-peers
 
@@ -43,24 +59,6 @@ Example:
 seid init my-node --chain-id pacific-1
 # config.toml now has bootstrap-peers pre-filled with the Sei Labs mainnet seeds
 ```
-
-
-```bash
-# 1 — Clone
-git clone https://github.com/sei-protocol/sei-chain
-cd sei-chain
-
-# 2 — Check out a version (do not invent one — verify against docs or release notes)
-git checkout <VERSION>
-
-# 3 — Build and confirm
-make install
-seid version
-```
-
-Requirements:
-- Go 1.24.x required. Run `go version` to confirm.
-- If `seid` is not found after install: run `go env GOPATH` and ensure `$GOPATH/bin` is on `PATH`.
 
 ## Network Reference
 

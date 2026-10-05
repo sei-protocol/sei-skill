@@ -420,6 +420,64 @@ seidb evm-logical-digest --backend flatkv -d <dir> --height H \
 ```
 
 
+
+### hashlog
+
+`seidb hashlog` groups read-only tools for inspecting the on-disk hash log archives produced by the hashlogger. Use it to pull a single block's recorded hashes or to diff two archives.
+
+```bash
+seidb hashlog get-block <archive> <block> [--json]
+seidb hashlog compare <archive-a> <archive-b> [--low N --high M] [--max-diffs N] [--full] [--json]
+```
+
+#### get-block
+
+Prints every hash recorded for a single block in a hash log archive. Takes exactly two positional args: the archive path and the block number.
+
+| Flag | Purpose | Default |
+|---|---|---|
+| `--json` | Emit JSON instead of human-readable text | `false` |
+
+Notes:
+- A block may have more than one record if it was executed more than once (e.g. after a rollback and replay); each execution's hashes are reported separately.
+- A hash type that was registered but not recorded for the block prints as `<none>` (and serializes to JSON `null`, distinguishable from an absent type).
+
+#### compare
+
+Compares two hash log archives and reports blocks whose hashes differ. Takes exactly two positional args: the two archive paths.
+
+| Flag | Purpose | Default |
+|---|---|---|
+| `--low` | Lowest block to compare (inclusive); **requires `--high`** | `0` |
+| `--high` | Highest block to compare (inclusive); **requires `--low`** | `0` |
+| `--max-diffs` | Maximum number of differing blocks to report, or `-1` for all | `-1` |
+| `--full` | Show every column for each differing block (default shows only the columns that differ) | `false` |
+| `--json` | Emit JSON instead of human-readable text | `false` |
+
+Notes:
+- `--low` and `--high` are optional but must be supplied **together** — providing only one panics with `Must provide both --low and --high to compare a block range`.
+- The default (compact) output shows only the columns that differ between the two sides; `--full` shows every column for both sides. This applies to both text and JSON output.
+- Column-level diffing is only well-defined when each side holds exactly one record. When the record counts differ (a rollback re-executed the block a different number of times), compact mode reports the record counts and defers to `--full` for the details.
+- If the number of reported diffs equals `--max-diffs`, the output may have been truncated and a warning is printed (`Output truncated at --max-diffs=N; there may be more differing blocks.`); widen or remove the cap (`--max-diffs -1`) to see all.
+
+Example:
+
+```bash
+# Print every hash recorded for block 213200000 in an archive
+seidb hashlog get-block /root/.sei/data/hashlog 213200000
+
+# As JSON
+seidb hashlog get-block /root/.sei/data/hashlog 213200000 --json
+
+# Diff two archives over a block range, showing full columns for each diff
+seidb hashlog compare /node-a/hashlog /node-b/hashlog \
+  --low 213200000 --high 213210000 --full
+
+# Diff whole archives, cap at the first 50 differing blocks
+seidb hashlog compare /node-a/hashlog /node-b/hashlog --max-diffs 50
+```
+
+
 ## Agent Workflow
 
 1. Classify the task: install · wallet · read query · payload generation · pointer lookup · tx lookup · transaction submission · raw JSON-RPC.

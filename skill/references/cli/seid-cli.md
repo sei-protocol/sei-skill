@@ -293,30 +293,44 @@ For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a walle
 Iterates a FlatKV store and dumps every physical `(key, value)` pair into per-bucket files, one file per bucket, formatted to match `dump-iavl` so the same diff tooling works on both.
 
 ```bash
-seidb dump-flatkv --db-dir <flatkv-data-dir> --output-dir <dir> [--height <n>] [--bucket account|code|storage|legacy]
+seidb dump-flatkv --db-dir <flatkv-data-dir> [--output-dir <dir>] [--height <n>] [--bucket account|code|storage|legacy] [--lthash] [--lthash-only] [--read-limit-mb <mibps>]
 ```
 
 | Flag | Short | Purpose | Default |
 |---|---|---|---|
 | `--db-dir` | `-d` | FlatKV database directory (required) | — |
-| `--output-dir` | `-o` | Output directory; one file per bucket (required) | — |
+| `--output-dir` | `-o` | Output directory; one file per bucket. Required unless `--lthash-only` is used | — |
 | `--height` | | FlatKV target version; `0` selects the latest available version | `0` |
 | `--bucket` | `-b` | Restrict dump to a single bucket (`account`, `code`, `storage`, or `legacy`) | all buckets |
+| `--lthash` | | Also compute per-bucket and total LtHash (lattice hash) over the scanned state and verify the total against the committed snapshot metadata | `true` |
+| `--lthash-only` | | Only compute and verify LtHash; do not write any bucket dump files. Requires `--lthash=true` and does not require `--output-dir` | `false` |
+| `--read-limit-mb` | | Throttle the scan to at most this many MiB/s of (key+value) bytes read, so a dump against a running node does not starve the chain of disk bandwidth. `0` = unlimited | `64` |
 
 Notes:
 - Valid `--bucket` values are exactly `account`, `code`, `storage`, `legacy`. `metadata` is intentionally excluded and module names (e.g. `evm`) are not valid buckets.
-- When `--bucket` is set, only that bucket's file is created under `--output-dir`; the others are not written.
+- When `--bucket` is set, only that bucket's file is created under `--output-dir`; the others are not written. The full keyspace is still scanned, and LtHash always covers all four buckets, so the printed total stays valid.
 - Each output file begins with a `Bucket <name> at version <V>` header, followed by `Key: <HEX>, Value: <HEX>` lines. Physical keys are emitted verbatim (including their `<module>/` + type-prefix header).
 - The tool operates on a read-only temp clone of the selected snapshot + changelog, so it does not contend with a live node for the FlatKV writer lock.
+- With `--lthash` (the default), after the dump it prints a `LtHash (lattice hash) at version <V>` block listing each bucket's `count` and checksum plus the `TOTAL`, then a `LtHash verification vs snapshot metadata (committed)` PASS/FAIL line. A mismatch exits non-zero. Verification is skipped (not failed) when the selected snapshot predates LtHash metadata or carries no committed LtHash.
+- `--lthash-only` requires `--lthash=true` and cannot be combined with `--bucket`. In this mode no output dir or bucket files are created, so `--output-dir` may be omitted.
+- `--read-limit-mb` must be `>= 0`. Keep it at the default (or lower) on a shared/live node; raise it or set `0` only for offline runs on idle disks.
 
 Example:
 
 ```bash
+# Dump one bucket at latest version with default 64 MiB/s throttle + LtHash verify
 seidb dump-flatkv \
   --db-dir /root/.sei/data/flatkv \
   --output-dir /tmp/flatkv-dump \
   --height 0 \
   --bucket storage
+
+# Verify the FlatKV lattice hash only, writing no key/value dump files
+seidb dump-flatkv --db-dir /root/.sei/data/flatkv --lthash-only
+
+# Offline / idle disk: go full speed, skip LtHash
+seidb dump-flatkv --db-dir /root/.sei/data/flatkv --output-dir /tmp/flatkv-dump \
+  --read-limit-mb 0 --lthash=false
 ```
 
 ### state-size (--flatkv-dir)

@@ -191,6 +191,52 @@ seid tx gov submit-proposal param-change proposal.json \
   --fees 20000usei
 ```
 
+
+#### Driving the SC memiavl→flatkv migration (`migration` subspace)
+
+The per-block state-commit (SC) migration rate is an on-chain governance param, **not** an `app.toml` config. The former `state-commit.sc-keys-to-migrate-per-block` field was removed; the rate now lives in the `migration` subspace under key `NumKeysToMigratePerBlock` and is raised via a `ParameterChangeProposal`.
+
+- Default is `0` (migration **paused**); valid range is `0`–`1000000` (a proposal above the max is rejected at submission).
+- Every validator reads the param in `BeginBlock`, so all nodes drain at the identical rate once it passes — a per-node config would diverge the AppHash.
+- The value is a **string** in the proposal JSON (e.g. `"12345"`).
+
+```bash
+# migration_param_change_proposal.json
+cat > migration_param_change_proposal.json << 'EOF'
+{
+  "title": "Update Migration Batch Size",
+  "description": "Set NumKeysToMigratePerBlock to 12345 to drive the SC memiavl->flatkv migration",
+  "changes": [
+    {
+      "subspace": "migration",
+      "key": "NumKeysToMigratePerBlock",
+      "value": "12345"
+    }
+  ],
+  "deposit": "10000000usei",
+  "is_expedited": false
+}
+EOF
+
+seid tx gov submit-proposal param-change migration_param_change_proposal.json \
+  --from mykey \
+  --chain-id pacific-1 \
+  --node https://rpc.sei-apis.com \
+  --fees 20000usei
+```
+
+Query the current value (defaults to `0` until a proposal raises it):
+
+```bash
+seid q params subspace migration NumKeysToMigratePerBlock --output json \
+  | jq -r .value | tr -d '"'
+```
+
+**Operator notes:**
+- A node only follows the governance-driven migration when running in **auto** write mode. As of v6.7.0 the new `state-commit.sc-write-mode-enable-auto` config defaults to `true`, which forces auto and ignores any explicit `sc-write-mode`. To pin a specific `sc-write-mode` (e.g. `flatkv_only`, `memiavl_only`, `test_only_dual_write`) you must also set `sc-write-mode-enable-auto = false` — otherwise the node runs in auto and will diverge if it was meant to stay pinned.
+- A `seid export` taken mid-migration omits `NumKeysToMigratePerBlock` (the `migration` subspace has no owning module in genesis). Re-issue the `ParameterChangeProposal` on the new chain to resume the drain.
+
+
 ### Software Upgrade Proposal
 
 ```bash

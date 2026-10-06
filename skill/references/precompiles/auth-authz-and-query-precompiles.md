@@ -51,7 +51,13 @@ Interface `IParams`. Method:
 
 ## Slashing — `0x0000000000000000000000000000000000001014`
 
-Interface `ISlashing`. Time fields are Unix seconds. Methods:
+Interface `ISlashing`. Time fields are Unix seconds. Unlike the other precompiles in this file, Slashing now exposes one state-mutating transaction method (`unjail`); its `IsTransaction` returns `true` for `unjail` and `false` for all query methods.
+
+Transaction method:
+
+- `unjail()` → `bool success` — unjails the validator whose operator address is the caller's associated Sei address (added via #, slashing precompile unjail feature). Non-payable (reverts on non-zero `value`). **Cannot** be invoked via `delegatecall` (reverts `cannot delegatecall slashing`) or `staticcall` (reverts `cannot call slashing precompile from staticcall`). Reverts if the caller has no associated Sei address, or if that address is not a validator operator (fails `MsgUnjail` validation / the slashing keeper). Internally calls the slashing `MsgServer.Unjail` with `NewMsgUnjail(sdk.ValAddress(seiAddr))`.
+
+Query methods (all `view`, no state mutation):
 
 - `params()` → `SlashingParams{int64 signedBlocksWindow, string minSignedPerWindow, uint64 downtimeJailDuration, string slashFractionDoubleSign, string slashFractionDowntime}`.
 - `signingInfo(string consAddress)` → `SigningInfo{string validatorAddress, int64 startHeight, int64 indexOffset, int64 jailedUntil, bool tombstoned, int64 missedBlocksCounter}` — reverts for unknown or invalid bech32 consensus address.

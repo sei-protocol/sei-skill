@@ -77,6 +77,67 @@ function withdrawDelegatorReward(
 function withdrawValidatorCommission(string memory validatorAddress) external returns (bool);
 ```
 
+
+### Distribution Query Functions
+
+The Distribution precompile (`0x1007`) exposes read-only view methods for inspecting rewards, commission, slashes, and module state (added in #3618). Validator addresses use the `seivaloper1...` bech32 format; delegator addresses are passed as EVM `address` (must be associated with a Sei address).
+
+```solidity
+struct Coin {
+    uint256 amount;
+    uint256 decimals;
+    string denom;
+}
+
+struct DistributionParams {
+    string communityTax;        // decimal string
+    string baseProposerReward;  // decimal string
+    string bonusProposerReward; // decimal string
+    bool withdrawAddrEnabled;
+}
+
+struct Slash {
+    uint64 validatorPeriod;
+    string fraction; // decimal string
+}
+
+// Distribution module parameters
+function params() external view returns (DistributionParams memory params);
+
+// Outstanding (un-withdrawn) rewards of a validator and all its delegations
+function validatorOutstandingRewards(string memory validatorAddress)
+    external view returns (Coin[] memory rewards);
+
+// Accumulated commission of a validator
+function validatorCommission(string memory validatorAddress)
+    external view returns (Coin[] memory commission);
+
+// Slash events of a validator within a height range (cursor-based pagination)
+function validatorSlashes(
+    string memory validatorAddress,
+    uint64 startingHeight,
+    uint64 endingHeight,
+    bytes memory pageKey
+) external view returns (Slash[] memory slashes, bytes memory nextKey);
+
+// Pending rewards of a single delegation
+function delegationRewards(address delegatorAddress, string memory validatorAddress)
+    external view returns (Coin[] memory rewards);
+
+// Validators a delegator is delegating to
+function delegatorValidators(address delegatorAddress)
+    external view returns (string[] memory validators);
+
+// Withdraw address of a delegator (bech32)
+function delegatorWithdrawAddress(address delegatorAddress)
+    external view returns (string memory withdrawAddress);
+
+// Coins held by the community pool
+function communityPool() external view returns (Coin[] memory pool);
+```
+
+> **Note:** These are `view` methods — do not send `value`; a non-zero value reverts. They run on a branched context internally, so the reward queriers' period-increment side effects are discarded and never mutate state.
+
 ## ethers.js Examples
 
 ### Setup

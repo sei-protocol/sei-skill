@@ -245,7 +245,12 @@ cast run <TX_HASH> \
 // Ethers.js — trace via debug_traceTransaction
 const trace = await provider.send("debug_traceTransaction", [txHash, {}]);
 console.log(trace.structLogs);  // step-by-step EVM execution
+
+// Named native tracer (e.g. callTracer) via TraceConfig.Tracer
+const callTrace = await provider.send("debug_traceTransaction", [txHash, { tracer: "callTracer" }]);
 ```
+
+**Tracer gating on Sei (deviation from geth defaults):** on `debug_traceTransaction` / `debug_traceCall` / `debug_traceBlockBy*` / `debug_traceTransactionProfile`, the `TraceConfig.Tracer` value is restricted by `[evm]` config in `app.toml`. Only native tracer names listed in `trace_allowed_tracers` (default `["callTracer", "prestateTracer", "flatCallTracer", "4byteTracer", "noopTracer", "muxTracer"]`) are accepted. Request-supplied JavaScript tracer source is **rejected** unless the operator sets `trace_allow_js_tracers = true` (default `false`); enabling it does not widen the native allowlist. `muxTracer` nested tracer names are validated recursively (bounded depth 16). Omitting `tracer` always falls back to the default struct logger.
 
 ## Testnet Deployment Checklist
 

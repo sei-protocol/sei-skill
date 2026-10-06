@@ -152,6 +152,32 @@ seid tx slashing unjail \
 
 > Note: There is no slashing of funds in Sei — jailing only excludes the validator from block signing and rewards; delegator tokens are safe.
 
+
+
+#### Unjail via the Slashing Precompile (EVM)
+
+A validator operator can also unjail from an EVM transaction by calling the `unjail()` method on the Slashing precompile at `0x0000000000000000000000000000000000001014`. This is useful for operators managing their validator from an EVM wallet or contract.
+
+```solidity
+address constant SLASHING_PRECOMPILE_ADDRESS = 0x0000000000000000000000000000000000001014;
+
+interface ISlashing {
+    // Unjails the validator whose operator address is the caller's
+    // associated Sei address. Returns true on success.
+    function unjail() external returns (bool success);
+}
+
+// Example
+bool success = ISlashing(SLASHING_PRECOMPILE_ADDRESS).unjail();
+```
+
+Behavior and constraints:
+
+- `unjail()` unjails the validator whose operator address is the **caller's associated Sei address** — the EVM caller must have an associated Sei address, and that address must be a validator operator, or the call reverts.
+- Non-payable (`stateMutability: nonpayable`) — sending value reverts.
+- State-mutating: it **cannot** be invoked via `delegatecall` or `staticcall` (both revert).
+- Takes no arguments and returns `(bool success)`.
+
 ### Update Commission
 
 ```bash

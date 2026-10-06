@@ -130,6 +130,43 @@ These methods are **registered** on Sei's EVM RPC but return JSON-RPC error code
 
 
 
+### `debug_trace*` Tracer Allowlist Gating
+
+Unlike upstream geth (which accepts any registered tracer, including request-supplied JavaScript, by default), Sei **gates** caller-supplied `TraceConfig.Tracer` values on `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile`. Validation runs before any tracer is constructed; when `Tracer` is omitted the default struct logger is always available.
+
+Two `[evm]` fields in `app.toml` control this:
+
+- `trace_allowed_tracers` — the native geth tracer names callers may request. Default:
+  ```toml
+  [evm]
+  trace_allowed_tracers = ["callTracer", "prestateTracer", "flatCallTracer", "4byteTracer", "noopTracer", "muxTracer"]
+  ```
+  Only native tracer names are accepted here (validated native-only at startup); set to `[]` to disable all named tracers. A non-native/typo'd name fails node startup.
+- `trace_allow_js_tracers` — default `false`. Must be explicitly set to `true` to permit request-supplied JavaScript tracer source in `TraceConfig.Tracer`. This executes untrusted code in-process; keep disabled on public RPC nodes. Enabling it does **not** widen `trace_allowed_tracers` — native tracer names must still be listed there to be usable.
+
+**Behavior:**
+- A tracer name not in `trace_allowed_tracers` is rejected (`... is not allowed; JavaScript tracers are disabled and only native tracers listed in evm.trace_allowed_tracers may be used`).
+- With `trace_allow_js_tracers = false`, any JS tracer source is rejected.
+- A padded native name (e.g. `" callTracer"`) is trimmed before validation/resolution; nested names inside `muxTracer` config must not have leading/trailing whitespace and are rejected if padded.
+- `muxTracer` nested tracer names (in `TracerConfig`) are validated recursively against the same allowlist, with a bounded nesting depth of **16** (exceeding it errors with `muxTracer nesting depth exceeds maximum of 16`).
+
+The `trace_bake_tracers` config (block-baking tracers) is held to the same native-only rule and validated at startup.
+
+Example allowlist-rejection response:
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32000,
+    "message": "debug tracer \"myCustomJS\" is not allowed; JavaScript tracers are disabled and only native tracers listed in evm.trace_allowed_tracers may be used"
+  }
+}
+```
+
+
+
 ### Deprecated `sei_*` / `sei2_*` JSON-RPC Namespaces
 
 The `sei_*` and `sei2_*` JSON-RPC surfaces (EVM HTTP endpoint only — not the Cosmos REST API on port 1317) are **deprecated and scheduled for removal**. Do not build new integrations on them; migrate to standard `eth_*` / `debug_*` methods and documented replacements.

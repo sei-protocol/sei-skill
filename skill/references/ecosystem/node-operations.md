@@ -213,6 +213,35 @@ enabled_legacy_sei_apis = [
 
 > **Docker localnet** (`docker/localnode/config/app.toml`) enables every gated method **except `sei_sign`** so integration tests can exercise the disabled-method path. Production `seid init` defaults remain the three-method allowlist above — expand only if you must keep legacy consumers working during migration.
 
+
+---
+
+## `debug_trace*` tracer gating (`[evm] trace_allowed_tracers` / `trace_allow_js_tracers`)
+
+Since v6.7.0 (#, PR introducing these fields) caller-supplied `TraceConfig.Tracer` values on `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile` are gated by two `[evm]` fields in `app.toml`. This is a deliberate deviation from upstream geth, which accepts any supported tracer (including request-supplied JavaScript) by default.
+
+```toml
+[evm]
+# Native debug tracers callers may request with TraceConfig.Tracer. Validated
+# native-only at startup; a non-native / typo'd name fails startup. The default
+# struct logger (TraceConfig.Tracer omitted) is always available. Set to [] to
+# disable all named tracers.
+trace_allowed_tracers = ["callTracer", "prestateTracer", "flatCallTracer", "4byteTracer", "noopTracer", "muxTracer"]
+
+# Opt in to request-supplied JavaScript tracer source in TraceConfig.Tracer.
+# Executes untrusted code in-process — keep disabled on public/default RPC nodes.
+# Enabling it does NOT widen trace_allowed_tracers: native names must still be
+# listed above to be usable.
+trace_allow_js_tracers = false
+```
+
+- **`trace_allowed_tracers`** — the native geth tracer names a caller may pass via `TraceConfig.Tracer`. Default: `["callTracer", "prestateTracer", "flatCallTracer", "4byteTracer", "noopTracer", "muxTracer"]`. Only native tracers are accepted here; entries are validated native-only at startup (empty or non-native/typo'd names fail startup), deduplicated, and whitespace-trimmed. Set to `[]` to disable all named tracers (the default struct logger still works when `Tracer` is omitted).
+- **`trace_allow_js_tracers`** — default `false`. When `false`, any request-supplied JavaScript tracer source is rejected; a tracer name not in `trace_allowed_tracers` is rejected with an error noting JavaScript tracers are disabled. Setting it to `true` is a separate opt-in that allows request-supplied JS — it does **not** widen the native allowlist, so native names must still appear in `trace_allowed_tracers` to be usable.
+- **`muxTracer` nesting** — when `muxTracer` is requested, its nested tracer names are validated recursively against the same allowlist, bounded to a nesting depth of 16. Nested names must not contain leading/trailing whitespace (they are forwarded to geth inside the raw JSON and cannot be rewritten).
+- **`trace_bake_tracers`** — now held to the same native-only rule and validated at startup; a non-native or JS-looking name fails startup rather than being evaluated as JS source by the baker on every committed block. Default: `["callTracer"]`.
+
+Both fields are read through the AppOptions/viper keys `evm.trace_allowed_tracers` and `evm.trace_allow_js_tracers`. Validation runs before trace-cache lookups and before any tracer is constructed.
+
 ---
 
 ## Commonly Used Ports

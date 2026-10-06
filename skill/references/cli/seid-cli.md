@@ -283,6 +283,9 @@ For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a walle
 - **`debug_traceTransaction`:** Only available if the RPC node exposes debug methods. If unavailable, fall back to standard RPC queries.
 
 
+- **`debug_trace*` tracer gating (deviation from upstream geth):** `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile` now reject any caller-supplied `TraceConfig.Tracer` name that is not in the `[evm].trace_allowed_tracers` allowlist in `app.toml` (also settable via the `evm.trace_allowed_tracers` AppOptions flag). The default allowlist is the native geth tracers `["callTracer", "prestateTracer", "flatCallTracer", "4byteTracer", "noopTracer", "muxTracer"]`; set it to `[]` to disable all named tracers. Requesting a name not on the list returns an error like `debug tracer "<name>" is not allowed; JavaScript tracers are disabled and only native tracers listed in evm.trace_allowed_tracers may be used`. Omitting `Tracer` (the default struct logger) is always available. Request-supplied JavaScript tracer source is rejected unless `[evm].trace_allow_js_tracers` (`evm.trace_allow_js_tracers`, default `false`) is explicitly enabled — upstream geth accepts JS tracers by default, Sei does not. Enabling `trace_allow_js_tracers` does **not** widen the native allowlist: native tracer names must still be listed in `trace_allowed_tracers` to be usable. `trace_allowed_tracers` is validated native-only at startup (a non-native/typo'd name fails startup), and `muxTracer` nested tracer names are validated recursively up to a bounded depth of 16. The baked-tracer list `[evm].trace_bake_tracers` is held to the same native-only rule at startup. (v6.7.0)
+
+
 
 ## seidb Tool
 

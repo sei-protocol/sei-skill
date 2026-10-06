@@ -44,6 +44,10 @@ function associate(
 // Associate via public key
 function associatePubKey(string memory pubKeyHex)
     external returns (address evmAddr, string memory seiAddr);
+
+// Note: both `associate` and `associatePubKey` are classified as
+// transaction (state-mutating) methods — they cannot be called from a
+// read-only/static context.
 ```
 
 ### ethers.js Example
@@ -95,6 +99,61 @@ function balance(string memory accountAddress, string memory denom)
 function all_balances(string memory accountAddress)
     external view returns (Coin[] memory);
 ```
+
+
+### Additional view methods
+
+These read-only view methods mirror the bank module's gRPC queries. All are `view` and non-payable.
+
+```solidity
+// Spendable (non-locked) balances for an account, paginated
+function spendableBalances(address acc, bytes memory pageKey)
+    external view returns (Coin[] memory balances, bytes memory nextKey);
+
+// Total supply of all denoms, paginated
+function totalSupply(bytes memory pageKey)
+    external view returns (Coin[] memory supply, bytes memory nextKey);
+
+// Bank module params
+function params() external view returns (Params memory params);
+
+// Metadata for a single denom
+function denomMetadata(string memory denom)
+    external view returns (Metadata memory metadata);
+
+// Metadata for all denoms, paginated
+function denomsMetadata(bytes memory pageKey)
+    external view returns (Metadata[] memory metadatas, bytes memory nextKey);
+```
+
+```solidity
+struct SendEnabled {
+    string denom;
+    bool enabled;
+}
+
+struct Params {
+    SendEnabled[] sendEnabled;
+    bool defaultSendEnabled;
+}
+
+struct DenomUnit {
+    string denom;
+    uint32 exponent;
+    string[] aliases;
+}
+
+struct Metadata {
+    string description;
+    DenomUnit[] denomUnits;
+    string base;
+    string display;
+    string name;
+    string symbol;
+}
+```
+
+Note: `spendableBalances` takes the account as an `address` (EVM address, which must be associated); pagination methods accept an empty `bytes` page key for the first page and return `nextKey` for the next page.
 
 ```solidity
 struct Coin {

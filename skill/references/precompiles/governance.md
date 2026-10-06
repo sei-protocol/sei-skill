@@ -61,6 +61,97 @@ function getProposals(uint32 proposalStatus, uint32 pageLimit, string memory pag
     external view returns (Proposal[] memory);
 ```
 
+
+## Query Methods (view)
+
+The Gov precompile exposes on-chain query methods accessible from EVM contracts. The vote and deposit queries are named `getVote`/`getDeposit` (not overloaded onto the `vote`/`deposit` transaction methods) because overloaded function names break common tooling like ethers.js.
+
+```solidity
+// Query a single proposal by ID
+function proposal(uint64 proposalID) external view returns (ProposalData memory proposal);
+
+// Query proposals with optional filters.
+// proposalStatus: 0 = all. voter/depositor: zero address = no filter.
+// pageKey: empty bytes for the first page.
+function proposals(
+    int32 proposalStatus,
+    address voter,
+    address depositor,
+    bytes memory pageKey
+) external view returns (ProposalData[] memory proposals, bytes memory nextKey);
+
+// Query a single vote cast on a proposal
+function getVote(uint64 proposalID, address voter) external view returns (VoteData memory vote);
+
+// Query all votes on a proposal, paginated
+function votes(uint64 proposalID, bytes memory pageKey)
+    external view returns (VoteData[] memory votes, bytes memory nextKey);
+
+// Query gov module voting/deposit/tally parameters
+function params() external view returns (GovParams memory params);
+
+// Query a single deposit on a proposal
+function getDeposit(uint64 proposalID, address depositor)
+    external view returns (DepositData memory deposit);
+
+// Query all deposits on a proposal, paginated
+function deposits(uint64 proposalID, bytes memory pageKey)
+    external view returns (DepositData[] memory deposits, bytes memory nextKey);
+
+// Query the current live tally of votes on a proposal
+function tallyResult(uint64 proposalID) external view returns (TallyResultData memory tallyResult);
+```
+
+### Return structs
+
+```solidity
+struct Coin { uint256 amount; string denom; }
+
+struct TallyResultData { string yes; string abstain; string no; string noWithVeto; }
+
+struct WeightedVoteOptionData { int32 option; string weight; } // weight as decimal string, e.g. "0.7"
+
+struct ProposalData {
+    uint64 id;
+    int32 status;                      // ProposalStatus enum value
+    TallyResultData finalTallyResult;
+    int64 submitTime;                  // Unix seconds
+    int64 depositEndTime;              // Unix seconds
+    Coin[] totalDeposit;
+    int64 votingStartTime;             // Unix seconds
+    int64 votingEndTime;               // Unix seconds
+    bool isExpedited;
+    bytes content;                     // proposal content as JSON
+}
+
+struct VoteData { uint64 proposalId; string voter; WeightedVoteOptionData[] options; } // voter is bech32
+
+struct DepositData { uint64 proposalId; string depositor; Coin[] amount; } // depositor is bech32
+
+struct GovParams {
+    uint64 votingPeriod;               // seconds
+    uint64 expeditedVotingPeriod;      // seconds
+    Coin[] minDeposit;
+    uint64 maxDepositPeriod;           // seconds
+    Coin[] minExpeditedDeposit;
+    string quorum;
+    string threshold;
+    string vetoThreshold;
+    string expeditedQuorum;
+    string expeditedThreshold;
+}
+```
+
+### Query notes
+
+- All query methods are `view` and non-payable; passing a non-zero `value` reverts.
+- Address arguments (`voter`, `depositor`) must be EVM addresses associated with a Sei address. For `proposals`, pass the zero address to skip that filter.
+- `tallyResult` returns the live tally without side effects — the underlying `Tally` deletes votes as it counts, but the precompile runs it on a branched context and discards the writes, so your votes are preserved.
+
+## Gas Model
+
+The Gov precompile uses **dynamic gas** — gas is metered against actual execution rather than a fixed per-method cost. This applies to both the transaction methods (`vote`, `voteWeighted`, `deposit`, `submitProposal`) and all the query methods above.
+
 ## ethers.js Examples
 
 ### Setup

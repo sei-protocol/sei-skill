@@ -366,19 +366,22 @@ seidb state-size \
 
 ### evm-logical-digest
 
-Computes a backend-independent digest of EVM *logical* state (account / code / storage canonical buckets) so a memIAVL node and a FlatKV node can be compared at the same chain height. Each FlatKV value embeds a per-key `blockHeight` stamp, so a raw physical byte-for-byte digest would diverge even when the underlying EVM state is identical; this command strips the serialization-version + blockHeight header on both sides and digests only the logical payload.
+Computes a backend-independent digest of EVM *logical* state (account / code / storage canonical buckets) so a memIAVL node and a FlatKV node can be compared at the same chain height. Each FlatKV value embeds a per-key `blockHeight` stamp, so a raw physical byte-for-byte digest would diverge even when the underlying EVM state is identical; this command strips the serialization-version + blockHeight header on both sides and digests only the logical payload. A `composite` backend additionally digests the union of flatkv (migrated) rows and memiavl (not-yet-migrated) rows so a mid-migration node can be compared against a memiavl-only or completed node.
 
 ```bash
-seidb evm-logical-digest --backend flatkv|memiavl --db-dir <dir> --height <H>
+seidb evm-logical-digest --backend flatkv|memiavl|composite --db-dir <dir> --height <H>
 ```
 
 | Flag | Short | Purpose | Default |
 |---|---|---|---|
-| `--backend` | | Backend to read: `flatkv` or `memiavl` (required) | — |
-| `--db-dir` | `-d` | For flatkv: the flatkv data dir. For memiavl: the memiavl root dir (contains `current/` and `snapshot-*`) | — |
+| `--backend` | | Backend to read: `flatkv`, `memiavl`, or `composite` (required) | — |
+| `--db-dir` | `-d` | For flatkv: the flatkv data dir. For memiavl: the memiavl root dir (contains `current/` and `snapshot-*`). Not required for `composite` (use `--flatkv-dir`/`--memiavl-dir` instead) | — |
+| `--flatkv-dir` | | Composite mode: flatkv data dir (required with `--backend composite`) | — |
+| `--memiavl-dir` | | Composite mode: memiavl root dir (contains `current/` and `snapshot-*`) (required with `--backend composite`) | — |
 | `--height` | | Target version. flatkv WAL-replays to it; memiavl resolves `snapshot-<height>/evm` (`0` = `current` symlink) | `0` |
+| `--memiavl-open-mode` | | memiavl read mode (memiavl/composite only): `snapshot` (FAST — sequential scan of the completed snapshot kvs file; requires an on-disk snapshot at `--height`, or `--height 0` for `current`) or `replay` (SLOW ~10x — replays the changelog to `--height` then walks the mmap tree; use only when no snapshot exists at the target height) | `snapshot` |
 | `--memiavl-normalization` | | memiavl normalization: `semantic`/`independent` (raw EVM key/value decoder) or `translator` (current migration mapping via `flatkv.ImportTranslator`) | `semantic` |
-| `--inspect-bucket` | | Inspect one normalized bucket (`account`, `code`, `storage`, `legacy`) instead of printing the global digest | — |
+| `--inspect-bucket` | | Inspect one normalized bucket (`account`, `code`, `storage`, `legacy`) instead of printing the global digest. Only supports `--memiavl-open-mode=snapshot`; combining it with `replay` returns an error | — |
 | `--key-offset` | | Inspect mode: byte offset into physical key before applying `--key-prefix` / sharding | `0` |
 | `--key-prefix` | | Inspect mode: hex prefix, relative to `--key-offset`, used to filter physical keys | — |
 | `--shard-next-bytes` | | Inspect mode: group matching keys by this many bytes after `--key-prefix` | `0` |

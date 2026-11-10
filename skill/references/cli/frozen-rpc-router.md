@@ -1,18 +1,20 @@
 # frozen-rpc-router
 
-`frozen-rpc-router` exposes an HTTP EVM JSON-RPC endpoint that proxies requests to a live node and any number of freeze-height-frozen nodes, routing each request by block number (added in sei-chain #frozen-rpc-router, v6.6.3).
+`frozen-rpc-router` exposes an HTTP EVM JSON-RPC endpoint that proxies requests to a live node and any number of freeze-height-frozen nodes, routing each request by block number (added in [sei-chain#4024](https://github.com/sei-protocol/sei-chain/pull/4024), shipped in v6.6.3). It is an operator tool built from a `sei-chain` checkout; it is not part of `seid`.
 
 ## Freeze height model
 
 A freeze height is an **exclusive** boundary. A node started with `seid start ... --freeze-height 100` serves blocks through height 99. The router therefore sends height 99 to that node and height 100 to the next configured interval (or to the live node).
 
-To run a frozen node, start `seid` with the `--freeze-height` flag:
+To run a frozen node, start `seid` with the `--freeze-height` flag (or set the top-level `freeze-height` key in `app.toml`). The startup constraints are in the "Freeze Height" section of [node operations](../ecosystem/node-operations.md).
 
 ```sh
-seid start --chain-id sei --inv-check-period 0 --freeze-height 100
+seid start --freeze-height 100
 ```
 
 ## Usage
+
+From the root of a `sei-chain` checkout:
 
 ```sh
 go run ./cmd/frozen-rpc-router \
@@ -38,8 +40,6 @@ make build-frozen-rpc-router
 | `--frozen-node` | — | `freeze-height=ip:port` pair; repeat once per frozen node. |
 | `--max-request-body-bytes` | `5242880` (5 MiB) | Maximum JSON-RPC request body size. Must be positive. |
 | `--max-block-reference-depth` | `16` | Maximum nested block reference depth when parsing block references. Must be positive. |
-
-
 | `--batch-request-limit` | `1000` | Maximum number of calls in a JSON-RPC batch. Must be positive. |
 | `--write-timeout` | `30s` | Maximum duration for writing an HTTP response. Must be positive. |
 | `--shutdown-timeout` | `10s` | Graceful shutdown timeout. Must be positive. |
@@ -54,10 +54,11 @@ make build-frozen-rpc-router
 - **Methods with explicit numeric block parameters** (e.g. `eth_getBlockByNumber`, `eth_getBalance`, `eth_call`, `eth_getStorageAt`, `debug_traceBlockByNumber`, and others) are routed to the frozen interval whose freeze height is greater than the requested height, or to the live node if no frozen interval covers it. The `earliest` tag routes to the lowest frozen interval (height 0).
 - **`eth_getLogs` and `eth_feeHistory`** are routed only when their entire explicit block range falls within one interval. A range crossing an interval boundary returns JSON-RPC error `-32000` (`block ranges spanning multiple frozen-node intervals are not supported`). For a notification (no `id`), no error is returned.
 - **Latest-style block tags** (`latest`, `pending`, `safe`, `finalized`), methods without block numbers, `eth_getLogs` by `blockHash`, EIP-1898 `blockHash` references, stateful filter methods, subscriptions, and WebSocket / non-POST requests all go to the **live** node.
+- **EIP-1898 `{"blockNumber": ...}` objects** are unwrapped and routed by number. A reference nested deeper than `--max-block-reference-depth` is treated as unknown and goes to the live node.
 
 ## Sei-RPC-Route response header
 
-Every HTTP response carries a `Sei-RPC-Route` header describing where the request was served:
+Responses served by a single backend carry a `Sei-RPC-Route` header describing where the request was served:
 
 - `frozen:<height>` — served entirely by the frozen node with that freeze height.
 - `live` — served entirely by the live node.
@@ -66,7 +67,7 @@ Every HTTP response carries a `Sei-RPC-Route` header describing where the reques
 ## Other error codes
 
 - `-32700` parse error (invalid JSON).
-- `-32600` invalid request.
+- `-32600` invalid request. A batch with more than `--batch-request-limit` calls is rejected with this code and the message `batch too large`.
 - `-32000` unsupported (range spanning intervals).
 - `-32001` upstream request failed.
 - Requests exceeding `--max-request-body-bytes` return HTTP `413 Request Entity Too Large`.

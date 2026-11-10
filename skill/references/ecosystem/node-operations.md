@@ -287,30 +287,31 @@ make install
 sudo systemctl restart seid
 ```
 
-
-
 ---
 
 ## Freeze Height (`--freeze-height` / `freeze-height`)
 
 Stops the node **before executing** a target block while **continuing to serve RPC** (the process and gRPC/JSON-RPC servers keep running). Unlike `halt-height`, which gracefully shuts the node down, freeze mode keeps the node alive and queryable at `freeze-height - 1`.
 
-Enable it via the start flag or the `app.toml` `BaseConfig` field (both default `0` = disabled):
+Enable it via the start flag or the top-level `freeze-height` key in `app.toml` (both default `0` = disabled):
 
 ```bash
 # CLI flag on the start command
-seid start --chain-id pacific-1 --freeze-height 12345678
+seid start --freeze-height 12345678
 ```
 
 ```toml
-# app.toml (BaseConfig section, alongside halt-height / halt-time)
+# app.toml — top-level key next to halt-height / halt-time (not under any [section])
 freeze-height = 12345678
 ```
+
+To serve historical EVM JSON-RPC from frozen nodes behind one endpoint, put [frozen-rpc-router](../cli/frozen-rpc-router.md) in front of them.
 
 ### Behavior
 
 - Block sync and consensus stop before executing the block at `freeze-height` and never advance beyond it — the node settles at `freeze-height - 1`.
-- The node keeps serving RPC while frozen (no WAL writes, no new consensus rounds).
+- The node keeps serving query RPC while frozen (no WAL writes, no new consensus rounds).
+- The node is read-only from startup: **transaction and evidence submission and mempool gossip are disabled**. Broadcasts (including `eth_sendRawTransaction`, which goes through the same path) fail with `RPC writes are disabled in freeze mode`; send transactions to a live node.
 - **State sync is disabled** when freeze mode is active and the node falls back to block sync.
 - Auto-remediation restart halts at the freeze boundary rather than restarting past it.
 
@@ -318,10 +319,10 @@ freeze-height = 12345678
 
 - `freeze-height` **cannot be combined with `halt-height` or `halt-time`**.
 - `--freeze-height` **cannot be used with grpc-only mode**.
-- **Not supported in seed mode** (`mode = seed`).
+- **Full nodes only** — not supported in validator or seed mode (`mode = "validator"` / `mode = "seed"` in `config.toml`).
 - **Not supported with Autobahn** (fails if `autobahn-config-file` is set).
 - Must **not exceed `MaxInt64`** (`9223372036854775807`).
-- Must be **above the genesis initial height** and **above the current application, block store, and state store heights** — you cannot freeze at a height the node has already reached or passed.
+- Must be **at or above the genesis initial height** and **above the current application, block store, and state store heights** — you cannot freeze at a height the node has already reached or passed.
 
 ---
 

@@ -103,9 +103,7 @@ const balance = await provider.getBalance(address); // always accurate
 
 ### State Storage (AVL vs MPT)
 - Sei uses a single global AVL-tree state root — there are no per-account state roots
-- `eth_getProof` (EIP-1186) returns proofs against the global state root, not per-account roots
-  - Storage keys must be **valid hex-encoded** values (e.g. `0x0000000000000000000000000000000000000000000000000000000000000001`). Malformed/non-hex keys are rejected with an error (`invalid storage key ...`) — they are no longer silently interpreted as raw bytes.
-  - A single request is capped at **1024 storage keys** (`MaxStorageKeysPerProof`); exceeding this returns an error (`too many storage keys: got N, max 1024`).
+- `eth_getProof` (EIP-1186) is **not supported** since v6.7.0 ([sei-chain#3926](https://github.com/sei-protocol/sei-chain/pull/3926)): it returns JSON-RPC error `-32000` `eth_getProof is not supported yet; please reach out to the Sei Labs if you need this endpoint`. Don't build light-client or storage-proof flows on it.
 - Block hash encoding differs from Ethereum — BLOCKHASH returns Tendermint header hash, not Ethereum keccak header hash
 
 ## JSON-RPC Method Availability
@@ -117,6 +115,7 @@ These methods are **registered** on Sei's EVM RPC but return JSON-RPC error code
 | Method | `error.message` |
 |---|---|
 | `eth_blobBaseFee` | `blobs not supported on this chain` |
+| `eth_getProof` | `eth_getProof is not supported yet; please reach out to the Sei Labs if you need this endpoint` (since v6.7.0) |
 | `eth_syncing` | `eth_syncing is not supported on Sei EVM RPC` |
 | `eth_newPendingTransactionFilter` | `eth_newPendingTransactionFilter is not supported on Sei EVM RPC` |
 | `debug_getRawBlock` | `debug_getRawBlock is not supported on Sei EVM RPC` |
@@ -165,21 +164,29 @@ Example allowlist-rejection response:
 
 
 
-### Deprecated `sei_*` / `sei2_*` JSON-RPC Namespaces
+### Legacy `sei_*` JSON-RPC Methods (three remain; `sei2_*` removed)
 
-The `sei_*` and `sei2_*` JSON-RPC surfaces (EVM HTTP endpoint only — not the Cosmos REST API on port 1317) are **deprecated and scheduled for removal**. Do not build new integrations on them; migrate to standard `eth_*` / `debug_*` methods and documented replacements.
+As of sei-chain v6.7.0 the legacy Sei JSON-RPC surface (EVM HTTP endpoint only — not WebSocket, and not the Cosmos REST API on port 1317) is down to three deprecated helper methods:
 
-**Gating by allowlist.** Which gated `sei_*` / `sei2_*` methods a node serves is controlled by `[evm] enabled_legacy_sei_apis` in `app.toml` (also settable via the AppOptions/CLI flag `evm.enabled_legacy_sei_apis`). Both prefixes share the same allowlist.
+- `sei_getSeiAddress` — EVM address → `sei1...` address
+- `sei_getEVMAddress` — `sei1...` address → EVM address
+- `sei_getCosmosTx` — EVM tx hash → Cosmos tx hash
 
-- **Default allowlist** (from `seid init` / `DefaultConfig`) enables only the three address/Cosmos helpers: `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`. All other gated methods appear commented out in the generated template and must be explicitly enabled.
-- Names are matched **case-insensitively** against the canonical method names.
+Everything else is **gone**, not just disabled:
 
-**Behavior of gated calls (all responses are HTTP 200):**
+- The whole `sei2_*` namespace (block getters that included bank transfers) was removed ([sei-chain#3912](https://github.com/sei-protocol/sei-chain/pull/3912)). Calls return the standard `-32601` `the method sei2_... does not exist/is not available`.
+- All other `sei_*` methods — block, receipt, and transaction-count getters and their `*ExcludeTraceFail` variants, filters and logs, `sei_getTransactionReceipt`, `sei_sign`, and `sei_associate` — were removed ([sei-chain#3924](https://github.com/sei-protocol/sei-chain/pull/3924), [#3927](https://github.com/sei-protocol/sei-chain/pull/3927), [#3945](https://github.com/sei-protocol/sei-chain/pull/3945)). The `sei_traceBlockBy*ExcludeTraceFail` endpoints were already removed in v6.6.0.
 
-- **Disabled** (method not in the allowlist, or an unrecognized `sei_*` / `sei2_*` name — the gate fails closed): returns a JSON-RPC `error` object with code `-32601`, a message explaining the method is not enabled and deprecated, and `error.data` set to the string `"legacy_sei_deprecated"`.
-- **Allowed**: the call passes through to the handler **unchanged** (JSON body is not mutated); the response additionally sets the optional HTTP header `Sei-Legacy-RPC-Deprecation` signaling deprecation.
+Use the standard `eth_*` / `debug_*` methods instead (e.g. `eth_getBlockByNumber`, `eth_getBlockReceipts`, `eth_getTransactionReceipt`, `eth_getLogs`, `debug_traceBlockByNumber`). To associate addresses, use the Addr precompile or send any transaction (see [addresses-wallets.md](../addresses-wallets.md)).
 
-Example disabled-method response:
+**Gating by allowlist.** The three remaining methods are served only if listed in `[evm] enabled_legacy_sei_apis` in `app.toml` (also settable via the AppOptions key `evm.enabled_legacy_sei_apis`). `seid init` / `DefaultConfig` lists all three, and names are matched case-insensitively. Other names in the list are ignored — they cannot bring a removed method back.
+
+**Behavior over HTTP (all responses are HTTP 200):**
+
+- **Any other `sei_*` name** — a removed method, a typo, or one of the three left out of the allowlist — is rejected by the gate (it fails closed) with JSON-RPC code `-32601`, `error.data` `"legacy_sei_deprecated"`, and a message saying the method is not enabled on this node. The message suggests adding the method to `enabled_legacy_sei_apis`, but that only works for the three remaining methods.
+- **Allowed** calls pass through to the handler **unchanged** (JSON body is not mutated); the response may also set the HTTP header `Sei-Legacy-RPC-Deprecation`.
+
+Example response for a removed method:
 
 ```json
 {
@@ -187,13 +194,13 @@ Example disabled-method response:
   "id": 42,
   "error": {
     "code": -32601,
-    "message": "sei_sign is not enabled on this node. The sei_* and sei2_* JSON-RPC surfaces are deprecated...",
+    "message": "sei_sign is not enabled on this node. The sei_* JSON-RPC surface is deprecated, scheduled for removal, and should not be used for new integrations - ...",
     "data": "legacy_sei_deprecated"
   }
 }
 ```
 
-Example `app.toml` to enable an additional gated method:
+Default `app.toml`:
 
 ```toml
 [evm]
@@ -201,27 +208,8 @@ enabled_legacy_sei_apis = [
   "sei_getSeiAddress",
   "sei_getEVMAddress",
   "sei_getCosmosTx",
-  "sei_getBlockByNumber",
 ]
 ```
-
-### Removed `sei_*` Trace-Block ExcludeTraceFail Endpoints
-
-As of sei-chain v6.6.0, the `sei_traceBlockByNumberExcludeTraceFail` and `sei_traceBlockByHashExcludeTraceFail` JSON-RPC endpoints (enhanced variants of `debug_traceBlockByNumber` / `debug_traceBlockByHash` that excluded pre-state-check failures) have been **removed entirely** from the EVM RPC server. They no longer appear in the `enabled_legacy_sei_apis` allowlist and are no longer registered on the `sei` namespace.
-
-Migrate to the standard `debug_traceBlockByNumber` / `debug_traceBlockByHash` methods. Note the corresponding `sei2_*ExcludeTraceFail` **block** getters (below) are unaffected — only the two `sei_*` trace-block endpoints were removed.
-
-### `sei2_*` Block Namespace
-
-The `sei2` namespace exposes the same **block** JSON-RPC shape as `sei` blocks, but with **bank transfers included** in the block payloads (HTTP only). There are seven `sei2_*` methods — block, block receipts, and transaction-count getters plus `*ExcludeTraceFail` variants — and **no** `sei2` transaction or filter API. They are gated by the same `enabled_legacy_sei_apis` allowlist (and are commented out by default).
-
-- `sei2_getBlockByHash`
-- `sei2_getBlockByHashExcludeTraceFail`
-- `sei2_getBlockByNumber`
-- `sei2_getBlockByNumberExcludeTraceFail`
-- `sei2_getBlockReceipts`
-- `sei2_getBlockTransactionCountByHash`
-- `sei2_getBlockTransactionCountByNumber`
 
 ## What Works Unchanged
 

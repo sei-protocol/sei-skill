@@ -31,21 +31,12 @@ Until a user submits any transaction, the chain doesn't know the public key behi
 | Signed message (off-chain) | Medium | Sign a message in wallet, submit via Addr precompile |
 | Public key direct | Medium | Submit public key hex via `associatePubKey()` |
 | Private key | High | Never recommended |
-| Gasless (`sei_associate`) | Low | Special RPC method — no gas needed |
 
 **Recommended**: the easiest way to associate is to simply make any transaction (buy testnet SEI from faucet, send to yourself, etc.). The association happens automatically on first on-chain activity.
 
-### Gasless Association (`sei_associate`)
+### No more `sei_associate` RPC (removed in v6.7.0)
 
-Users can associate without paying gas via a special JSON-RPC method:
-
-```javascript
-// Gasless association — sign with EVM wallet, no gas needed
-const result = await provider.send("sei_associate", [{
-  // Parameters include signature over a custom message
-  // See sei-docs/evm/precompiles/cosmwasm-precompiles/addr.mdx for full spec
-}]);
-```
+The gasless `sei_associate` JSON-RPC method was removed in sei-chain v6.7.0 along with the other legacy `sei_*` methods; calls now fail with `-32601`. For a user who holds no SEI, have a sponsor submit the Addr precompile's `associate(v, r, s, customMessage)`: it links the addresses of whoever **signed** `customMessage`, not the caller, so the sponsor pays the gas.
 
 ### Programmatic Association in Solidity
 

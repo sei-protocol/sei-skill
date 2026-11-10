@@ -213,7 +213,7 @@ cat > migration_param_change_proposal.json << 'EOF'
       "value": "12345"
     }
   ],
-  "deposit": "10000000usei",
+  "deposit": "3500000000usei",
   "is_expedited": false
 }
 EOF

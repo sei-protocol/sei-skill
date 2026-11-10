@@ -152,11 +152,9 @@ seid tx slashing unjail \
 
 > Note: There is no slashing of funds in Sei — jailing only excludes the validator from block signing and rewards; delegator tokens are safe.
 
-
-
 #### Unjail via the Slashing Precompile (EVM)
 
-A validator operator can also unjail from an EVM transaction by calling the `unjail()` method on the Slashing precompile at `0x0000000000000000000000000000000000001014`. This is useful for operators managing their validator from an EVM wallet or contract.
+Since the v6.7 upgrade ([sei-chain#3825](https://github.com/sei-protocol/sei-chain/pull/3825)), a validator operator can also unjail from an EVM transaction by calling the `unjail()` method on the Slashing precompile at `0x0000000000000000000000000000000000001014`. This is useful for operators managing their validator from an EVM wallet or contract.
 
 ```solidity
 address constant SLASHING_PRECOMPILE_ADDRESS = 0x0000000000000000000000000000000000001014;
@@ -177,6 +175,7 @@ Behavior and constraints:
 - Non-payable (`stateMutability: nonpayable`) — sending value reverts.
 - State-mutating: it **cannot** be invoked via `delegatecall` or `staticcall` (both revert).
 - Takes no arguments and returns `(bool success)`.
+- To let another account (e.g. a monitoring bot) unjail for you, call `grantUnjailAuthorization(grantee, expiration)` from the operator's EVM address; the grantee then calls `unjailWithAuthorization(operatorEvmAddress)`. Revoke with `revokeUnjailAuthorization(grantee)`. See [auth-authz-and-query-precompiles.md](../precompiles/auth-authz-and-query-precompiles.md) for the full Slashing interface.
 
 ### Update Commission
 

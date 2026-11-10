@@ -61,10 +61,9 @@ function getProposals(uint32 proposalStatus, uint32 pageLimit, string memory pag
     external view returns (Proposal[] memory);
 ```
 
-
 ## Query Methods (view)
 
-The Gov precompile exposes on-chain query methods accessible from EVM contracts. The vote and deposit queries are named `getVote`/`getDeposit` (not overloaded onto the `vote`/`deposit` transaction methods) because overloaded function names break common tooling like ethers.js.
+Since the v6.7 upgrade ([sei-chain#3767](https://github.com/sei-protocol/sei-chain/pull/3767)), the Gov precompile exposes on-chain query methods accessible from EVM contracts. The vote and deposit queries are named `getVote`/`getDeposit` (not overloaded onto the `vote`/`deposit` transaction methods) because overloaded function names break common tooling like ethers.js.
 
 ```solidity
 // Query a single proposal by ID

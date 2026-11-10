@@ -100,10 +100,9 @@ function all_balances(string memory accountAddress)
     external view returns (Coin[] memory);
 ```
 
-
 ### Additional view methods
 
-These read-only view methods mirror the bank module's gRPC queries. All are `view` and non-payable.
+These read-only view methods (added in the v6.7 upgrade, [sei-chain#3767](https://github.com/sei-protocol/sei-chain/pull/3767)) mirror the bank module's gRPC queries. All are `view` and non-payable.
 
 ```solidity
 // Spendable (non-locked) balances for an account, paginated

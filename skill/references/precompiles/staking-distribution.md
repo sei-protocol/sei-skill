@@ -80,7 +80,7 @@ function withdrawValidatorCommission(string memory validatorAddress) external re
 
 ### Distribution Query Functions
 
-The Distribution precompile (`0x1007`) exposes read-only view methods for inspecting rewards, commission, slashes, and module state (added in #3618). Validator addresses use the `seivaloper1...` bech32 format; delegator addresses are passed as EVM `address` (must be associated with a Sei address).
+The Distribution precompile (`0x1007`) exposes read-only view methods for inspecting rewards, commission, slashes, and module state (added in the v6.7 upgrade, [sei-chain#3767](https://github.com/sei-protocol/sei-chain/pull/3767)). Validator addresses use the `seivaloper1...` bech32 format; delegator addresses are passed as EVM `address` (must be associated with a Sei address).
 
 ```solidity
 struct Coin {

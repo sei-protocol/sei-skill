@@ -163,17 +163,19 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 
 - **RocksDB SS backend** (optional): faster for iteration-heavy work (`debug_trace*`, large archive queries). Build with `make build-rocksdb && make install-rocksdb`, then set `ss-backend = "rocksdb"`. RocksDB RPC nodes must state-sync on first start.
 - **Giga SS Store** (optional, RPC nodes): splits the **State Store** so EVM state lives in its own SS DB. Controlled by a single bool — `evm-ss-split = true` (Sei v6.5+; older releases used per-key `evm-ss-write-mode`/`evm-ss-read-mode`). Requires a **fresh state sync** — flipping it on a node with existing data fails startup safety checks. **SC config is left untouched.** See the [Giga SS Store Migration Guide](https://docs.sei.io/node/giga-storage-migration).
-- **Giga Storage (SC FlatKV routing)** is a *separate*, broader option that routes EVM **State Commit** data through FlatKV, controlled by the single `sc-write-mode` key:
+- **Giga Storage (SC FlatKV routing)** is a *separate*, broader option that routes EVM **State Commit** data through FlatKV. Since v6.7.0 the migration is **governance-driven**: `state-commit.sc-write-mode-enable-auto` defaults to `true` (it is not rendered into `app.toml`), which runs the node in `auto` and **ignores** `sc-write-mode`. The per-block drain rate is the on-chain param `migration.NumKeysToMigratePerBlock` (default `0` = paused), set by governance — see [staking-governance.md](staking-governance.md). The old `sc-keys-to-migrate-per-block` key was removed.
 
   ```toml
   [state-commit]
+  # Ignored while sc-write-mode-enable-auto is true (the default).
   # Valid: memiavl_only (default), migrate_evm, evm_migrated, migrate_all_but_bank,
-  # all_migrated_but_bank, migrate_bank, flatkv_only.  (test_only_dual_write is
-  # test-only — never in production.) There is NO sc-read-mode and NO
+  # all_migrated_but_bank, migrate_bank, flatkv_only, auto. (test_only_dual_write
+  # is test-only — never in production.) There is NO sc-read-mode and NO
   # sc-enable-lattice-hash key; the evm_lattice app-hash handling is internal.
   sc-write-mode = "memiavl_only"
-  # Keys drained memiavl→FlatKV per block while migrating (migrate_* modes):
-  sc-keys-to-migrate-per-block = 1024
+  # Only to pin an explicit mode — a pinned node does not follow the
+  # governance-driven migration and diverges once the chain migrates:
+  # sc-write-mode-enable-auto = false
   ```
 
   The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules.
@@ -213,12 +215,11 @@ enabled_legacy_sei_apis = [
 
 > **Docker localnet** (`docker/localnode/config/app.toml`) enables every gated method **except `sei_sign`** so integration tests can exercise the disabled-method path. Production `seid init` defaults remain the three-method allowlist above — expand only if you must keep legacy consumers working during migration.
 
-
 ---
 
 ## `debug_trace*` tracer gating (`[evm] trace_allowed_tracers` / `trace_allow_js_tracers`)
 
-Since v6.7.0 (#, PR introducing these fields) caller-supplied `TraceConfig.Tracer` values on `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile` are gated by two `[evm]` fields in `app.toml`. This is a deliberate deviation from upstream geth, which accepts any supported tracer (including request-supplied JavaScript) by default.
+Since v6.7.0 ([sei-chain#3718](https://github.com/sei-protocol/sei-chain/pull/3718)) caller-supplied `TraceConfig.Tracer` values on `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile` are gated by two `[evm]` fields in `app.toml`. This is a deliberate deviation from upstream geth, which accepts any supported tracer (including request-supplied JavaScript) by default.
 
 ```toml
 [evm]

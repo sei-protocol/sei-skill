@@ -1,8 +1,14 @@
-# Query precompiles (Auth, Authz, Evidence, Feegrant, Mint, Params, Slashing, Upgrade)
+# Query precompiles (Auth, Authz, Evidence, Mint, Params, Slashing, Upgrade)
 
-Eight view-only precompiles that expose Cosmos module queries to EVM contracts. All are registered in the fail-fast precompile address list and in `GetCustomPrecompiles`. All methods are `view` (no state mutation): `IsTransaction` returns `false` for every method. Each precompile branches the context (`ctx.CacheContext()`) before running a view and discards the writes, so queriers with side effects (e.g. auth `nextAccountNumber` increments a counter) stay read-only. Sending non-zero `value` to any method reverts (`ValidateNonPayable`). Methods taking an `address` require the address to be associated with a Sei address, or the call reverts.
+Seven precompiles that expose Cosmos module queries to EVM contracts. They are new in the v6.7 upgrade (sei-chain v6.7.0, [sei-chain#3767](https://github.com/sei-protocol/sei-chain/pull/3767)) and live on both mainnet (pacific-1) and testnet (atlantic-2). Every method on this page is a `view` except Slashing's four transaction methods.
 
-All use dynamic gas (`pcommon.NewDynamicGasPrecompile`). First shipped at version `v6.6`.
+- Views run on a branched context (`ctx.CacheContext()`) whose writes are discarded, so queriers with side effects (e.g. auth `nextAccountNumber` increments a counter) stay read-only.
+- Sending non-zero `value` to any method reverts.
+- Methods taking an `address` require that address to be associated with a Sei address, or the call reverts. The zero address is rejected (`invalid addr`).
+- All use dynamic gas.
+- The canonical Solidity interfaces are in sei-chain at `precompiles/<module>/<Module>.sol` (e.g. `precompiles/slashing/Slashing.sol`).
+
+> **There is no Feegrant precompile.** v6.7 removed the feegrant module ([sei-chain#3958](https://github.com/sei-protocol/sei-chain/pull/3958)). Nothing is registered at `0x0000000000000000000000000000000000001010`; calls to it return empty data, so a typed call fails to decode.
 
 ## Auth — `0x000000000000000000000000000000000000100D`
 
@@ -15,7 +21,7 @@ Interface `IAuth`. Methods:
 
 ## Authz — `0x000000000000000000000000000000000000100E`
 
-Interface `IAuthz`. Authorization fields are returned as JSON-encoded `bytes`. Methods:
+Interface `IAuthz`. Read-only queries over native authz grants, including the scoped grants that the staking, distribution, gov, and slashing precompiles create with their `grant*Authorization` methods. Authorization fields are returned as JSON-encoded `bytes`. Methods:
 
 - `grants(address granter, address grantee, string msgTypeUrl, bytes pageKey)` → `GrantsResponse{Grant[] grants, bytes nextKey}` where `Grant{bytes authorization, int64 expiration}`. Empty `msgTypeUrl` means no filter; `expiration` is Unix seconds.
 - `granterGrants(address granter, bytes pageKey)` → `GrantAuthorizationsResponse{GrantAuthorization[] grants, bytes nextKey}` where `GrantAuthorization{string granter, string grantee, bytes authorization, int64 expiration}`.
@@ -27,14 +33,6 @@ Interface `IEvidence`. Evidence entries are JSON-encoded `bytes`. Methods:
 
 - `evidence(bytes evidenceHash)` → `bytes` — JSON of the evidence with the given hash; reverts if not found.
 - `allEvidence(bytes pageKey)` → `AllEvidenceResponse{bytes[] evidenceList, bytes nextKey}` — each entry JSON-encoded.
-
-## Feegrant — `0x0000000000000000000000000000000000001010`
-
-Interface `IFeegrant`. The `allowance` field of each grant is JSON-encoded `bytes`. Methods:
-
-- `allowance(address granter, address grantee)` → `Grant{string granter, string grantee, bytes allowance}` — reverts with `no allowance found` if none exists.
-- `allowances(address grantee, bytes pageKey)` → `AllowancesResponse{Grant[] allowances, bytes nextKey}`.
-- `allowancesByGranter(address granter, bytes pageKey)` → same `AllowancesResponse`.
 
 ## Mint — `0x0000000000000000000000000000000000001012`
 
@@ -51,11 +49,14 @@ Interface `IParams`. Method:
 
 ## Slashing — `0x0000000000000000000000000000000000001014`
 
-Interface `ISlashing`. Time fields are Unix seconds. Unlike the other precompiles in this file, Slashing now exposes one state-mutating transaction method (`unjail`); its `IsTransaction` returns `true` for `unjail` and `false` for all query methods.
+Interface `ISlashing`. Time fields are Unix seconds. Unlike the other precompiles on this page, Slashing has four state-mutating transaction methods ([sei-chain#3825](https://github.com/sei-protocol/sei-chain/pull/3825), [sei-chain#3893](https://github.com/sei-protocol/sei-chain/pull/3893)).
 
-Transaction method:
+Transaction methods. All are non-payable and **cannot** be invoked via `delegatecall` (reverts `cannot delegatecall slashing`) or `staticcall` (reverts `cannot call slashing precompile from staticcall`):
 
-- `unjail()` → `bool success` — unjails the validator whose operator address is the caller's associated Sei address (added via #, slashing precompile unjail feature). Non-payable (reverts on non-zero `value`). **Cannot** be invoked via `delegatecall` (reverts `cannot delegatecall slashing`) or `staticcall` (reverts `cannot call slashing precompile from staticcall`). Reverts if the caller has no associated Sei address, or if that address is not a validator operator (fails `MsgUnjail` validation / the slashing keeper). Internally calls the slashing `MsgServer.Unjail` with `NewMsgUnjail(sdk.ValAddress(seiAddr))`.
+- `unjail()` → `bool success` — unjails the validator whose operator address is the caller's associated Sei address. Reverts if the caller has no associated Sei address or that address is not a validator operator (the slashing module's `MsgUnjail` runs with `sdk.ValAddress(seiAddr)`).
+- `grantUnjailAuthorization(address grantee, int64 expiration)` → `bool success` — lets `grantee` unjail the caller's validator until `expiration` (Unix seconds; must be after the current block time). Creates a native authz grant for `MsgUnjail`.
+- `unjailWithAuthorization(address validatorOperator)` → `bool success` — called by a grantee to unjail `validatorOperator`'s validator using that grant. Reverts if no unexpired grant exists.
+- `revokeUnjailAuthorization(address grantee)` → `bool success` — removes the grant; reverts with `authorization not found` if there is none.
 
 Query methods (all `view`, no state mutation):
 
@@ -72,20 +73,26 @@ Interface `IUpgrade`. Methods:
 - `upgradedConsensusState(int64 lastHeight)` → `bytes consensusState` — empty bytes if none stored (no error).
 - `moduleVersions(string moduleName)` → `ModuleVersion[]{string name, uint64 version}` — empty `moduleName` returns all modules; a specific name returns one entry and reverts if the module is unknown.
 
-## Example (ethers.js)
+## Example (ethers.js v6)
+
+These methods are new in v6.7, so the example uses human-readable ABI fragments rather than a packaged ABI that may predate them:
 
 ```js
+import { ethers } from "ethers";
+
+const provider = new ethers.JsonRpcProvider("https://evm-rpc-testnet.sei-apis.com");
+
 const auth = new ethers.Contract(
   "0x000000000000000000000000000000000000100D",
-  IAuthAbi,
+  ["function account(address addr) view returns (tuple(string accountAddress, uint64 accountNumber, uint64 sequence) account)"],
   provider
 );
-const account = await auth.account("0xYourEvmAddress");
+const account = await auth.account("0xYourAssociatedEvmAddress");
 console.log(account.accountAddress, account.accountNumber.toString());
 
 const slashing = new ethers.Contract(
   "0x0000000000000000000000000000000000001014",
-  ISlashingAbi,
+  ["function params() view returns (tuple(int64 signedBlocksWindow, string minSignedPerWindow, uint64 downtimeJailDuration, string slashFractionDoubleSign, string slashFractionDowntime) params)"],
   provider
 );
 const p = await slashing.params();
@@ -95,5 +102,4 @@ console.log(p.signedBlocksWindow.toString(), p.slashFractionDowntime);
 ## Notes
 
 - Paginated methods take a `bytes pageKey` (empty bytes for the first page) and return a `bytes nextKey` (empty when the final page is reached).
-- Fields typed as `bytes` holding authorizations, allowances, or evidence are JSON encodings of the underlying protobuf `Any`, produced by `codec.MarshalAsJSON`; decode them as JSON (look for the `@type` field), not ABI.
-- Each precompile package exposes its address constant in Go (e.g. `auth.AuthAddress`, `authz.AuthzAddress`, `evidence.EvidenceAddress`, `feegrant.FeegrantAddress`, `mint.MintAddress`, `params.ParamsAddress`, `slashing.SlashingAddress`, `upgrade.UpgradeAddress`).
+- Fields typed as `bytes` holding authorizations or evidence are JSON encodings of the underlying protobuf `Any`, produced by `codec.MarshalAsJSON`; decode them as JSON (look for the `@type` field), not ABI.

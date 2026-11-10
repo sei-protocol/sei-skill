@@ -23,10 +23,16 @@ Precompiles are fixed-address contracts deployed by the Sei protocol that expose
 | PointerView | `0x000000000000000000000000000000000000100A` | Query pointer registrations |
 | Pointer | `0x000000000000000000000000000000000000100B` | Register pointer contracts |
 | Solo | `0x000000000000000000000000000000000000100C` | Claim/migrate legacy CW20 and CW721 tokens to EVM |
+| Auth | `0x000000000000000000000000000000000000100D` | Query accounts, account numbers, auth params (v6.7+) |
+| Authz | `0x000000000000000000000000000000000000100E` | Query authz grants (v6.7+) |
+| Evidence | `0x000000000000000000000000000000000000100F` | Query submitted evidence (v6.7+) |
 | P256Verify | `0x0000000000000000000000000000000000001011` | Verify P-256 (secp256r1) signatures on-chain |
-| Slashing | `0x0000000000000000000000000000000000001014` | Query signing info/params; also `unjail()` transaction for validator operators |
+| Mint | `0x0000000000000000000000000000000000001012` | Query mint params and minter state (v6.7+) |
+| Params | `0x0000000000000000000000000000000000001013` | Query any module param by subspace/key (v6.7+) |
+| Slashing | `0x0000000000000000000000000000000000001014` | Query signing info/params; `unjail` transactions for validator operators (v6.7+) |
+| Upgrade | `0x0000000000000000000000000000000000001015` | Query upgrade plans and module versions (v6.7+) |
 
-> Slashing precompile is not purely read-only: alongside its query methods (`params`, `signingInfo`, `signingInfos`) it exposes a state-mutating transaction `unjail()` that returns `(bool success)`. `unjail()` unjails the validator whose operator address is the caller's associated Sei address. It is non-payable and cannot be invoked via `delegatecall` or `staticcall` — calls that attempt either revert. The caller's EVM address must be associated with a Sei address that is a validator operator.
+> The v6.7 query precompiles (Auth through Upgrade) are documented in [auth-authz-and-query-precompiles.md](auth-authz-and-query-precompiles.md). Slashing is not purely read-only: it also has `unjail()`, `unjailWithAuthorization`, and grant/revoke methods. `0x0000000000000000000000000000000000001010` is unassigned — v6.7 removed the feegrant module, so there is no Feegrant precompile.
 
 > Note: CosmWasm, CosmWasm bridge (Bank, IBC), and Solo precompiles are marked legacy because CosmWasm is deprecated per SIP-3. Bank and the pointer precompiles remain functional for existing integrations. **The IBC precompile does not** — IBC is closed in both directions (Props 116/120 inbound, 121 outbound), so its `transfer` reverts.
 
@@ -137,6 +143,7 @@ contract LiquidStaking {
 - **Staking + Distribution:** [staking-distribution.md](staking-distribution.md)
 - **Governance:** [governance.md](governance.md)
 - **JSON + P256:** [json-p256.md](json-p256.md)
+- **Auth, Authz, Evidence, Mint, Params, Slashing, Upgrade:** [auth-authz-and-query-precompiles.md](auth-authz-and-query-precompiles.md)
 - **Addr, Bank, CosmWasm, IBC, Pointer, PointerView:** [cosmwasm-bridge.md](cosmwasm-bridge.md)
 - **Oracle:** See [oracles.md](../ecosystem/oracles.md#native-oracle-precompile)
 

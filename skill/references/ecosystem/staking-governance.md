@@ -191,12 +191,11 @@ seid tx gov submit-proposal param-change proposal.json \
   --fees 20000usei
 ```
 
-
 #### Driving the SC memiavl→flatkv migration (`migration` subspace)
 
-The per-block state-commit (SC) migration rate is an on-chain governance param, **not** an `app.toml` config. The former `state-commit.sc-keys-to-migrate-per-block` field was removed; the rate now lives in the `migration` subspace under key `NumKeysToMigratePerBlock` and is raised via a `ParameterChangeProposal`.
+Since v6.7.0 ([sei-chain#3650](https://github.com/sei-protocol/sei-chain/pull/3650)) the per-block state-commit (SC) migration rate is an on-chain governance param, **not** an `app.toml` config. The former `state-commit.sc-keys-to-migrate-per-block` field was removed; the rate now lives in the `migration` subspace under key `NumKeysToMigratePerBlock` and is raised via a `ParameterChangeProposal`.
 
-- Default is `0` (migration **paused**); valid range is `0`–`1000000` (a proposal above the max is rejected at submission).
+- Default is `0` (migration **paused**); valid range is `0`–`1000000` — larger values fail the parameter's validation (`NumKeysToMigratePerBlock must be <= 1000000`).
 - Every validator reads the param in `BeginBlock`, so all nodes drain at the identical rate once it passes — a per-node config would diverge the AppHash.
 - The value is a **string** in the proposal JSON (e.g. `"12345"`).
 
@@ -233,9 +232,8 @@ seid q params subspace migration NumKeysToMigratePerBlock --output json \
 ```
 
 **Operator notes:**
-- A node only follows the governance-driven migration when running in **auto** write mode. As of v6.7.0 the new `state-commit.sc-write-mode-enable-auto` config defaults to `true`, which forces auto and ignores any explicit `sc-write-mode`. To pin a specific `sc-write-mode` (e.g. `flatkv_only`, `memiavl_only`, `test_only_dual_write`) you must also set `sc-write-mode-enable-auto = false` — otherwise the node runs in auto and will diverge if it was meant to stay pinned.
-- A `seid export` taken mid-migration omits `NumKeysToMigratePerBlock` (the `migration` subspace has no owning module in genesis). Re-issue the `ParameterChangeProposal` on the new chain to resume the drain.
-
+- A node only follows the governance-driven migration when running in **auto** write mode. As of v6.7.0, `state-commit.sc-write-mode-enable-auto` defaults to `true` (it is not written into `app.toml` unless you add it), which forces auto and ignores any explicit `sc-write-mode`. In auto the effective mode comes from the on-disk migration state, advanced by `NumKeysToMigratePerBlock`, so no `app.toml` edit is needed when governance starts the migration.
+- To pin an explicit `sc-write-mode` (e.g. `memiavl_only`, `flatkv_only`, `evm_migrated`) you must also set `sc-write-mode-enable-auto = false`; only then is `sc-write-mode` honored. A pinned node does not take part in the governance-driven migration and diverges from the network once the chain migrates.
 
 ### Software Upgrade Proposal
 

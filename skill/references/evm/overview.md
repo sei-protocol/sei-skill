@@ -128,11 +128,9 @@ These methods are **registered** on Sei's EVM RPC but return JSON-RPC error code
 - `eth_newPendingTransactionFilter` — Sei has instant finality and does not expose Ethereum-style pending tx filters on this RPC.
 - `debug_getRaw*` — raw RLP block/header/receipt/tx payloads are not served on this surface.
 
-
-
 ### `debug_trace*` Tracer Allowlist Gating
 
-Unlike upstream geth (which accepts any registered tracer, including request-supplied JavaScript, by default), Sei **gates** caller-supplied `TraceConfig.Tracer` values on `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile`. Validation runs before any tracer is constructed; when `Tracer` is omitted the default struct logger is always available.
+Since v6.7.0 ([sei-chain#3718](https://github.com/sei-protocol/sei-chain/pull/3718)), unlike upstream geth (which accepts any registered tracer, including request-supplied JavaScript, by default), Sei **gates** caller-supplied `TraceConfig.Tracer` values on `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile`. Validation runs before any tracer is constructed; when `Tracer` is omitted the default struct logger is always available.
 
 Two `[evm]` fields in `app.toml` control this:
 

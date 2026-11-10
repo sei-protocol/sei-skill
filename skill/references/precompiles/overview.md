@@ -84,8 +84,8 @@ const staking = new ethers.Contract(
   signer
 );
 
-// Call precompile functions
-const validators = await staking.validators("BONDED", 10, "");
+// Call precompile functions (status is a Cosmos BondStatus name; "0x" = first page)
+const { validators, nextKey } = await staking.validators("BOND_STATUS_BONDED", "0x");
 ```
 
 ## Quick Interaction Pattern (Viem)
@@ -118,10 +118,7 @@ interface IStaking {
 }
 
 interface IDistribution {
-    function withdrawDelegatorReward(
-        address delegatorAddress,
-        string memory validatorAddress
-    ) external returns (bool);
+    function withdrawDelegationRewards(string memory validator) external returns (bool);
 }
 
 contract LiquidStaking {
@@ -129,11 +126,11 @@ contract LiquidStaking {
     address constant DISTRIBUTION = 0x0000000000000000000000000000000000001007;
 
     function stakeAndClaimRewards(string memory validator) external payable {
-        // Delegate
+        // Delegate (msg.value must be a whole number of usei: a multiple of 1e12 wei)
         IStaking(STAKING).delegate{value: msg.value}(validator);
 
-        // Claim pending rewards
-        IDistribution(DISTRIBUTION).withdrawDelegatorReward(address(this), validator);
+        // Claim this contract's pending rewards from that validator
+        IDistribution(DISTRIBUTION).withdrawDelegationRewards(validator);
     }
 }
 ```
@@ -149,7 +146,7 @@ contract LiquidStaking {
 
 ## Important Notes
 
-1. **Amounts in wei (18 decimals)** — `1 SEI = 1e18 wei`; always convert amounts accordingly
+1. **Units differ by parameter** — `msg.value` is wei (`1 SEI = 1e18 wei`). The staking, governance, and CosmWasm payable methods require a whole number of usei (a multiple of `1e12` wei) and revert otherwise; Bank `sendNative` accepts any wei amount. Some `uint256` amount parameters are usei (`1 SEI = 1e6 usei`), e.g. staking `undelegate`/`redelegate`. Check each method's page
 2. **Precompiles are only available on Sei** — unit tests without fork testing will fail when calling precompile addresses; use `--fork-url` in Foundry or `forking` in Hardhat
 3. **Events are emitted** — all precompiles emit events for indexing; use `eth_getLogs` or The Graph
 4. **No approval needed** — precompiles don't use ERC20 approve patterns; value is passed as `msg.value` (payable) or directly as parameters

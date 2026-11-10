@@ -113,8 +113,8 @@ STAKING(0x1005).delegate{value: amount}(validatorAddress);
 // Undelegate: amount in usei (6 decimals), not wei
 STAKING(0x1005).undelegate(validatorAddress, amountInUsei);
 
-// Claim rewards
-DISTRIBUTION(0x1007).withdrawDelegatorReward(validatorAddress);
+// Claim the caller's rewards from one validator
+DISTRIBUTION(0x1007).withdrawDelegationRewards(validatorAddress);
 ```
 
 **Critical**: `delegate` is `payable` (send wei). `undelegate`/`redelegate` take amounts in **usei** (1 SEI = 1,000,000 usei).
@@ -179,12 +179,13 @@ cat > proposal.json << 'EOF'
       "key": "MaxValidators",
       "value": 125
     }
-  ]
+  ],
+  "deposit": "3500000000usei"
 }
 EOF
 
+# param-change reads the deposit from the JSON file; it has no --deposit flag
 seid tx gov submit-proposal param-change proposal.json \
-  --deposit 3500000000usei \
   --from mykey \
   --chain-id pacific-1 \
   --node https://rpc.sei-apis.com \

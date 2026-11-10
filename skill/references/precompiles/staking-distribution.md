@@ -17,7 +17,8 @@ description: Delegate, undelegate, and claim staking rewards from EVM contracts 
 ### Core Transaction Functions
 
 ```solidity
-// Delegate SEI to a validator (value = amount in wei)
+// Delegate SEI to a validator (value = amount in wei; must be a whole number of usei,
+// i.e. a multiple of 1e12 wei, or the call reverts)
 function delegate(string memory validatorAddress) external payable returns (bool);
 
 // Undelegate from validator (amount in usei: 1 SEI = 1,000,000 usei)
@@ -34,27 +35,35 @@ function redelegate(
 ### Query Functions
 
 ```solidity
-// Get all validators with a given status and optional pagination
-// Pagination is cursor-based: pass nextKey from previous ValidatorsResponse; "" for first page
-struct Validator { string operatorAddress; /* ... */ }
+// Validators with a given status: "BOND_STATUS_BONDED", "BOND_STATUS_UNBONDING",
+// "BOND_STATUS_UNBONDED", or "" for all (any other string, e.g. "BONDED", reverts).
+// Cursor pagination: pass nextKey from the previous response; empty bytes for the first page.
+struct Validator { string operatorAddress; bytes consensusPubkey; bool jailed; int32 status; string tokens; /* ... */ }
 struct ValidatorsResponse { Validator[] validators; bytes nextKey; }
 function validators(string memory status, bytes memory nextKey)
-    external view returns (ValidatorsResponse memory);
+    external view returns (ValidatorsResponse memory response);
 
-// Get a delegator's delegations
-struct DelegationResponse { /* delegatorAddress, validatorAddress, shares, balance */ }
-struct DelegationsResponse { DelegationResponse[] delegations; bytes nextKey; }
+// A delegator's delegations (paginated)
+struct DelegationsResponse { Delegation[] delegations; bytes nextKey; }
 function delegatorDelegations(address delegator, bytes memory nextKey)
-    external view returns (DelegationsResponse memory);
+    external view returns (DelegationsResponse memory response);
 
-// Get a specific delegation
-function delegation(address delegatorAddress, string memory validatorAddress)
-    external view returns (uint256 shares, Coin memory balance);
+// A specific delegation
+struct Balance { uint256 amount; string denom; }   // amount in usei
+struct DelegationDetails { string delegator_address; uint256 shares; uint256 decimals; string validator_address; }
+struct Delegation { Balance balance; DelegationDetails delegation; }
+function delegation(address delegator, string memory valAddress)
+    external view returns (Delegation memory delegation);
 
-// Get unbonding delegations
-function delegatorUnbondingDelegations(address delegatorAddress, uint32 pageLimit, string memory pageKey)
-    external view returns (UnbondingDelegation[] memory);
+// A delegator's unbonding delegations (paginated)
+struct UnbondingDelegationEntry { int64 creationHeight; int64 completionTime; string initialBalance; string balance; }
+struct UnbondingDelegation { string delegatorAddress; string validatorAddress; UnbondingDelegationEntry[] entries; }
+struct UnbondingDelegationsResponse { UnbondingDelegation[] unbondingDelegations; bytes nextKey; }
+function delegatorUnbondingDelegations(address delegator, bytes memory nextKey)
+    external view returns (UnbondingDelegationsResponse memory response);
 ```
+
+The full interface (also `validator`, `validatorDelegations`, `unbondingDelegation`, `redelegations`, `historicalInfo`, `pool`, `params`, `createValidator`, `editValidator`) is in sei-chain at `precompiles/staking/Staking.sol`.
 
 ### Events
 
@@ -66,16 +75,28 @@ event Redelegate(address indexed delegator, string srcValidator, string dstValid
 
 ## Distribution Precompile Functions
 
-```solidity
-// Withdraw delegator reward from a validator
-function withdrawDelegatorReward(
-    address delegatorAddress,
-    string memory validatorAddress
-) external returns (bool);
+All transaction methods act for the caller (its associated Sei address); rewards and commission are paid to the caller's withdraw address.
 
-// Withdraw validator commission (for validator operators)
-function withdrawValidatorCommission(string memory validatorAddress) external returns (bool);
+```solidity
+// Withdraw the caller's rewards from one validator
+function withdrawDelegationRewards(string memory validator) external returns (bool success);
+
+// Withdraw the caller's rewards from several validators in one call
+function withdrawMultipleDelegationRewards(string[] memory validators) external returns (bool success);
+
+// Withdraw the caller's validator commission (the caller must be the validator operator)
+function withdrawValidatorCommission() external returns (bool success);
+
+// Set the address the caller's rewards are paid to
+function setWithdrawAddress(address withdrawAddr) external returns (bool success);
+
+// All pending rewards of a delegator: per validator, plus the total
+struct Reward { Coin[] coins; string validator_address; }
+struct Rewards { Reward[] rewards; Coin[] total; }
+function rewards(address delegatorAddress) external view returns (Rewards memory rewards);
 ```
+
+There is no `withdrawDelegatorReward(address, string)` method — a call with that signature reverts.
 
 
 ### Distribution Query Functions
@@ -185,21 +206,19 @@ await tx.wait(1);
 ### Query Delegation
 
 ```typescript
-const [shares, balance] = await staking.delegation(
+const { balance, delegation } = await staking.delegation(
   await signer.getAddress(),
   validator
 );
-console.log("Shares:", shares.toString());
-console.log("Balance:", ethers.formatEther(balance.amount), "SEI");
+console.log("Shares:", delegation.shares.toString(), `(${delegation.decimals} decimals)`);
+console.log("Balance:", ethers.formatUnits(balance.amount, 6), "SEI"); // balance.amount is usei
 ```
 
 ### Claim Rewards
 
 ```typescript
-const tx = await distribution.withdrawDelegatorReward(
-  await signer.getAddress(),
-  validator
-);
+// Acts for the caller; rewards go to the caller's withdraw address
+const tx = await distribution.withdrawDelegationRewards(validator);
 await tx.wait(1);
 console.log("Rewards claimed");
 ```
@@ -207,10 +226,11 @@ console.log("Rewards claimed");
 ### List Validators
 
 ```typescript
-const validators = await staking.validators("BONDED", 20, "");
+const { validators, nextKey } = await staking.validators("BOND_STATUS_BONDED", "0x"); // "0x" = first page
 for (const v of validators) {
   console.log(v.operatorAddress);
 }
+// Pass nextKey back in to fetch the next page; it is "0x" after the last page
 ```
 
 ## Solidity Integration — Liquid Staking Contract
@@ -226,10 +246,7 @@ interface IStaking {
 }
 
 interface IDistribution {
-    function withdrawDelegatorReward(
-        address delegatorAddress,
-        string memory validatorAddress
-    ) external returns (bool);
+    function withdrawDelegationRewards(string memory validator) external returns (bool);
 }
 
 contract LiquidStakingVault is ERC20 {
@@ -245,6 +262,7 @@ contract LiquidStakingVault is ERC20 {
     // Stake SEI and receive lstSEI shares
     function deposit() external payable {
         require(msg.value > 0, "Must send SEI");
+        require(msg.value % 1e12 == 0, "Whole usei only"); // delegate rejects sub-usei wei
         bool success = IStaking(STAKING).delegate{value: msg.value}(validatorAddress);
         require(success, "Delegation failed");
         _mint(msg.sender, msg.value);  // 1:1 initial minting
@@ -252,8 +270,9 @@ contract LiquidStakingVault is ERC20 {
 
     // Compound rewards by claiming and re-delegating
     function compound() external {
-        IDistribution(DISTRIBUTION).withdrawDelegatorReward(address(this), validatorAddress);
-        uint256 rewards = address(this).balance;
+        // Rewards are paid to this contract's withdraw address (itself by default)
+        IDistribution(DISTRIBUTION).withdrawDelegationRewards(validatorAddress);
+        uint256 rewards = address(this).balance - (address(this).balance % 1e12);
         if (rewards > 0) {
             IStaking(STAKING).delegate{value: rewards}(validatorAddress);
         }
@@ -269,4 +288,4 @@ contract LiquidStakingVault is ERC20 {
 - **Slashing**: validators can be slashed for downtime or double-signing; delegators share in slashing proportionally
 - **Rewards**: rewards accrue each block; claim anytime via Distribution precompile
 - **Validator addresses**: use `seivaloper1...` bech32 format for all validator address parameters
-- **Amount precision**: `delegate` → wei (1e18); `undelegate`/`redelegate` → usei (1e6)
+- **Amount precision**: `delegate` → wei (1e18), and `msg.value` must be a multiple of 1e12 wei (whole usei) or the call reverts; `undelegate`/`redelegate` → usei (1e6); `delegation().balance.amount` is usei

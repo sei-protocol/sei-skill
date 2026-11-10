@@ -121,9 +121,10 @@ const STAKING_ADDRESS = "0x0000000000000000000000000000000000001005";
 
 describe("Staking precompile integration", () => {
   it("should return validators", async () => {
-    const abi = ["function validators(string,bytes) view returns ((string operatorAddress, bool jailed, int32 status, string tokens)[] validators, bytes nextKey)"];
+    // Returns one ValidatorsResponse tuple; the Validator struct must list all 14 fields to decode
+    const abi = ["function validators(string status, bytes nextKey) view returns (tuple(tuple(string operatorAddress, bytes consensusPubkey, bool jailed, int32 status, string tokens, string delegatorShares, string description, int64 unbondingHeight, int64 unbondingTime, string commissionRate, string commissionMaxRate, string commissionMaxChangeRate, int64 commissionUpdateTime, string minSelfDelegation)[] validators, bytes nextKey) response)"];
     const staking = new ethers.Contract(STAKING_ADDRESS, abi, ethers.provider);
-    const result = await staking.validators("BONDED", "0x"); // "0x" = empty bytes, first page
+    const result = await staking.validators("BOND_STATUS_BONDED", "0x"); // "0x" = empty bytes, first page
     expect(result.validators.length).to.be.greaterThan(0);
   });
 });

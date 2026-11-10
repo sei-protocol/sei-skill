@@ -42,24 +42,17 @@ struct WeightedVoteOption {
 function voteWeighted(uint64 proposalID, WeightedVoteOption[] memory options)
     external returns (bool success);
 
-// Deposit tokens to a proposal (msg.value = amount in wei)
+// Deposit tokens to a proposal (msg.value = amount in wei; must be a whole number of usei)
 function deposit(uint64 proposalID) external payable returns (bool success);
 
-// Submit a new proposal
-function submitProposal(
-    string memory title,
-    string memory description,
-    string memory metadata,
-    string memory proposalType  // "Text", "ParameterChange", "SoftwareUpgrade"
-) external payable returns (uint64 proposalID);
-
-// Query a proposal
-function getProposal(uint64 proposalID) external view returns (Proposal memory);
-
-// List proposals with pagination
-function getProposals(uint32 proposalStatus, uint32 pageLimit, string memory pageKey)
-    external view returns (Proposal[] memory);
+// Submit a new proposal described by a JSON string; msg.value is the initial deposit
+// (wei, whole usei only). Returns the new proposal ID.
+function submitProposal(string memory proposalJSON) external payable returns (uint64 proposalID);
 ```
+
+`proposalJSON` fields: `title` and `description` (both required), `type` (`"Text"` — the default when empty — `"ParameterChange"`, `"SoftwareUpgrade"`, `"CancelSoftwareUpgrade"`, `"CommunityPoolSpend"`, …), `is_expedited` (bool), plus the type's payload: `changes` (`[{subspace, key, value}]`) for parameter changes, `plan` for software upgrades, `community_pool_spend` for spends. CosmWasm and IBC proposal types are rejected (`... proposals are not supported yet via precompile`).
+
+There are no `getProposal` / `getProposals` methods; use `proposal` / `proposals` below.
 
 ## Query Methods (view)
 
@@ -206,24 +199,30 @@ await tx.wait(1);
 // 3,500 SEI minimum deposit to submit (mainnet)
 const deposit = ethers.parseEther("3500");
 
-const tx = await governance.submitProposal(
-  "My Proposal Title",
-  "Detailed description of the proposed changes...",
-  "ipfs://QmMetadata...",  // optional IPFS metadata
-  "Text",                  // proposal type
-  { value: deposit }
-);
+const proposalJSON = JSON.stringify({
+  title: "My Proposal Title",
+  description: "Detailed description of the proposed changes...",
+  type: "Text",
+  is_expedited: false,
+});
+const tx = await governance.submitProposal(proposalJSON, { value: deposit });
 const receipt = await tx.wait(1);
-// Parse the proposalID from events
+// submitProposal returns the proposal ID; read it with staticCall before sending,
+// or look it up afterwards with governance.proposals(...)
 ```
 
-### Query a Proposal
+### Query a Proposal (v6.7+)
 
 ```typescript
-const proposal = await governance.getProposal(proposalId);
-console.log("Status:", proposal.status);
-console.log("Title:", proposal.title);
-console.log("Yes votes:", ethers.formatEther(proposal.finalTallyResult?.yes ?? 0));
+// v6.7 method: if your packaged ABI predates it, build the contract from
+// precompiles/gov/Gov.sol in sei-chain (or an ABI fragment) instead
+const proposal = await governance.proposal(proposalId);
+console.log("Status:", proposal.status); // ProposalStatus enum value
+// content is the proposal content (protobuf Any) as JSON bytes
+const content = JSON.parse(ethers.toUtf8String(proposal.content));
+console.log("Title:", content.title);
+// tally values are usei amounts as decimal strings
+console.log("Yes votes:", ethers.formatUnits(proposal.finalTallyResult.yes, 6), "SEI");
 ```
 
 ## Automated Governance in Solidity

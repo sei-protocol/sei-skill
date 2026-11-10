@@ -70,20 +70,20 @@ For programmatic registration (e.g., in a factory contract):
 pragma solidity ^0.8.28;
 
 interface IPointer {
-    function registerNativePointer(string memory denom)
-        external payable returns (address pointer);
-    function registerCW20Pointer(string memory cwAddr)
-        external payable returns (address pointer);
-    function registerCW721Pointer(string memory cwAddr)
-        external payable returns (address pointer);
+    // The ABI marks these payable, but a non-zero msg.value reverts.
+    function addNativePointer(string memory token) external returns (address ret);
+    function addCW20Pointer(string memory cwAddr) external returns (address ret);
+    function addCW721Pointer(string memory cwAddr) external returns (address ret);
+    function addCW1155Pointer(string memory cwAddr) external returns (address ret);
 }
 
 contract TokenFactory {
     address constant POINTER = 0x000000000000000000000000000000000000100B;
 
-    function createTokenWithPointer(string memory denom) external payable {
-        // Register ERC20 pointer for an existing native denom
-        address pointerAddr = IPointer(POINTER).registerNativePointer{value: msg.value}(denom);
+    function createTokenWithPointer(string memory denom) external {
+        // Register ERC20 pointer for an existing native denom. The denom must have bank
+        // metadata; otherwise its pointer can only be set by governance proposal.
+        address pointerAddr = IPointer(POINTER).addNativePointer(denom);
         emit PointerCreated(denom, pointerAddr);
     }
 

@@ -58,7 +58,7 @@ make build-frozen-rpc-router
 
 ## Sei-RPC-Route response header
 
-Responses served by a single backend carry a `Sei-RPC-Route` header describing where the request was served:
+Every response the router forwards from a backend carries a `Sei-RPC-Route` header describing which backend(s) served it. Errors the router generates itself (parse errors, spanning-range errors, `413`) do not.
 
 - `frozen:<height>` — served entirely by the frozen node with that freeze height.
 - `live` — served entirely by the live node.

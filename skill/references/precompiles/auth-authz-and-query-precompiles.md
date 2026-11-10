@@ -58,6 +58,8 @@ Transaction methods. All are non-payable and **cannot** be invoked via `delegate
 - `unjailWithAuthorization(address validatorOperator)` → `bool success` — called by a grantee to unjail `validatorOperator`'s validator using that grant. Reverts if no unexpired grant exists.
 - `revokeUnjailAuthorization(address grantee)` → `bool success` — removes the grant; reverts with `authorization not found` if there is none.
 
+The grant methods follow the same model as the staking, distribution, and gov authorizations — see "Scoped Authorizations" in [overview.md](overview.md).
+
 Query methods (all `view`, no state mutation):
 
 - `params()` → `SlashingParams{int64 signedBlocksWindow, string minSignedPerWindow, uint64 downtimeJailDuration, string slashFractionDoubleSign, string slashFractionDowntime}`.

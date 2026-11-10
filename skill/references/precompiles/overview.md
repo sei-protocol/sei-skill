@@ -135,6 +135,31 @@ contract LiquidStaking {
 }
 ```
 
+## Scoped Authorizations (v6.7+)
+
+Since the v6.7 upgrade ([sei-chain#3893](https://github.com/sei-protocol/sei-chain/pull/3893), [sei-chain#3846](https://github.com/sei-protocol/sei-chain/pull/3846)), the Staking, Distribution, Governance, and Slashing precompiles let an account (the **granter**) authorize another EVM account (the **grantee**) to perform a narrow set of actions on its behalf — e.g. a bot that compounds rewards or votes for a DAO treasury. They are thin wrappers over native Cosmos `authz` grants:
+
+1. The granter calls a `grant*Authorization(grantee, …, expiration)` method. `expiration` is Unix seconds and must be after the current block time.
+2. The grantee calls the matching `*WithAuthorization(…)` method, naming the granter. The precompile runs the message for the granter through authz `MsgExec`, so it fails without an unexpired grant.
+3. The granter calls `revoke*Authorization(grantee)` to remove the grant; it reverts with `authorization not found` if nothing was granted.
+
+| Precompile | Grant (called by granter) | Covers | Grantee calls |
+|---|---|---|---|
+| Staking `0x1005` | `grantStakingAuthorization(grantee, allowedValidators, maxTokens, expiration)` | Delegate, undelegate, redelegate — only to validators in `allowedValidators` (for redelegation, the destination), each action with its own `maxTokens` (usei) budget that shrinks as it is used | `delegateWithAuthorization`, `undelegateWithAuthorization`, `redelegateWithAuthorization` |
+| Distribution `0x1007` | `grantWithdrawAuthorization(grantee, expiration)` | Withdrawing delegation rewards and validator commission | `withdrawDelegationRewardsWithAuthorization`, `withdrawValidatorCommissionWithAuthorization` |
+| Governance `0x1006` | `grantVoteAuthorization(grantee, expiration)` / `grantProposalAuthorization(grantee, expiration)` | `MsgVote` only (not weighted votes) / `MsgSubmitProposal` only (not deposits) | `voteWithAuthorization`, `submitProposalWithAuthorization` |
+| Slashing `0x1014` | `grantUnjailAuthorization(grantee, expiration)` | `MsgUnjail` | `unjailWithAuthorization` |
+
+Rules for all of them:
+
+- Granter, grantee, and the account acted for must be associated EVM addresses; the zero address is rejected.
+- All are non-payable except `delegateWithAuthorization` and `submitProposalWithAuthorization`: their `msg.value`, sent by the grantee, funds the delegation or initial deposit made for the granter (whole usei only).
+- Withdrawn rewards and commission go to the granter's withdraw address, never to the grantee.
+- Like the precompiles' other transaction methods, they cannot be called via `delegatecall` or `staticcall`.
+- The grants are ordinary authz grants: inspect them with the Authz precompile (`0x100E`) or `seid q authz grants <granter-sei1-address> <grantee-sei1-address>`.
+
+Method signatures are on each precompile's page: [staking-distribution.md](staking-distribution.md), [governance.md](governance.md), [auth-authz-and-query-precompiles.md](auth-authz-and-query-precompiles.md) (Slashing).
+
 ## Reference for Each Precompile
 
 - **Staking + Distribution:** [staking-distribution.md](staking-distribution.md)

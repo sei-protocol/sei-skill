@@ -63,6 +63,39 @@ function delegatorUnbondingDelegations(address delegator, bytes memory nextKey)
     external view returns (UnbondingDelegationsResponse memory response);
 ```
 
+### Authorization Functions (v6.7+)
+
+Let a grantee stake on the caller's behalf. See "Scoped Authorizations" in [overview.md](overview.md) for how grants work.
+
+```solidity
+// Called by the delegator (granter). Creates delegate, undelegate, and redelegate grants for
+// `grantee`, limited to `allowedValidators` (seivaloper1..., at least one) and each capped at
+// `maxTokens` usei (must be > 0). `expiration` is Unix seconds, after the current block time.
+function grantStakingAuthorization(
+    address grantee,
+    string[] memory allowedValidators,
+    uint256 maxTokens,
+    int64 expiration
+) external returns (bool success);
+
+// Called by the delegator: remove all three grants
+function revokeStakingAuthorization(address grantee) external returns (bool success);
+
+// Called by the grantee. msg.value (from the grantee, whole usei) is delegated for `delegator`.
+function delegateWithAuthorization(address delegator, string memory valAddress)
+    external payable returns (bool success);
+
+// Called by the grantee. `amount` in usei.
+function undelegateWithAuthorization(address delegator, string memory valAddress, uint256 amount)
+    external returns (bool success);
+function redelegateWithAuthorization(
+    address delegator,
+    string memory srcAddress,
+    string memory dstAddress,
+    uint256 amount
+) external returns (bool success);
+```
+
 The full interface (also `validator`, `validatorDelegations`, `unbondingDelegation`, `redelegations`, `historicalInfo`, `pool`, `params`, `createValidator`, `editValidator`) is in sei-chain at `precompiles/staking/Staking.sol`.
 
 ### Events
@@ -97,6 +130,21 @@ function rewards(address delegatorAddress) external view returns (Rewards memory
 ```
 
 There is no `withdrawDelegatorReward(address, string)` method — a call with that signature reverts.
+
+### Distribution Authorization Functions (v6.7+)
+
+```solidity
+// Called by the delegator/operator (granter): let `grantee` withdraw its delegation rewards
+// and validator commission until `expiration` (Unix seconds)
+function grantWithdrawAuthorization(address grantee, int64 expiration) external returns (bool success);
+function revokeWithdrawAuthorization(address grantee) external returns (bool success);
+
+// Called by the grantee. Funds go to the granter's withdraw address, not to the grantee.
+function withdrawDelegationRewardsWithAuthorization(address delegator, string memory validator)
+    external returns (bool success);
+function withdrawValidatorCommissionWithAuthorization(address validatorOperator)
+    external returns (bool success);
+```
 
 
 ### Distribution Query Functions

@@ -54,6 +54,26 @@ function submitProposal(string memory proposalJSON) external payable returns (ui
 
 There are no `getProposal` / `getProposals` methods; use `proposal` / `proposals` below.
 
+## Authorization Methods (v6.7+)
+
+Let a grantee vote or submit proposals for the caller ([sei-chain#3846](https://github.com/sei-protocol/sei-chain/pull/3846), [sei-chain#3893](https://github.com/sei-protocol/sei-chain/pull/3893)). See "Scoped Authorizations" in [overview.md](overview.md) for how grants work.
+
+```solidity
+// Called by the voter/proposer (granter). `expiration` is Unix seconds, after the current block time.
+function grantVoteAuthorization(address grantee, int64 expiration) external returns (bool success);     // MsgVote only
+function grantProposalAuthorization(address grantee, int64 expiration) external returns (bool success); // MsgSubmitProposal only
+function revokeVoteAuthorization(address grantee) external returns (bool success);
+function revokeProposalAuthorization(address grantee) external returns (bool success);
+
+// Called by the grantee
+function voteWithAuthorization(address voter, uint64 proposalID, int32 option) external returns (bool success);
+// msg.value (from the grantee, whole usei) is the initial deposit, made for `proposer`
+function submitProposalWithAuthorization(address proposer, string memory proposalJSON)
+    external payable returns (uint64 proposalID);
+```
+
+A vote grant does not cover `voteWeighted`, and a proposal grant does not cover `deposit`.
+
 ## Query Methods (view)
 
 Since the v6.7 upgrade ([sei-chain#3767](https://github.com/sei-protocol/sei-chain/pull/3767)), the Gov precompile exposes on-chain query methods accessible from EVM contracts. The vote and deposit queries are named `getVote`/`getDeposit` (not overloaded onto the `vote`/`deposit` transaction methods) because overloaded function names break common tooling like ethers.js.

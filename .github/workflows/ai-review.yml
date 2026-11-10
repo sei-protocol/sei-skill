@@ -1,13 +1,21 @@
 name: AI Review
 on:
   pull_request:
-    # `labeled`/`unlabeled` let the `ai: skip-review` label take effect immediately rather
-    # than on the next push. UCI ignores those two events for every other label.
+    # `labeled`/`unlabeled` let removing the `ai: skip-review` label start the review right
+    # away rather than on the next push. UCI ignores those two events for labels other than
+    # `ai: skip-review` and `ai: nitpick`.
     types: [ opened, ready_for_review, synchronize, reopened, labeled, unlabeled ]
+  # UCI reviews a PR automatically only once. After that, an active member of `allowed-team`
+  # asks for another review by commenting exactly `@seidroid review`.
+  issue_comment:
+    types: [ created ]
+  pull_request_review_comment:
+    types: [ created ]
 jobs:
   ai-review:
-    # See: https://github.com/sei-protocol/uci/releases/tag/v0.0.15
-    uses: sei-protocol/uci/.github/workflows/ai-review.yml@65901242783550521f25a19199a6b10e54550b97
+    if: github.event_name != 'issue_comment' || github.event.issue.pull_request != null
+    # See: https://github.com/sei-protocol/uci/releases/tag/v0.0.27
+    uses: sei-protocol/uci/.github/workflows/ai-review.yml@a3e422db031508ff0b2adf2e66e5a2860a8858e2
     permissions:
       contents: read
       pull-requests: write
@@ -15,6 +23,7 @@ jobs:
       id-token: write
     secrets: inherit
     with:
-      # See: https://github.com/sei-protocol/uci/releases/tag/v0.0.15
-      uci-ref: 65901242783550521f25a19199a6b10e54550b97
+      # See: https://github.com/sei-protocol/uci/releases/tag/v0.0.27
+      uci-ref: a3e422db031508ff0b2adf2e66e5a2860a8858e2
+      allowed-team: 'sei-protocol/sei-core'
       enable-cursor: false # Disabled for now since there is a dedicated Bugbot flow built into Cursor currently enabled on repo.

@@ -160,6 +160,7 @@ For agent-grade RPC patterns, see the 17 canonical skills in [ecosystem/rpc-agen
 
 ### Cross-domain references the ecosystem reaches for
 - Precompiles for on-chain integration: [precompiles/overview.md](references/precompiles/overview.md)
+- v6.7 query precompiles, incl. Slashing `unjail` and unjail grants for validator operators: [precompiles/auth-authz-and-query-precompiles.md](references/precompiles/auth-authz-and-query-precompiles.md)
 - Pointer contracts for cross-VM assets: [pointers/overview.md](references/pointers/overview.md)
 - TokenFactory for new ecosystem tokens: [pointers/token-factory.md](references/pointers/token-factory.md)
 - seid CLI (node queries, wallet management, address mapping, JSON-RPC): [cli/seid-cli.md](references/cli/seid-cli.md)

@@ -222,3 +222,4 @@ When implementing changes, provide:
 
 ### CLI — seid and JSON-RPC
 - **seid CLI reference (install, wallet, queries, transactions, JSON-RPC):** [cli/seid-cli.md](references/cli/seid-cli.md)
+- **frozen-rpc-router (serve historical EVM JSON-RPC from freeze-height nodes):** [cli/frozen-rpc-router.md](references/cli/frozen-rpc-router.md)

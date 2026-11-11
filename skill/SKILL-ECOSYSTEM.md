@@ -150,6 +150,7 @@ For agent-grade RPC patterns, see the 17 canonical skills in [ecosystem/rpc-agen
 - **Oracles:** [ecosystem/oracles.md](references/ecosystem/oracles.md)
 - **Indexers:** [ecosystem/indexers.md](references/ecosystem/indexers.md)
 - **Node operations:** [ecosystem/node-operations.md](references/ecosystem/node-operations.md)
+- **frozen-rpc-router (historical EVM JSON-RPC from freeze-height nodes):** [cli/frozen-rpc-router.md](references/cli/frozen-rpc-router.md)
 - **Validators:** [ecosystem/validators.md](references/ecosystem/validators.md)
 - **Staking & governance:** [ecosystem/staking-governance.md](references/ecosystem/staking-governance.md)
 

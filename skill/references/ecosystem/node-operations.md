@@ -163,17 +163,19 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 
 - **RocksDB SS backend** (optional): faster for iteration-heavy work (`debug_trace*`, large archive queries). Build with `make build-rocksdb && make install-rocksdb`, then set `ss-backend = "rocksdb"`. RocksDB RPC nodes must state-sync on first start.
 - **Giga SS Store** (optional, RPC nodes): splits the **State Store** so EVM state lives in its own SS DB. Controlled by a single bool — `evm-ss-split = true` (Sei v6.5+; older releases used per-key `evm-ss-write-mode`/`evm-ss-read-mode`). Requires a **fresh state sync** — flipping it on a node with existing data fails startup safety checks. **SC config is left untouched.** See the [Giga SS Store Migration Guide](https://docs.sei.io/node/giga-storage-migration).
-- **Giga Storage (SC FlatKV routing)** is a *separate*, broader option that routes EVM **State Commit** data through FlatKV, controlled by the single `sc-write-mode` key:
+- **Giga Storage (SC FlatKV routing)** is a *separate*, broader option that routes EVM **State Commit** data through FlatKV. Since v6.7.0 the migration is **governance-driven**: `state-commit.sc-write-mode-enable-auto` defaults to `true` (it is not rendered into `app.toml`), which runs the node in `auto` and **ignores** `sc-write-mode`. The per-block drain rate is the on-chain param `migration.NumKeysToMigratePerBlock` (default `0` = paused), set by governance — see [staking-governance.md](staking-governance.md). The old `sc-keys-to-migrate-per-block` key was removed.
 
   ```toml
   [state-commit]
+  # Ignored while sc-write-mode-enable-auto is true (the default).
   # Valid: memiavl_only (default), migrate_evm, evm_migrated, migrate_all_but_bank,
-  # all_migrated_but_bank, migrate_bank, flatkv_only.  (test_only_dual_write is
-  # test-only — never in production.) There is NO sc-read-mode and NO
+  # all_migrated_but_bank, migrate_bank, flatkv_only, auto. (test_only_dual_write
+  # is test-only — never in production.) There is NO sc-read-mode and NO
   # sc-enable-lattice-hash key; the evm_lattice app-hash handling is internal.
   sc-write-mode = "memiavl_only"
-  # Keys drained memiavl→FlatKV per block while migrating (migrate_* modes):
-  sc-keys-to-migrate-per-block = 1024
+  # Only to pin an explicit mode — a pinned node does not follow the
+  # governance-driven migration and diverges once the chain migrates:
+  # sc-write-mode-enable-auto = false
   ```
 
   The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules.
@@ -185,14 +187,15 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 
 ---
 
-## Legacy `sei_*` / `sei2_*` JSON-RPC gating (`[evm] enabled_legacy_sei_apis`)
+## Legacy `sei_*` JSON-RPC gating (`[evm] enabled_legacy_sei_apis`)
 
-The `sei_*` and `sei2_*` JSON-RPC namespaces (EVM HTTP endpoint only, port `8545` — not the Cosmos REST API on `1317`) are **deprecated and scheduled for removal**. Build new integrations on `eth_*` / `debug_*` instead. Which gated legacy methods are served is controlled by the `enabled_legacy_sei_apis` allowlist under `[evm]` in `app.toml`:
+As of v6.7.0 only three legacy `sei_*` methods remain on the EVM HTTP endpoint (port `8545` — not WebSocket, and not the Cosmos REST API on `1317`): `sei_getSeiAddress`, `sei_getEVMAddress`, and `sei_getCosmosTx`. They are deprecated; build new integrations on `eth_*` / `debug_*`. The `sei2_*` namespace and all other `sei_*` methods were removed ([sei-chain#3912](https://github.com/sei-protocol/sei-chain/pull/3912), [#3924](https://github.com/sei-protocol/sei-chain/pull/3924), [#3927](https://github.com/sei-protocol/sei-chain/pull/3927), [#3945](https://github.com/sei-protocol/sei-chain/pull/3945)); the `sei_traceBlockBy*ExcludeTraceFail` endpoints went in v6.6.0.
+
+Which of the three are served is controlled by the `enabled_legacy_sei_apis` allowlist under `[evm]` in `app.toml`:
 
 ```toml
 [evm]
-# Only methods listed here are allowed. seid init / DefaultConfig pre-fill
-# the three address/Cosmos helpers; every other gated method is rejected.
+# seid init / DefaultConfig list all three remaining methods.
 enabled_legacy_sei_apis = [
   "sei_getSeiAddress",
   "sei_getEVMAddress",
@@ -200,18 +203,43 @@ enabled_legacy_sei_apis = [
 ]
 ```
 
-- **Default allowlist** (from `seid init` / `DefaultConfig`): only `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`. All other `sei_*` and `sei2_*` methods (block/receipt/count, filters, logs, `sei_sign`, and the seven `sei2_*` block methods) are disabled until explicitly added to the array.
-- **Removed (as of Sei v6.6.0)**: the two `sei_*` block-trace endpoints `sei_traceBlockByHashExcludeTraceFail` and `sei_traceBlockByNumberExcludeTraceFail` have been fully removed from the EVM RPC server and dropped from the `enabled_legacy_sei_apis` allowlist — they can no longer be enabled. Use the standard `debug_traceBlockByHash` / `debug_traceBlockByNumber` endpoints instead. (The `sei_getBlockByHashExcludeTraceFail` / `sei_getBlockByNumberExcludeTraceFail` and `sei2_*ExcludeTraceFail` block variants, and `sei_getTransactionReceiptExcludeTraceFail`, all remain.)
+- **Only these three names have any effect.** Names are matched case-insensitively; any other name in the list is ignored, so a removed method cannot be re-enabled.
 - **Internally read through the AppOptions/viper key** `evm.enabled_legacy_sei_apis` (an environment-variable override via viper is possible; there is no dedicated `seid` CLI flag).
-- **Enable more methods** by uncommenting / adding their names — the `seid`-generated template lists the optional `sei_*` and `sei2_*` methods as commented lines you can turn on. Names are matched case-insensitively.
-- **`sei2_*` namespace**: exposes the same block JSON-RPC shape as `sei_*` blocks but includes bank transfers in block payloads (HTTP only). Seven methods — `sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` variants — gated via this same allowlist. There is no `sei2` transaction or filter API.
+- The Docker localnet config (`docker/localnode/config/app.toml`) lists the same three.
 
-### Behavior for gated calls (all HTTP 200)
+### Behavior for legacy calls (all HTTP 200)
 
-- **Not in the allowlist**: returns a JSON-RPC error — code `-32601`, message stating the method is not enabled and deprecated, and `data` `"legacy_sei_deprecated"`. The request never reaches the handler.
+- **Any other `sei_*` name** (removed, misspelled, or left out of the allowlist): JSON-RPC error — code `-32601`, `data` `"legacy_sei_deprecated"`, and a message saying the method is not enabled on this node. The request never reaches a handler.
+- **`sei2_*` names**: the standard `-32601` `the method ... does not exist/is not available`.
 - **Allowed**: passes through unchanged (JSON body identical), but the response may set the HTTP header `Sei-Legacy-RPC-Deprecation` signaling deprecation.
 
-> **Docker localnet** (`docker/localnode/config/app.toml`) enables every gated method **except `sei_sign`** so integration tests can exercise the disabled-method path. Production `seid init` defaults remain the three-method allowlist above — expand only if you must keep legacy consumers working during migration.
+---
+
+## `debug_trace*` tracer gating (`[evm] trace_allowed_tracers` / `trace_allow_js_tracers`)
+
+Since v6.7.0 ([sei-chain#3718](https://github.com/sei-protocol/sei-chain/pull/3718)) caller-supplied `TraceConfig.Tracer` values on `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile` are gated by two `[evm]` fields in `app.toml`. This is a deliberate deviation from upstream geth, which accepts any supported tracer (including request-supplied JavaScript) by default.
+
+```toml
+[evm]
+# Native debug tracers callers may request with TraceConfig.Tracer. Validated
+# native-only at startup; a non-native / typo'd name fails startup. The default
+# struct logger (TraceConfig.Tracer omitted) is always available. Set to [] to
+# disable all named tracers.
+trace_allowed_tracers = ["callTracer", "prestateTracer", "flatCallTracer", "4byteTracer", "noopTracer", "muxTracer"]
+
+# Opt in to request-supplied JavaScript tracer source in TraceConfig.Tracer.
+# Executes untrusted code in-process — keep disabled on public/default RPC nodes.
+# Enabling it does NOT widen trace_allowed_tracers: native names must still be
+# listed above to be usable.
+trace_allow_js_tracers = false
+```
+
+- **`trace_allowed_tracers`** — the native geth tracer names a caller may pass via `TraceConfig.Tracer`. Default: `["callTracer", "prestateTracer", "flatCallTracer", "4byteTracer", "noopTracer", "muxTracer"]`. Only native tracers are accepted here; entries are validated native-only at startup (empty or non-native/typo'd names fail startup), deduplicated, and whitespace-trimmed. Set to `[]` to disable all named tracers (the default struct logger still works when `Tracer` is omitted).
+- **`trace_allow_js_tracers`** — default `false`. When `false`, any request-supplied JavaScript tracer source is rejected; a tracer name not in `trace_allowed_tracers` is rejected with an error noting JavaScript tracers are disabled. Setting it to `true` is a separate opt-in that allows request-supplied JS — it does **not** widen the native allowlist, so native names must still appear in `trace_allowed_tracers` to be usable.
+- **`muxTracer` nesting** — when `muxTracer` is requested, its nested tracer names are validated recursively against the same allowlist, bounded to a nesting depth of 16. Nested names must not contain leading/trailing whitespace (they are forwarded to geth inside the raw JSON and cannot be rewritten).
+- **`trace_bake_tracers`** — now held to the same native-only rule and validated at startup; a non-native or JS-looking name fails startup rather than being evaluated as JS source by the baker on every committed block. Default: `["callTracer"]`.
+
+Both fields are read through the AppOptions/viper keys `evm.trace_allowed_tracers` and `evm.trace_allow_js_tracers`. Validation runs before trace-cache lookups and before any tracer is constructed.
 
 ---
 

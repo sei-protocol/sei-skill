@@ -113,8 +113,8 @@ STAKING(0x1005).delegate{value: amount}(validatorAddress);
 // Undelegate: amount in usei (6 decimals), not wei
 STAKING(0x1005).undelegate(validatorAddress, amountInUsei);
 
-// Claim rewards
-DISTRIBUTION(0x1007).withdrawDelegatorReward(validatorAddress);
+// Claim the caller's rewards from one validator
+DISTRIBUTION(0x1007).withdrawDelegationRewards(validatorAddress);
 ```
 
 **Critical**: `delegate` is `payable` (send wei). `undelegate`/`redelegate` take amounts in **usei** (1 SEI = 1,000,000 usei).
@@ -179,17 +179,62 @@ cat > proposal.json << 'EOF'
       "key": "MaxValidators",
       "value": 125
     }
-  ]
+  ],
+  "deposit": "3500000000usei"
 }
 EOF
 
+# param-change reads the deposit from the JSON file; it has no --deposit flag
 seid tx gov submit-proposal param-change proposal.json \
-  --deposit 3500000000usei \
   --from mykey \
   --chain-id pacific-1 \
   --node https://rpc.sei-apis.com \
   --fees 20000usei
 ```
+
+#### Driving the SC memiavl→flatkv migration (`migration` subspace)
+
+Since v6.7.0 ([sei-chain#3650](https://github.com/sei-protocol/sei-chain/pull/3650)) the per-block state-commit (SC) migration rate is an on-chain governance param, **not** an `app.toml` config. The former `state-commit.sc-keys-to-migrate-per-block` field was removed; the rate now lives in the `migration` subspace under key `NumKeysToMigratePerBlock` and is raised via a `ParameterChangeProposal`.
+
+- Default is `0` (migration **paused**); valid range is `0`–`1000000` — larger values fail the parameter's validation (`NumKeysToMigratePerBlock must be <= 1000000`).
+- Every validator reads the param in `BeginBlock`, so all nodes drain at the identical rate once it passes — a per-node config would diverge the AppHash.
+- The value is a **string** in the proposal JSON (e.g. `"12345"`).
+
+```bash
+# migration_param_change_proposal.json
+cat > migration_param_change_proposal.json << 'EOF'
+{
+  "title": "Update Migration Batch Size",
+  "description": "Set NumKeysToMigratePerBlock to 12345 to drive the SC memiavl->flatkv migration",
+  "changes": [
+    {
+      "subspace": "migration",
+      "key": "NumKeysToMigratePerBlock",
+      "value": "12345"
+    }
+  ],
+  "deposit": "3500000000usei",
+  "is_expedited": false
+}
+EOF
+
+seid tx gov submit-proposal param-change migration_param_change_proposal.json \
+  --from mykey \
+  --chain-id pacific-1 \
+  --node https://rpc.sei-apis.com \
+  --fees 20000usei
+```
+
+Query the current value (defaults to `0` until a proposal raises it):
+
+```bash
+seid q params subspace migration NumKeysToMigratePerBlock --output json \
+  | jq -r .value | tr -d '"'
+```
+
+**Operator notes:**
+- A node only follows the governance-driven migration when running in **auto** write mode. As of v6.7.0, `state-commit.sc-write-mode-enable-auto` defaults to `true` (it is not written into `app.toml` unless you add it), which forces auto and ignores any explicit `sc-write-mode`. In auto the effective mode comes from the on-disk migration state, advanced by `NumKeysToMigratePerBlock`, so no `app.toml` edit is needed when governance starts the migration.
+- To pin an explicit `sc-write-mode` (e.g. `memiavl_only`, `flatkv_only`, `evm_migrated`) you must also set `sc-write-mode-enable-auto = false`; only then is `sc-write-mode` honored. A pinned node does not take part in the governance-driven migration and diverges from the network once the chain migrates.
 
 ### Software Upgrade Proposal
 

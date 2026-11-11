@@ -143,7 +143,8 @@ contract PrecompileTest is Test {
 
     function test_QueryValidators() public view {
         // Precompile call works against real chain state
-        IStaking.ValidatorsResponse memory resp = staking.validators("BONDED", "");
+        // Status must be a Cosmos BondStatus name ("BOND_STATUS_BONDED") or "" for all
+        IStaking.ValidatorsResponse memory resp = staking.validators("BOND_STATUS_BONDED", "");
         assertGt(resp.validators.length, 0);
     }
 }

@@ -302,51 +302,61 @@ For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a walle
 ### Sei-Specific JSON-RPC Behaviour
 
 - **Finality:** `safe`, `finalized`, and `latest` are equivalent on Sei (instant single-block finality).
-- **Proofs:** Sei stores state in SeiDB state-commit (SC), a memiavl-based tree, not Merkle Patricia Tries. The legacy IAVL backend has been fully removed and SeiDB SC is mandatory — a node started with `sc-enable = false` panics with `SeiDB state-commit (SC) must be enabled; IAVL backend has been fully deprecated`. Proofs returned by proof-bearing endpoints are IAVL-style (memiavl) proofs, not Merkle Patricia Trie proofs.
-
-
-- **`eth_getProof` storage keys:** Each storage key in an `eth_getProof` request must be a valid hex-encoded value (e.g. a 32-byte slot like `0x0000000000000000000000000000000000000000000000000000000000000001`). Keys are decoded as hex hashes — malformed (non-hex) keys are rejected with an error such as `invalid storage key "..."` rather than being silently interpreted as raw bytes. A single request may include at most `1024` storage keys (`MaxStorageKeysPerProof`); exceeding this returns `too many storage keys: got <n>, max 1024`.
+- **Proofs:** Sei stores state in SeiDB state-commit (SC), a memiavl-based tree, not Merkle Patricia Tries. The legacy IAVL backend has been fully removed and SeiDB SC is mandatory — a node started with `sc-enable = false` panics with `SeiDB state-commit (SC) must be enabled; IAVL backend has been fully deprecated`. Proofs from Cosmos-side queries are IAVL-style (memiavl) proofs, not Merkle Patricia Trie proofs.
+- **`eth_getProof` is not supported** (since v6.7.0, [sei-chain#3926](https://github.com/sei-protocol/sei-chain/pull/3926)): it returns `-32000` `eth_getProof is not supported yet; please reach out to the Sei Labs if you need this endpoint`.
 - **Filter limits:** Open-ended log queries return up to 10,000 logs; closed-range queries cover up to 2,000 blocks.
-- **Deprecated:** `sei_*` and `sei2_*` namespaced methods (EVM HTTP only) are deprecated and scheduled for removal — migrate to standard `eth_*` and `debug_*` methods. The `sei2_*` namespace is block-only (same block shape as `sei` blocks, with bank transfers included in block payloads): seven methods (`sei2_getBlockByHash`, `sei2_getBlockByNumber`, `sei2_getBlockReceipts`, `sei2_getBlockTransactionCountByHash`, `sei2_getBlockTransactionCountByNumber`, and the `*ExcludeTraceFail` variants); there is no `sei2` transaction or filter API.
-- **Removed block-trace endpoints:** As of v6.6.0 the `sei_traceBlockByNumberExcludeTraceFail` and `sei_traceBlockByHashExcludeTraceFail` JSON-RPC endpoints are fully removed — not merely deprecated or gated. They no longer exist in the EVM RPC server and have been dropped from the `enabled_legacy_sei_apis` allowlist; adding them there has no effect. Use the standard `debug_traceBlockByNumber` and `debug_traceBlockByHash` endpoints instead.
-- **Legacy `sei_*` / `sei2_*` gating:** These gated methods are governed by the `[evm].enabled_legacy_sei_apis` allowlist in `app.toml` (also settable via the `evm.enabled_legacy_sei_apis` AppOptions flag). The `seid init` / default allowlist enables only three methods: `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx`; any other gated `sei_*` / `sei2_*` method must be added to the list explicitly. All responses return HTTP 200. A call to a gated method not on the allowlist returns a JSON-RPC error with code `-32601` and `data` `"legacy_sei_deprecated"` (message explains the method is not enabled and the surface is deprecated). Allowed calls pass through with an unchanged JSON body but may set the HTTP response header `Sei-Legacy-RPC-Deprecation`.
+- **Legacy `sei_*` methods:** As of v6.7.0 only three remain, all deprecated: `sei_getSeiAddress`, `sei_getEVMAddress`, `sei_getCosmosTx` (EVM HTTP only). The `sei2_*` namespace and every other `sei_*` method (block/receipt/count getters, filters, logs, `sei_getTransactionReceipt`, `sei_sign`, `sei_associate`) were removed ([sei-chain#3912](https://github.com/sei-protocol/sei-chain/pull/3912), [#3924](https://github.com/sei-protocol/sei-chain/pull/3924), [#3927](https://github.com/sei-protocol/sei-chain/pull/3927), [#3945](https://github.com/sei-protocol/sei-chain/pull/3945)); the `sei_traceBlockBy*ExcludeTraceFail` endpoints were removed in v6.6.0. Use standard `eth_*` / `debug_*` methods.
+- **Legacy `sei_*` gating:** The three remaining methods are served only if listed in `[evm].enabled_legacy_sei_apis` in `app.toml` (also settable via the `evm.enabled_legacy_sei_apis` AppOptions flag); the `seid init` default lists all three, and other names in the list are ignored. All responses return HTTP 200. Any other `sei_*` name returns a JSON-RPC error with code `-32601` and `data` `"legacy_sei_deprecated"` (the message says the method is not enabled; for removed methods, adding them to the allowlist does nothing). `sei2_*` calls return the standard `-32601` "does not exist". Allowed calls pass through with an unchanged JSON body but may set the HTTP response header `Sei-Legacy-RPC-Deprecation`.
 - **`debug_traceTransaction`:** Only available if the RPC node exposes debug methods. If unavailable, fall back to standard RPC queries.
-
-
+- **`debug_trace*` tracer gating (deviation from upstream geth):** `debug_traceCall`, `debug_traceTransaction`, `debug_traceBlockByNumber`, `debug_traceBlockByHash`, and `debug_traceTransactionProfile` now reject any caller-supplied `TraceConfig.Tracer` name that is not in the `[evm].trace_allowed_tracers` allowlist in `app.toml` (also settable via the `evm.trace_allowed_tracers` AppOptions flag). The default allowlist is the native geth tracers `["callTracer", "prestateTracer", "flatCallTracer", "4byteTracer", "noopTracer", "muxTracer"]`; set it to `[]` to disable all named tracers. Requesting a name not on the list returns an error like `debug tracer "<name>" is not allowed; JavaScript tracers are disabled and only native tracers listed in evm.trace_allowed_tracers may be used`. Omitting `Tracer` (the default struct logger) is always available. Request-supplied JavaScript tracer source is rejected unless `[evm].trace_allow_js_tracers` (`evm.trace_allow_js_tracers`, default `false`) is explicitly enabled — upstream geth accepts JS tracers by default, Sei does not. Enabling `trace_allow_js_tracers` does **not** widen the native allowlist: native tracer names must still be listed in `trace_allowed_tracers` to be usable. `trace_allowed_tracers` is validated native-only at startup (a non-native/typo'd name fails startup), and `muxTracer` nested tracer names are validated recursively up to a bounded depth of 16. The baked-tracer list `[evm].trace_bake_tracers` is held to the same native-only rule at startup. (v6.7.0, [sei-chain#3718](https://github.com/sei-protocol/sei-chain/pull/3718))
 
 ## seidb Tool
 
-`seidb` is the SeiDB maintenance/analysis tool (built from `sei-db/tools/cmd/seidb`). Use it for inspecting on-disk state stores — not for chain queries. Two commands cover FlatKV analysis.
+`seidb` is the SeiDB maintenance/analysis tool (built from `sei-db/tools/cmd/seidb`). Use it for inspecting on-disk state stores — not for chain queries. The commands below cover FlatKV analysis and hash-log inspection. As of v6.7.0 the fourth FlatKV bucket is named `misc` (it was `legacy` in v6.6).
 
 ### dump-flatkv
 
 Iterates a FlatKV store and dumps every physical `(key, value)` pair into per-bucket files, one file per bucket, formatted to match `dump-iavl` so the same diff tooling works on both.
 
 ```bash
-seidb dump-flatkv --db-dir <flatkv-data-dir> --output-dir <dir> [--height <n>] [--bucket account|code|storage|legacy]
+seidb dump-flatkv --db-dir <flatkv-data-dir> [--output-dir <dir>] [--height <n>] [--bucket account|code|storage|misc] [--lthash] [--lthash-only] [--read-limit-mb <mibps>]
 ```
 
 | Flag | Short | Purpose | Default |
 |---|---|---|---|
 | `--db-dir` | `-d` | FlatKV database directory (required) | — |
-| `--output-dir` | `-o` | Output directory; one file per bucket (required) | — |
+| `--output-dir` | `-o` | Output directory; one file per bucket. Required unless `--lthash-only` is used | — |
 | `--height` | | FlatKV target version; `0` selects the latest available version | `0` |
-| `--bucket` | `-b` | Restrict dump to a single bucket (`account`, `code`, `storage`, or `legacy`) | all buckets |
+| `--bucket` | `-b` | Restrict dump to a single bucket (`account`, `code`, `storage`, or `misc`) | all buckets |
+| `--lthash` | | Also compute per-bucket and total LtHash (lattice hash) over the scanned state and verify the total against the committed snapshot metadata | `true` |
+| `--lthash-only` | | Only compute and verify LtHash; do not write any bucket dump files. Requires `--lthash=true` and does not require `--output-dir` | `false` |
+| `--read-limit-mb` | | Throttle the scan to at most this many MiB/s of (key+value) bytes read, so a dump against a running node does not starve the chain of disk bandwidth. `0` = unlimited | `64` |
 
 Notes:
-- Valid `--bucket` values are exactly `account`, `code`, `storage`, `legacy`. `metadata` is intentionally excluded and module names (e.g. `evm`) are not valid buckets.
-- When `--bucket` is set, only that bucket's file is created under `--output-dir`; the others are not written.
+- Valid `--bucket` values are exactly `account`, `code`, `storage`, `misc`. `metadata` is intentionally excluded and module names (e.g. `evm`) are not valid buckets.
+- When `--bucket` is set, only that bucket's file is created under `--output-dir`; the others are not written. The full keyspace is still scanned, and LtHash always covers all four buckets, so the printed total stays valid.
 - Each output file begins with a `Bucket <name> at version <V>` header, followed by `Key: <HEX>, Value: <HEX>` lines. Physical keys are emitted verbatim (including their `<module>/` + type-prefix header).
 - The tool operates on a read-only temp clone of the selected snapshot + changelog, so it does not contend with a live node for the FlatKV writer lock.
+- With `--lthash` (the default), after the dump it prints a `LtHash (lattice hash) at version <V>` block listing each bucket's `count` and checksum plus the `TOTAL`, then a `LtHash verification vs snapshot metadata (committed)` PASS/FAIL line. A mismatch exits non-zero. Verification is skipped (not failed) when the selected snapshot predates LtHash metadata or carries no committed LtHash.
+- `--lthash-only` requires `--lthash=true` and cannot be combined with `--bucket`. In this mode no output dir or bucket files are created, so `--output-dir` may be omitted.
+- `--read-limit-mb` must be `>= 0`. Keep it at the default (or lower) on a shared/live node; raise it or set `0` only for offline runs on idle disks.
 
 Example:
 
 ```bash
+# Dump one bucket at latest version with default 64 MiB/s throttle + LtHash verify
 seidb dump-flatkv \
   --db-dir /root/.sei/data/flatkv \
   --output-dir /tmp/flatkv-dump \
   --height 0 \
   --bucket storage
+
+# Verify the FlatKV lattice hash only, writing no key/value dump files
+seidb dump-flatkv --db-dir /root/.sei/data/flatkv --lthash-only
+
+# Offline / idle disk: go full speed, skip LtHash
+seidb dump-flatkv --db-dir /root/.sei/data/flatkv --output-dir /tmp/flatkv-dump \
+  --read-limit-mb 0 --lthash=false
 ```
 
 ### state-size (--flatkv-dir)
@@ -366,7 +376,7 @@ seidb state-size --db-dir <memiavl-db-dir> [--flatkv-dir <flatkv-data-dir>] [--h
 
 Notes:
 - If `--flatkv-dir` is omitted, the tool auto-detects a sibling `flatkv/` directory next to `--db-dir` (e.g. `<home>/data/committer.db` → `<home>/data/flatkv`). If none exists, FlatKV analysis is skipped.
-- FlatKV analysis is only attempted when `--module` is empty or `evm` (FlatKV in production holds only evm keys; everything else is bucketed into `legacy`).
+- FlatKV analysis is only attempted when `--module` is empty or `evm` (FlatKV in production holds only evm keys; everything else is bucketed into `misc`).
 - FlatKV analysis is strictly additive: any failure to open or scan FlatKV is logged and skipped, and the memIAVL analysis still completes.
 - With `--export-dynamodb`, the FlatKV result is pushed to the same DynamoDB batch under module name `flatkv`.
 
@@ -382,19 +392,23 @@ seidb state-size \
 
 ### evm-logical-digest
 
-Computes a backend-independent digest of EVM *logical* state (account / code / storage canonical buckets) so a memIAVL node and a FlatKV node can be compared at the same chain height. Each FlatKV value embeds a per-key `blockHeight` stamp, so a raw physical byte-for-byte digest would diverge even when the underlying EVM state is identical; this command strips the serialization-version + blockHeight header on both sides and digests only the logical payload.
+Computes a backend-independent digest of EVM *logical* state (account / code / storage canonical buckets) so a memIAVL node and a FlatKV node can be compared at the same chain height. Each FlatKV value embeds a per-key `blockHeight` stamp, so a raw physical byte-for-byte digest would diverge even when the underlying EVM state is identical; this command strips the serialization-version + blockHeight header on both sides and digests only the logical payload. A `composite` backend additionally digests the union of flatkv (migrated) rows and memiavl (not-yet-migrated) rows so a mid-migration node can be compared against a memiavl-only or completed node.
 
 ```bash
-seidb evm-logical-digest --backend flatkv|memiavl --db-dir <dir> --height <H>
+seidb evm-logical-digest --backend flatkv|memiavl|composite --db-dir <dir> --height <H>
 ```
 
 | Flag | Short | Purpose | Default |
 |---|---|---|---|
-| `--backend` | | Backend to read: `flatkv` or `memiavl` (required) | — |
-| `--db-dir` | `-d` | For flatkv: the flatkv data dir. For memiavl: the memiavl root dir (contains `current/` and `snapshot-*`) | — |
+| `--backend` | | Backend to read: `flatkv`, `memiavl`, or `composite` (required) | — |
+| `--db-dir` | `-d` | For flatkv: the flatkv data dir. For memiavl: the memiavl root dir (contains `current/` and `snapshot-*`). Not required for `composite` (use `--flatkv-dir`/`--memiavl-dir` instead) | — |
+| `--flatkv-dir` | | Composite mode: flatkv data dir (required with `--backend composite`) | — |
+| `--memiavl-dir` | | Composite mode: memiavl root dir (contains `current/` and `snapshot-*`) (required with `--backend composite`) | — |
 | `--height` | | Target version. flatkv WAL-replays to it; memiavl resolves `snapshot-<height>/evm` (`0` = `current` symlink) | `0` |
+| `--memiavl-open-mode` | | memiavl read mode (memiavl/composite only): `snapshot` (FAST — sequential scan of the completed snapshot kvs file; requires an on-disk snapshot at `--height`, or `--height 0` for `current`), `replay` (SLOW ~10x — replays the changelog to `--height` then walks the mmap tree; use only when no snapshot exists at the target height), or `changelog` (scans the snapshot kvs file at or below `--height` merged with the EVM writes of the changelog above it; same rows as `replay`) | `snapshot` |
 | `--memiavl-normalization` | | memiavl normalization: `semantic`/`independent` (raw EVM key/value decoder) or `translator` (current migration mapping via `flatkv.ImportTranslator`) | `semantic` |
-| `--inspect-bucket` | | Inspect one normalized bucket (`account`, `code`, `storage`, `legacy`) instead of printing the global digest | — |
+| `--inspect-bucket` | | Inspect one normalized bucket (`account`, `code`, `storage`, `misc`) instead of printing the global digest. With `--memiavl-normalization=translator`, or `--details` on the storage bucket, only `--memiavl-open-mode=snapshot` is supported | — |
+| `--inspect-plan` | | Inspect mode: JSON file listing several inspect reports to take from one scan; each item sets `inspect_bucket`, `key_offset`, `key_prefix`, `shard_next_bytes`, `list`, `list_limit`, and `out` (the file its report is written to). Replaces the single-report inspect flags | — |
 | `--key-offset` | | Inspect mode: byte offset into physical key before applying `--key-prefix` / sharding | `0` |
 | `--key-prefix` | | Inspect mode: hex prefix, relative to `--key-offset`, used to filter physical keys | — |
 | `--shard-next-bytes` | | Inspect mode: group matching keys by this many bytes after `--key-prefix` | `0` |
@@ -402,11 +416,12 @@ seidb evm-logical-digest --backend flatkv|memiavl --db-dir <dir> --height <H>
 | `--list-limit` | | Inspect mode: maximum pairs to print with `--list`; `<=0` means unlimited | `1000` |
 | `--details` | | Inspect list mode: include backend-specific version metadata | `false` |
 | `--find-hash` | | 32-byte hex per-entry hash to hunt for; every entry whose `sha256(len(key)||key||len(val)||val)` matches is printed as `FOUND-HASH` | — |
+| `--json` | | Emit the digest or inspect report as one JSON object on stdout (narration goes to stderr), for scheduled digest checks | `false` |
 
 Notes:
 - The per-bucket accumulator is an order-independent XOR of `sha256(len(key)||key||len(val)||val)`, so it does not matter that flatkv iterates in pebble global order while memiavl is scanned by leaf index.
 - flatkv opens a read-only clone from snapshot + changelog WAL replay. memiavl does **not** replay WAL — it opens `snapshot-<height>/evm` or `current/evm`.
-- The primary comparison is `account+code+storage+legacy`, printed as one `FINAL_DIGEST` line. flatkv contains a flatkv-only migration-version marker row (`migration/migration-version`) that a memiavl-only node never owns; it is folded into the legacy bucket but XORed back out for the final comparison, and a `flatkv_marker_adjustment` line reports this. This makes the flatkv `FINAL_DIGEST` comparable apples-to-apples against memiavl-only output.
+- The primary comparison is `account+code+storage+misc`, printed as one `FINAL_DIGEST` line. flatkv can contain flatkv-only migration rows that a memiavl-only node never owns — the migration-version marker (`migration/migration-version`, once a migration completes) and the migration-boundary cursor (only while a migration is in flight). Both are folded into the `misc` bucket but XORed back out for the final comparison, and a `flatkv_marker_adjustment` line reports this. This makes the flatkv `FINAL_DIGEST` comparable apples-to-apples against memiavl-only output.
 - To hunt the single diverging entry when two `bucket_digest` values differ by exactly one row, XOR those two 32-byte hex values and pass the result to `--find-hash`.
 
 Compare a migrated FlatKV node against a memiavl-only node at height `H` — the two `FINAL_DIGEST` lines should match:
@@ -435,6 +450,61 @@ seidb evm-logical-digest --backend flatkv -d <dir> --height H \
   --find-hash <32-byte-hex>
 ```
 
+### hashlog
+
+`seidb hashlog` groups read-only tools for inspecting the on-disk hash log archives produced by the hashlogger. Use it to pull a single block's recorded hashes or to diff two archives.
+
+```bash
+seidb hashlog get-block <archive> <block> [--json]
+seidb hashlog compare <archive-a> <archive-b> [--low N --high M] [--max-diffs N] [--full] [--json]
+```
+
+#### get-block
+
+Prints every hash recorded for a single block in a hash log archive. Takes exactly two positional args: the archive path and the block number.
+
+| Flag | Purpose | Default |
+|---|---|---|
+| `--json` | Emit JSON instead of human-readable text | `false` |
+
+Notes:
+- A block may have more than one record if it was executed more than once (e.g. after a rollback and replay); each execution's hashes are reported separately.
+- A hash type that was registered but not recorded for the block prints as `<none>` (and serializes to JSON `null`, distinguishable from an absent type).
+
+#### compare
+
+Compares two hash log archives and reports blocks whose hashes differ. Takes exactly two positional args: the two archive paths.
+
+| Flag | Purpose | Default |
+|---|---|---|
+| `--low` | Lowest block to compare (inclusive); **requires `--high`** | `0` |
+| `--high` | Highest block to compare (inclusive); **requires `--low`** | `0` |
+| `--max-diffs` | Maximum number of differing blocks to report, or `-1` for all | `-1` |
+| `--full` | Show every column for each differing block (default shows only the columns that differ) | `false` |
+| `--json` | Emit JSON instead of human-readable text | `false` |
+
+Notes:
+- `--low` and `--high` are optional but must be supplied **together** — providing only one panics with `Must provide both --low and --high to compare a block range`.
+- The default (compact) output shows only the columns that differ between the two sides; `--full` shows every column for both sides. This applies to both text and JSON output.
+- Column-level diffing is only well-defined when each side holds exactly one record. When the record counts differ (a rollback re-executed the block a different number of times), compact mode reports the record counts and defers to `--full` for the details.
+- If the number of reported diffs equals `--max-diffs`, the output may have been truncated and a warning is printed (`Output truncated at --max-diffs=N; there may be more differing blocks.`); widen or remove the cap (`--max-diffs -1`) to see all.
+
+Example:
+
+```bash
+# Print every hash recorded for block 213200000 in an archive
+seidb hashlog get-block /root/.sei/data/hashlog 213200000
+
+# As JSON
+seidb hashlog get-block /root/.sei/data/hashlog 213200000 --json
+
+# Diff two archives over a block range, showing full columns for each diff
+seidb hashlog compare /node-a/hashlog /node-b/hashlog \
+  --low 213200000 --high 213210000 --full
+
+# Diff whole archives, cap at the first 50 differing blocks
+seidb hashlog compare /node-a/hashlog /node-b/hashlog --max-diffs 50
+```
 
 ## Agent Workflow
 

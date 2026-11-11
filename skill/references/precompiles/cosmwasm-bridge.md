@@ -33,17 +33,22 @@ function getEvmAddr(string memory seiAddr) external view returns (address evmAdd
 // Get the bech32 address for a 0x... EVM address
 function getSeiAddr(address evmAddr) external view returns (string memory seiAddr);
 
-// Associate bech32 and 0x addresses (requires signed message — see docs)
+// Associate bech32 and 0x addresses (requires signed message — see docs).
+// Associates the *signer* of customMessage, not the caller, so anyone can submit it and pay the gas.
 function associate(
     string memory v,
     string memory r,
     string memory s,
     string memory customMessage
-) external returns (address evmAddr, string memory seiAddr);
+) external returns (string memory seiAddr, address evmAddr);
 
 // Associate via public key
 function associatePubKey(string memory pubKeyHex)
-    external returns (address evmAddr, string memory seiAddr);
+    external returns (string memory seiAddr, address evmAddr);
+
+// Note: both `associate` and `associatePubKey` are classified as
+// transaction (state-mutating) methods — they cannot be called from a
+// read-only/static context.
 ```
 
 ### ethers.js Example
@@ -54,9 +59,14 @@ import { ADDRESS_PRECOMPILE_ADDRESS, ADDRESS_PRECOMPILE_ABI } from '@sei-js/prec
 
 const addr = new ethers.Contract(ADDRESS_PRECOMPILE_ADDRESS, ADDRESS_PRECOMPILE_ABI, provider);
 
-// Check if an EVM address has an associated sei1... address
-const seiAddress = await addr.getSeiAddr("0x1234...");
-console.log("Sei address:", seiAddress); // "sei1..." or empty if not associated
+// Check if an EVM address has an associated sei1... address.
+// Reverts ("EVM address 0x... is not associated") when there is no association.
+try {
+  const seiAddress = await addr.getSeiAddr("0x1234...");
+  console.log("Sei address:", seiAddress);
+} catch {
+  console.log("Not associated yet");
+}
 
 // Check if a sei1... address has an EVM address
 const evmAddress = await addr.getEvmAddr("sei1abc...");
@@ -81,20 +91,77 @@ Send native Cosmos tokens (SEI, IBC tokens, factory tokens) from an EVM contract
 ### Functions
 
 ```solidity
-// Send native tokens to a bech32 address
-function send(string memory toAddress, Coin[] memory amount) external returns (bool);
-
 // Send native SEI (msg.value) to a bech32 address
-function sendNative(string memory toAddress) external payable returns (bool);
+function sendNative(string memory toNativeAddress) external payable returns (bool success);
 
-// Query balance of a native denom
-function balance(string memory accountAddress, string memory denom)
-    external view returns (uint256);
+// Balance of a native denom for an EVM address (an unassociated address is read via its cast Sei address)
+function balance(address acc, string memory denom) external view returns (uint256 amount);
 
-// Query all balances for an address
-function all_balances(string memory accountAddress)
-    external view returns (Coin[] memory);
+// All balances for an EVM address
+function all_balances(address acc) external view returns (Coin[] memory response);
+
+// Denom metadata helpers
+function name(string memory denom) external view returns (string memory response);
+function symbol(string memory denom) external view returns (string memory response);
+function decimals(string memory denom) external view returns (uint8 response);
+function supply(string memory denom) external view returns (uint256 response);
 ```
+
+`send(address fromAddress, address toAddress, string denom, uint256 amount)` also exists, but only the registered ERC20 pointer contract for `denom` may call it (`only pointer <addr> can send <denom>`); it is not a general-purpose transfer. To move native SEI from a contract, use `sendNative`.
+
+### Additional view methods
+
+These read-only view methods (added in the v6.7 upgrade, [sei-chain#3767](https://github.com/sei-protocol/sei-chain/pull/3767)) mirror the bank module's gRPC queries. All are `view` and non-payable.
+
+```solidity
+// Spendable (non-locked) balances for an account, paginated
+function spendableBalances(address acc, bytes memory pageKey)
+    external view returns (Coin[] memory balances, bytes memory nextKey);
+
+// Total supply of all denoms, paginated
+function totalSupply(bytes memory pageKey)
+    external view returns (Coin[] memory supply, bytes memory nextKey);
+
+// Bank module params
+function params() external view returns (Params memory params);
+
+// Metadata for a single denom
+function denomMetadata(string memory denom)
+    external view returns (Metadata memory metadata);
+
+// Metadata for all denoms, paginated
+function denomsMetadata(bytes memory pageKey)
+    external view returns (Metadata[] memory metadatas, bytes memory nextKey);
+```
+
+```solidity
+struct SendEnabled {
+    string denom;
+    bool enabled;
+}
+
+struct Params {
+    SendEnabled[] sendEnabled;
+    bool defaultSendEnabled;
+}
+
+struct DenomUnit {
+    string denom;
+    uint32 exponent;
+    string[] aliases;
+}
+
+struct Metadata {
+    string description;
+    DenomUnit[] denomUnits;
+    string base;
+    string display;
+    string name;
+    string symbol;
+}
+```
+
+Note: `spendableBalances` takes the account as an `address` (EVM address, which must be associated); pagination methods accept an empty `bytes` page key for the first page and return `nextKey` for the next page.
 
 ```solidity
 struct Coin {
@@ -110,8 +177,8 @@ pragma solidity ^0.8.28;
 
 interface IBank {
     struct Coin { uint256 amount; string denom; }
-    function sendNative(string memory toAddress) external payable returns (bool);
-    function balance(string memory account, string memory denom) external view returns (uint256);
+    function sendNative(string memory toNativeAddress) external payable returns (bool);
+    function balance(address acc, string memory denom) external view returns (uint256);
 }
 
 contract Distributor {
@@ -122,8 +189,8 @@ contract Distributor {
         IBank(BANK).sendNative{value: msg.value}(recipient);
     }
 
-    // Query how much USDC a Cosmos address holds
-    function getUSDCBalance(string memory account) external view returns (uint256) {
+    // Query how much of a legacy IBC USDC denom an account holds
+    function getUSDCBalance(address account) external view returns (uint256) {
         string memory usdcDenom = "ibc/..."; // legacy IBC denom, still held and transferable within Sei
         return IBank(BANK).balance(account, usdcDenom);
     }
@@ -158,9 +225,11 @@ interface ICosmWasm {
         bytes memory msg,
         string memory label,
         bytes memory coins
-    ) external payable returns (string memory contractAddress, bytes memory data);
+    ) external payable returns (string memory contractAddr, bytes memory data);
 }
 ```
+
+`execute_batch` is still in the ABI but has been disabled since v6.7 ([sei-chain#4074](https://github.com/sei-protocol/sei-chain/pull/4074)); calls revert with `wasmd execute_batch is disabled`. Use one `execute` call per message.
 
 ---
 
@@ -181,21 +250,21 @@ Register pointer contracts to bridge EVM ↔ Cosmos tokens. See [pointers/overvi
 ```solidity
 interface IPointer {
     // Create an ERC20 pointer for a CW20 contract
-    function registerCW20Pointer(string memory cwAddr) external payable returns (address pointer);
+    function addCW20Pointer(string memory cwAddr) external returns (address ret);
 
     // Create an ERC721 pointer for a CW721 contract
-    function registerCW721Pointer(string memory cwAddr) external payable returns (address pointer);
+    function addCW721Pointer(string memory cwAddr) external returns (address ret);
 
-    // Create an ERC20 pointer for a native Cosmos denom
-    function registerNativePointer(string memory denom) external payable returns (address pointer);
+    // Create an ERC1155 pointer for a CW1155 contract
+    function addCW1155Pointer(string memory cwAddr) external returns (address ret);
 
-    // Create a CW20 pointer for an ERC20 contract
-    function registerERC20CW20Pointer(address erc20Addr) external payable returns (string memory pointer);
-
-    // Create a CW721 pointer for an ERC721 contract
-    function registerERC721CW721Pointer(address erc721Addr) external payable returns (string memory pointer);
+    // Create an ERC20 pointer for a native Cosmos denom (the denom must have bank metadata;
+    // otherwise its pointer can only be set by governance proposal)
+    function addNativePointer(string memory token) external returns (address ret);
 }
 ```
+
+The ABI marks these methods `payable`, but every one rejects a non-zero `msg.value`. The precompile only creates EVM-side pointers; there are no `register*` methods and no ERC20→CW20 / ERC721→CW721 registration through it.
 
 ---
 
@@ -210,6 +279,9 @@ interface IPointerView {
 
     // Get EVM pointer address for a CW721 contract
     function getCW721Pointer(string memory cwAddr) external view returns (address pointer, uint16 version, bool exists);
+
+    // Get EVM pointer address for a CW1155 contract
+    function getCW1155Pointer(string memory cwAddr) external view returns (address pointer, uint16 version, bool exists);
 
     // Get EVM pointer address for a native denom
     function getNativePointer(string memory denom) external view returns (address pointer, uint16 version, bool exists);

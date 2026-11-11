@@ -32,7 +32,7 @@ A focused variant of the Sei skill scoped to **smart-contract development and to
 Use this Skill when the user asks for:
 
 - EVM smart contract development on Sei (Solidity, Hardhat, Foundry)
-- Using Sei precompiles (Staking, Governance, Distribution, Oracle, JSON, P256)
+- Using Sei precompiles (Staking, Governance, Distribution, JSON, P256, and the v6.7 query precompiles: Auth, Authz, Evidence, Mint, Params, Slashing, Upgrade); the Oracle precompile is retired — queries revert, so point users to third-party oracles
 - CosmWasm bridge precompiles (Addr, Bank, CosmWasm, Pointer, PointerView; IBC is closed)
 - Pointer contracts and cross-VM asset bridging (ERC20↔CW20, ERC721↔CW721, ERC20↔native)
 - Token creation (ERC20/721/1155, TokenFactory native denoms)
@@ -151,6 +151,7 @@ When implementing changes, provide:
 - **Precompile quick start (full address table):** [precompiles/overview.md](references/precompiles/overview.md)
 - **Staking + Distribution precompiles:** [precompiles/staking-distribution.md](references/precompiles/staking-distribution.md)
 - **Governance precompile:** [precompiles/governance.md](references/precompiles/governance.md)
+- **Query precompiles (Auth, Authz, Evidence, Mint, Params, Slashing, Upgrade — v6.7+):** [precompiles/auth-authz-and-query-precompiles.md](references/precompiles/auth-authz-and-query-precompiles.md)
 - **JSON + P256 precompiles:** [precompiles/json-p256.md](references/precompiles/json-p256.md)
 - **CosmWasm bridge precompiles:** [precompiles/cosmwasm-bridge.md](references/precompiles/cosmwasm-bridge.md)
 - **Pointer contracts:** [pointers/overview.md](references/pointers/overview.md)

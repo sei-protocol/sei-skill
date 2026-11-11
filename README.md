@@ -346,6 +346,8 @@ Built from:
    ```
 6. Open a pull request
 
+Pull requests are reviewed automatically against [REVIEW.md](REVIEW.md), which records this repo's review standards — worth a read before a larger change.
+
 ## License
 
 MIT — see [LICENSE](LICENSE)

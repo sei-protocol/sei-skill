@@ -25,7 +25,7 @@ seid version
 ```
 
 Requirements:
-- Go 1.24.x required. Run `go version` to confirm.
+- Go 1.25.6 or later. The `go` line in `go.mod` at the tag you check out is authoritative; it has been `1.25.6` since v6.4.0. Run `go version` to confirm.
 - If `seid` is not found after install: run `go env GOPATH` and ensure `$GOPATH/bin` is on `PATH`.
 
 ## Node Initialization

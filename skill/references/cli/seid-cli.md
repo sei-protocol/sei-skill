@@ -25,7 +25,7 @@ seid version
 ```
 
 Requirements:
-- Go 1.24.x required. Run `go version` to confirm.
+- Go 1.25.6 or later. The `go` line in `go.mod` at the tag you check out is authoritative; it has been `1.25.6` since v6.4.0. Run `go version` to confirm.
 - If `seid` is not found after install: run `go env GOPATH` and ensure `$GOPATH/bin` is on `PATH`.
 
 ## Node Initialization
@@ -256,6 +256,8 @@ Constraints:
 - The target height must not be below the chain's initial height, and the application, block store, and state store must not have reached it yet — otherwise the node refuses to start.
 - Auto-remediation restart halts at the freeze boundary rather than restarting past it.
 
+Run v6.6.4+ or v6.7.2+. On v6.6.3 and v6.7.0–v6.7.1 a frozen node's EVM JSON-RPC does not come back after the process restarts, because the EVM servers waited for a processed block ([sei-chain#4448](https://github.com/sei-protocol/sei-chain/pull/4448), [#4447](https://github.com/sei-protocol/sei-chain/pull/4447)). A frozen node runs the latest patch of the release that its upgrade replaced: v6.6.4 for the v6.7 upgrade, `--freeze-height 236450000` on mainnet and `273966500` on testnet. See "Which release a frozen node runs" in [node operations](../ecosystem/node-operations.md).
+
 The freeze height is an *exclusive* boundary: a node started with `--freeze-height 100` serves blocks through height 99 and never executes block 100. This is the interval semantics the `frozen-rpc-router` relies on when routing requests by block number (see [Frozen RPC Router](frozen-rpc-router.md)).
 
 Example — freeze a node just before executing block 5,000,000 while continuing to serve RPC (the node serves blocks through height 4,999,999):
@@ -263,6 +265,19 @@ Example — freeze a node just before executing block 5,000,000 while continuing
 ```bash
 seid start --freeze-height 5000000
 ```
+
+## Rollback (`seid rollback`)
+
+Stop the node first. `seid rollback` rolls the application and Tendermint state back so the node re-fetches and re-executes the removed blocks on restart. It is the usual first step for `wrong Block.Header.AppHash`.
+
+```bash
+seid rollback [--num-blocks <n>] [--home <dir>]
+```
+
+- `--num-blocks` / `-n` (default `1`): how many heights to roll back when the application and Tendermint are at the same height. If their heights differ, rollback only brings the one that is ahead down to the other's height.
+- **FlatKV retention floor (v6.7.1+, [sei-chain#4496](https://github.com/sei-protocol/sei-chain/pull/4496)):** on a node whose FlatKV store is open (the EVM storage migration has started, or a FlatKV write mode is pinned), rollback first checks that FlatKV can rebuild the target height from its retained snapshots and WAL. If it cannot, it refuses before changing anything: `flatkv cannot roll back to version <N>: version unreachable: ...; use state sync instead`. State sync is then the only way back.
+
+`seid export` was **removed in v6.7.1** ([sei-chain#4478](https://github.com/sei-protocol/sei-chain/pull/4478)). There is no supported way to dump live state to a genesis file; recover with `seid rollback`, state sync, or a snapshot. `seid init`, `seid collect-gentxs`, and starting a chain from a genesis file are unchanged.
 
 ## curl and JSON-RPC
 

@@ -22,7 +22,7 @@ description: Running and maintaining Sei full nodes — node types, setup, state
 
 - Ubuntu 22.04 (recommended) or macOS
 - 16+ CPU cores, 256 GB DDR5 RAM, 2 TB NVMe SSD
-- Go 1.24.x installed (required for seid v6.3+)
+- Go 1.25.6 or later installed (the `go.mod` at the release tag is authoritative)
 
 ### Build from Source
 
@@ -93,6 +93,12 @@ sudo systemctl start seid
 State sync peers:
 - **Mainnet (pacific-1)**: `https://rpc.sei-apis.com:443` or `https://sei-rpc.polkachu.com:443`
 - **Testnet (atlantic-2)**: `https://rpc-testnet.sei-apis.com:443`
+
+### Trust period (built into `seid` since v6.7.3)
+
+The trust height must be younger than the chain's state sync trust period. Since v6.7.3 ([sei-chain#4679](https://github.com/sei-protocol/sei-chain/pull/4679)) that period is built into the binary per chain ID: **112h** on `pacific-1`, `atlantic-2`, and `arctic-1`, and 168h on any other chain. An older trust height fails with `old header has expired at ...`. The script above picks the last 100,000-block boundary, which is well under a day old.
+
+`trust-period` is no longer in the `config.toml` template, and a value left under `[statesync]` is ignored. When it differs from the built-in period, `seid start` warns `statesync.trust-period is set in config.toml, but state sync uses the trust period built into seid for this chain; the setting is ignored and can be removed`. Most nodes created from the old template (`trust-period = "168h0m0s"`) log this on every start, whether or not state sync is enabled. Delete the line.
 
 ---
 
@@ -179,6 +185,8 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
   ```
 
   The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules.
+
+  Since v6.7.1 ([sei-chain#4484](https://github.com/sei-protocol/sei-chain/pull/4484)), a pin to `evm_migrated`, `all_migrated_but_bank`, or `flatkv_only` is checked against the migration state persisted in FlatKV whenever the store loads, and when `seid rollback` finishes. If they disagree, typically after rolling back below the height where a migration finished, the node refuses to start with an error containing `write mode is pinned to "<pin>" but the persisted migration state is "<mode>"; set state-commit.sc-write-mode-enable-auto = true to follow the migration`. Set `sc-write-mode-enable-auto = true` (or delete the line, since `true` is the default); reopening in `auto` reconciles the backends to the rolled-back height. A store whose history began in FlatKV carries no migration metadata and passes the check for any pin.
 - **Giga Executor** (`[giga_executor] enabled`) is a *separate* feature — an evmone-based EVM interpreter for throughput. Don't conflate it with Giga Storage.
 
 > Minimum gas price, block gas limit, and SSTORE/storage gas are governance-adjustable — confirm live values at https://docs.sei.io/evm/differences-with-ethereum, and set `minimum-gas-prices` at or above the mainnet floor (`0usei` is local-dev only).
@@ -351,6 +359,23 @@ To serve historical EVM JSON-RPC from frozen nodes behind one endpoint, put [fro
 - **Not supported with Autobahn** (fails if `autobahn-config-file` is set).
 - Must **not exceed `MaxInt64`** (`9223372036854775807`).
 - Must be **at or above the genesis initial height** and **above the current application, block store, and state store heights** — you cannot freeze at a height the node has already reached or passed.
+
+### Which release a frozen node runs
+
+A frozen node serves history from before a breaking upgrade: set `freeze-height` to the upgrade height and run the **latest patch of the release that upgrade replaced**. Never upgrade it to the release its freeze height introduces; a later patch of the same line (v6.6.4 over v6.6.3) is fine. For the v6.7 upgrade:
+
+| Network | `freeze-height` (v6.7 upgrade height) | Last height served | Frozen node release |
+|---|---|---|---|
+| Mainnet (`pacific-1`) | `236450000` | `236449999` | v6.6.4 |
+| Testnet (`atlantic-2`) | `273966500` | `273966499` | v6.6.4 |
+
+Each later upgrade adds one more frozen node. Read an upgrade's height from the chain (testnet: `https://rest-testnet.sei-apis.com`):
+
+```bash
+curl -s https://rest.sei-apis.com/cosmos/upgrade/v1beta1/applied_plan/v6.7 | jq -r .height   # 236450000
+```
+
+**Use v6.6.4 or later, not v6.6.3.** A frozen node never processes another block, and on v6.6.3 (and v6.7.0–v6.7.1) the EVM HTTP and WebSocket servers only started once a block was processed, so after any restart EVM JSON-RPC stayed down while Tendermint RPC kept working. v6.6.4 ([sei-chain#4448](https://github.com/sei-protocol/sei-chain/pull/4448)) and v6.7.2 ([sei-chain#4447](https://github.com/sei-protocol/sei-chain/pull/4447)) initialize the app from the last stored block header at startup, so EVM RPC comes back after a restart, and a frozen node that is still catching up serves it from startup. After setting one up, restart it once and check that `eth_blockNumber` still answers. Full walkthrough: [docs.sei.io/node/frozen-nodes](https://docs.sei.io/node/frozen-nodes).
 
 ---
 

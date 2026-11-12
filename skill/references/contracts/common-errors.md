@@ -118,7 +118,7 @@ STAKING.delegate{value: 1 ether}(validatorAddr);
 **Fix**:
 1. Stop node: `systemctl stop seid`
 2. Try rollback: `seid rollback`, then restart
-3. If rollback fails: wipe data and state sync from scratch (back up validator keys first)
+3. If rollback fails: wipe data and state sync from scratch (back up validator keys first). Since v6.7.1, a node with an open FlatKV store refuses a rollback below the history FlatKV retains, with `flatkv cannot roll back to version <N>: ...; use state sync instead`.
 
 ### `Consensus failure - height halted`
 **Cause**: Network upgrade required at this height.  
@@ -136,8 +136,11 @@ STAKING.delegate{value: 1 ether}(validatorAddr);
 **Cause**: Node has no P2P connections, can't sync.  
 **Fix**:
 ```bash
-# Check peer count
-curl http://localhost:26657/net_info | jq '.result.n_peers'
+# Connected peer count (n_peers counts live connections since v6.7.2)
+curl -s http://localhost:26657/net_info | jq -r '.result.n_peers'
+# Before v6.7.2, n_peers counted every known address (~175-200 on pacific-1),
+# not connections. This works on every version:
+curl -s http://localhost:26657/net_info | jq '.result.peer_connections | length'
 # Update persistent peers in config.toml
 # Verify port 26656 is open in firewall
 ```
@@ -223,8 +226,8 @@ seid status | jq .SyncInfo.catching_up
 # Validator signing info
 seid q slashing signing-info $(seid tendermint show-validator) --node https://rpc.sei-apis.com
 
-# Peer count
-curl -s http://localhost:26657/net_info | jq '.result.n_peers'
+# Connected peer count (v6.7.2+; on older binaries use '.result.peer_connections | length')
+curl -s http://localhost:26657/net_info | jq -r '.result.n_peers'
 
 # Current block height
 curl -s http://localhost:26657/status | jq '.result.sync_info.latest_block_height'

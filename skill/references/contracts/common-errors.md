@@ -118,7 +118,7 @@ STAKING.delegate{value: 1 ether}(validatorAddr);
 **Fix**:
 1. Stop node: `systemctl stop seid`
 2. Try rollback: `seid rollback`, then restart
-3. If rollback fails: wipe data and state sync from scratch (back up validator keys first)
+3. If rollback fails: wipe data and state sync from scratch (back up validator keys first). Since v6.7.1, a node with an open FlatKV store refuses a rollback below the history FlatKV retains, with `flatkv cannot roll back to version <N>: ...; use state sync instead`.
 
 ### `Consensus failure - height halted`
 **Cause**: Network upgrade required at this height.  

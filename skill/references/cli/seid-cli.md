@@ -266,6 +266,19 @@ Example — freeze a node just before executing block 5,000,000 while continuing
 seid start --freeze-height 5000000
 ```
 
+## Rollback (`seid rollback`)
+
+Stop the node first. `seid rollback` rolls the application and Tendermint state back so the node re-fetches and re-executes the removed blocks on restart. It is the usual first step for `wrong Block.Header.AppHash`.
+
+```bash
+seid rollback [--num-blocks <n>] [--home <dir>]
+```
+
+- `--num-blocks` / `-n` (default `1`): how many heights to roll back when the application and Tendermint are at the same height. If their heights differ, rollback only brings the one that is ahead down to the other's height.
+- **FlatKV retention floor (v6.7.1+, [sei-chain#4496](https://github.com/sei-protocol/sei-chain/pull/4496)):** on a node whose FlatKV store is open (the EVM storage migration has started, or a FlatKV write mode is pinned), rollback first checks that FlatKV can rebuild the target height from its retained snapshots and WAL. If it cannot, it refuses before changing anything: `flatkv cannot roll back to version <N>: version unreachable: ...; use state sync instead`. State sync is then the only way back.
+
+`seid export` was **removed in v6.7.1** ([sei-chain#4478](https://github.com/sei-protocol/sei-chain/pull/4478)). There is no supported way to dump live state to a genesis file; recover with `seid rollback`, state sync, or a snapshot. `seid init`, `seid collect-gentxs`, and starting a chain from a genesis file are unchanged.
+
 ## curl and JSON-RPC
 
 Use `curl` when the user wants raw EVM RPC access, debug methods, or JSON-RPC examples. Use `seid` for everything else.

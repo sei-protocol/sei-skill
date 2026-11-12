@@ -94,6 +94,12 @@ State sync peers:
 - **Mainnet (pacific-1)**: `https://rpc.sei-apis.com:443` or `https://sei-rpc.polkachu.com:443`
 - **Testnet (atlantic-2)**: `https://rpc-testnet.sei-apis.com:443`
 
+### Trust period (built into `seid` since v6.7.3)
+
+The trust height must be younger than the chain's state sync trust period. Since v6.7.3 ([sei-chain#4679](https://github.com/sei-protocol/sei-chain/pull/4679)) that period is built into the binary per chain ID: **112h** on `pacific-1`, `atlantic-2`, and `arctic-1`, and 168h on any other chain. An older trust height fails with `old header has expired at ...`. The script above picks the last 100,000-block boundary, which is well under a day old.
+
+`trust-period` is no longer in the `config.toml` template, and a value left under `[statesync]` is ignored. When it differs from the built-in period, `seid start` warns `statesync.trust-period is set in config.toml, but state sync uses the trust period built into seid for this chain; the setting is ignored and can be removed`. Most nodes created from the old template (`trust-period = "168h0m0s"`) log this on every start, whether or not state sync is enabled. Delete the line.
+
 ---
 
 ## Directory Structure

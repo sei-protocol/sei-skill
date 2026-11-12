@@ -179,6 +179,8 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
   ```
 
   The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules.
+
+  Since v6.7.1 ([sei-chain#4484](https://github.com/sei-protocol/sei-chain/pull/4484)), a pin to `evm_migrated`, `all_migrated_but_bank`, or `flatkv_only` is checked against the migration state persisted in FlatKV whenever the store loads, and when `seid rollback` finishes. If they disagree, typically after rolling back below the height where a migration finished, the node refuses to start with an error containing `write mode is pinned to "<pin>" but the persisted migration state is "<mode>"; set state-commit.sc-write-mode-enable-auto = true to follow the migration`. Set `sc-write-mode-enable-auto = true` (or delete the line, since `true` is the default); reopening in `auto` reconciles the backends to the rolled-back height. A store whose history began in FlatKV carries no migration metadata and passes the check for any pin.
 - **Giga Executor** (`[giga_executor] enabled`) is a *separate* feature — an evmone-based EVM interpreter for throughput. Don't conflate it with Giga Storage.
 
 > Minimum gas price, block gas limit, and SSTORE/storage gas are governance-adjustable — confirm live values at https://docs.sei.io/evm/differences-with-ethereum, and set `minimum-gas-prices` at or above the mainnet floor (`0usei` is local-dev only).

@@ -234,7 +234,7 @@ seid q params subspace migration NumKeysToMigratePerBlock --output json \
 
 **Operator notes:**
 - A node only follows the governance-driven migration when running in **auto** write mode. As of v6.7.0, `state-commit.sc-write-mode-enable-auto` defaults to `true` (it is not written into `app.toml` unless you add it), which forces auto and ignores any explicit `sc-write-mode`. In auto the effective mode comes from the on-disk migration state, advanced by `NumKeysToMigratePerBlock`, so no `app.toml` edit is needed when governance starts the migration.
-- To pin an explicit `sc-write-mode` (e.g. `memiavl_only`, `flatkv_only`, `evm_migrated`) you must also set `sc-write-mode-enable-auto = false`; only then is `sc-write-mode` honored. A pinned node does not take part in the governance-driven migration and diverges from the network once the chain migrates.
+- To pin an explicit `sc-write-mode` (e.g. `memiavl_only`, `flatkv_only`, `evm_migrated`) you must also set `sc-write-mode-enable-auto = false`; only then is `sc-write-mode` honored. A pinned node does not take part in the governance-driven migration and diverges from the network once the chain migrates. Since v6.7.1, a node pinned to `evm_migrated`, `all_migrated_but_bank`, or `flatkv_only` also refuses to start when the pin disagrees with the migration state on disk (the error contains `write mode is pinned to`); re-enable auto mode to recover. See [node-operations.md](node-operations.md).
 
 ### Software Upgrade Proposal
 

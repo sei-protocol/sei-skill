@@ -352,6 +352,23 @@ To serve historical EVM JSON-RPC from frozen nodes behind one endpoint, put [fro
 - Must **not exceed `MaxInt64`** (`9223372036854775807`).
 - Must be **at or above the genesis initial height** and **above the current application, block store, and state store heights** — you cannot freeze at a height the node has already reached or passed.
 
+### Which release a frozen node runs
+
+A frozen node serves history from before a breaking upgrade: set `freeze-height` to the upgrade height and run the **latest patch of the release that upgrade replaced**. Never upgrade it to the release its freeze height introduces; a later patch of the same line (v6.6.4 over v6.6.3) is fine. For the v6.7 upgrade:
+
+| Network | `freeze-height` (v6.7 upgrade height) | Last height served | Frozen node release |
+|---|---|---|---|
+| Mainnet (`pacific-1`) | `236450000` | `236449999` | v6.6.4 |
+| Testnet (`atlantic-2`) | `273966500` | `273966499` | v6.6.4 |
+
+Each later upgrade adds one more frozen node. Read an upgrade's height from the chain (testnet: `https://rest-testnet.sei-apis.com`):
+
+```bash
+curl -s https://rest.sei-apis.com/cosmos/upgrade/v1beta1/applied_plan/v6.7 | jq -r .height   # 236450000
+```
+
+**Use v6.6.4 or later, not v6.6.3.** A frozen node never processes another block, and on v6.6.3 (and v6.7.0–v6.7.1) the EVM HTTP and WebSocket servers only started once a block was processed, so after any restart EVM JSON-RPC stayed down while Tendermint RPC kept working. v6.6.4 ([sei-chain#4448](https://github.com/sei-protocol/sei-chain/pull/4448)) and v6.7.2 ([sei-chain#4447](https://github.com/sei-protocol/sei-chain/pull/4447)) initialize the app from the last stored block header at startup, so EVM RPC comes back after a restart, and a frozen node that is still catching up serves it from startup. After setting one up, restart it once and check that `eth_blockNumber` still answers. Full walkthrough: [docs.sei.io/node/frozen-nodes](https://docs.sei.io/node/frozen-nodes).
+
 ---
 
 ## Database Management

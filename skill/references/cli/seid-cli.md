@@ -256,6 +256,8 @@ Constraints:
 - The target height must not be below the chain's initial height, and the application, block store, and state store must not have reached it yet — otherwise the node refuses to start.
 - Auto-remediation restart halts at the freeze boundary rather than restarting past it.
 
+Run v6.6.4+ or v6.7.2+. On v6.6.3 and v6.7.0–v6.7.1 a frozen node's EVM JSON-RPC does not come back after the process restarts, because the EVM servers waited for a processed block ([sei-chain#4448](https://github.com/sei-protocol/sei-chain/pull/4448), [#4447](https://github.com/sei-protocol/sei-chain/pull/4447)). A frozen node runs the latest patch of the release that its upgrade replaced: v6.6.4 for the v6.7 upgrade, `--freeze-height 236450000` on mainnet and `273966500` on testnet. See "Which release a frozen node runs" in [node operations](../ecosystem/node-operations.md).
+
 The freeze height is an *exclusive* boundary: a node started with `--freeze-height 100` serves blocks through height 99 and never executes block 100. This is the interval semantics the `frozen-rpc-router` relies on when routing requests by block number (see [Frozen RPC Router](frozen-rpc-router.md)).
 
 Example — freeze a node just before executing block 5,000,000 while continuing to serve RPC (the node serves blocks through height 4,999,999):

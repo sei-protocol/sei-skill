@@ -189,13 +189,15 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 
 ## Legacy `sei_*` JSON-RPC gating (`[evm] enabled_legacy_sei_apis`)
 
-As of v6.7.0 only three legacy `sei_*` methods remain on the EVM HTTP endpoint (port `8545` — not WebSocket, and not the Cosmos REST API on `1317`): `sei_getSeiAddress`, `sei_getEVMAddress`, and `sei_getCosmosTx`. They are deprecated; build new integrations on `eth_*` / `debug_*`. The `sei2_*` namespace and all other `sei_*` methods were removed ([sei-chain#3912](https://github.com/sei-protocol/sei-chain/pull/3912), [#3924](https://github.com/sei-protocol/sei-chain/pull/3924), [#3927](https://github.com/sei-protocol/sei-chain/pull/3927), [#3945](https://github.com/sei-protocol/sei-chain/pull/3945)); the `sei_traceBlockBy*ExcludeTraceFail` endpoints went in v6.6.0.
+Only three legacy `sei_*` methods remain on the EVM HTTP endpoint (port `8545` — not WebSocket, and not the Cosmos REST API on `1317`): `sei_getSeiAddress`, `sei_getEVMAddress`, and `sei_getCosmosTx`. They are deprecated; build new integrations on `eth_*` / `debug_*`. The `sei2_*` namespace and all other `sei_*` methods were removed ([sei-chain#3912](https://github.com/sei-protocol/sei-chain/pull/3912), [#3924](https://github.com/sei-protocol/sei-chain/pull/3924), [#3927](https://github.com/sei-protocol/sei-chain/pull/3927), [#3945](https://github.com/sei-protocol/sei-chain/pull/3945)); the `sei_traceBlockBy*ExcludeTraceFail` endpoints went in v6.6.0.
 
-Which of the three are served is controlled by the `enabled_legacy_sei_apis` allowlist under `[evm]` in `app.toml`:
+`sei_getTransactionReceipt` has been **fully removed** — it is no longer available even when explicitly listed in the allowlist. Use `eth_getTransactionReceipt` instead. There is no longer any JSON-RPC method for discovering synthetic logs from Cosmos-originated transactions.
+
+Which of these are served is controlled by the `enabled_legacy_sei_apis` allowlist under `[evm]` in `app.toml`:
 
 ```toml
 [evm]
-# seid init / DefaultConfig list all three remaining methods.
+# seid init / DefaultConfig list all three remaining address/Cosmos helpers.
 enabled_legacy_sei_apis = [
   "sei_getSeiAddress",
   "sei_getEVMAddress",
@@ -203,7 +205,7 @@ enabled_legacy_sei_apis = [
 ]
 ```
 
-- **Only these three names have any effect.** Names are matched case-insensitively; any other name in the list is ignored, so a removed method cannot be re-enabled.
+- **Only these three names have any effect.** Names are matched case-insensitively; any other name in the list is ignored, so a removed method (including `sei_getTransactionReceipt`) cannot be re-enabled.
 - **Internally read through the AppOptions/viper key** `evm.enabled_legacy_sei_apis` (an environment-variable override via viper is possible; there is no dedicated `seid` CLI flag).
 - The Docker localnet config (`docker/localnode/config/app.toml`) lists the same three.
 

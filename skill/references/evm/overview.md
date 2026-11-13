@@ -115,7 +115,7 @@ These methods are **registered** on Sei's EVM RPC but return JSON-RPC error code
 | Method | `error.message` |
 |---|---|
 | `eth_blobBaseFee` | `blobs not supported on this chain` |
-| `eth_getProof` | `eth_getProof is not supported yet; please reach out to the Sei Labs if you need this endpoint` (since v6.7.0) |
+| `eth_getProof` | `eth_getProof is not supported yet on Sei EVM RPC; please reach out to the Sei team if you need this endpoint` (since v6.7.0, [sei-chain#3926](https://github.com/sei-protocol/sei-chain/pull/3926)) |
 | `eth_syncing` | `eth_syncing is not supported on Sei EVM RPC` |
 | `eth_newPendingTransactionFilter` | `eth_newPendingTransactionFilter is not supported on Sei EVM RPC` |
 | `debug_getRawBlock` | `debug_getRawBlock is not supported on Sei EVM RPC` |

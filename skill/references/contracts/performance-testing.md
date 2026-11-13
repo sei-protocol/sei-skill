@@ -118,6 +118,41 @@ Source: https://github.com/sei-protocol/sei-chain/tree/main/loadtest
 
 You don't need to fork it. Build your own loadtest in TypeScript with viem (above) — same shape, easier to iterate.
 
+
+### EVM-only executor load harness (`evmonly-loadtest`)
+
+sei-chain v6.7.0 added a standalone harness at `giga/evmonly/cmd/evmonly-loadtest` that feeds synthetic blocks directly into the EVM-only executor with mock state and receipt sinks — no Cosmos SDK, mempool, RPC, or chain persistence. It isolates executor/OCC throughput from block production, so it's the most direct way to see how a workload behaves under parallel execution.
+
+Basic bounded run:
+
+```bash
+go run ./giga/evmonly/cmd/evmonly-loadtest --blocks=1000 --txs-per-block=1000
+```
+
+The synthetic workload defaults to local EVM chain ID `1337` (override with `--chain-id`). `--blocks` is required and must be greater than `0`; the harness prebuilds every block before the measured phase.
+
+Three workloads, selected with `--workload` (default `transfer`):
+
+- `transfer` — pure EVM legacy transfer transactions. Recipients are unique by default (optimistic no-overlap). Pass `--recipient-conflict-rate=<0..1>` to pair that fraction of each block onto shared recipients, `--recipient=0x...` to force one recipient, or `--same-sender` to use one sender with sequential nonces per block.
+- `erc20-transfer` — ERC20 transfer calls using sei-load's compiled contract runtime.
+- `snapshot-revert` — a contract-call workload that exercises nested StateDB snapshot/revert behavior (`--snapshot-revert-contract`, `--snapshot-revert-helper`).
+
+The three OCC scenarios map to conflict-free (unique senders/recipients), hot-recipient (`--recipient=0x...`), and same-sender nonce chain (`--same-sender`). Zero gas settings keep the conflict-free case focused on no-overlap:
+
+```bash
+go run ./giga/evmonly/cmd/evmonly-loadtest \
+  --blocks=400 --txs-per-block=5000 \
+  --gas-price-wei=0 --min-gas-price-wei=0 \
+  --recipient-conflict-rate=0.10
+```
+
+Non-zero fees make every tx update the coinbase balance — a real intra-block conflict.
+
+Useful tuning flags: `--workers` (parallel executors, default `1`), `--executor-workers` (OCC workers per executor, default `min(12, GOMAXPROCS)`), `--prepare-workers`, `--parse-workers`, `--builders`, `--queue-size` (default `64`). Result handling: `--result-sink=discard|file`, with `--persist-dir`, `--persist-sync`, `--persist-buffer-size`, `--persist-queue-size` for the file sink. Profiling: `--cpu-profile`, `--heap-profile`, `--trace-profile`.
+
+Observability: unless `--metrics-addr=` is empty, an HTTP server listens on `--metrics-addr` (default `127.0.0.1:9698`) exposing Prometheus metrics at `/metrics` and a `/healthz` endpoint. `--report-interval` (default `5s`) also prints throughput to stdout. Metrics include block input/preparation/finishing throughput, finished/successful/failed tx per second, gas per second, total OCC rerun attempts, queue depths, and result-sink stats. `sink_enqueue_wait` is the primary backpressure signal — a non-zero value means executor workers waited for async sink queue capacity.
+
+
 ## Common bottlenecks discovered by load testing
 
 | Symptom | Likely cause | Fix |

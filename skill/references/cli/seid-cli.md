@@ -214,7 +214,7 @@ All transaction commands require a funded key in the local keyring (`--from`).
 
 ```bash
 # Associate a Sei address with an EVM address
-seid tx evm associate-address [optional-priv-key-hex] --from <name> --evm-rpc <url>
+seid tx evm native-associate <custom-message> --from <name> -y
 
 # Send native SEI (amount in wei)
 seid tx evm send <to-evm-addr> <amount-wei> --from <name> --gas-fee-cap <cap> --gas-limit <limit>

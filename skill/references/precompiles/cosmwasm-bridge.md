@@ -264,7 +264,9 @@ interface IPointer {
 }
 ```
 
-The ABI marks these methods `payable`, but every one rejects a non-zero `msg.value`. The precompile only creates EVM-side pointers; there are no `register*` methods and no ERC20→CW20 / ERC721→CW721 registration through it.
+The ABI marks these methods `payable`, but every one rejects a non-zero `msg.value`. The precompile only creates EVM-side pointers (ERC pointers for CW tokens, plus native-denom pointers); there are no `register*` methods and no CW-wrapper registration through it.
+
+The reverse direction — creating a CosmWasm wrapper (CW20/CW721/CW1155) around an ERC20/721/1155 token — has been retired. The `seid tx evm register-cw-pointer [pointer type] [erc address]` CLI subcommand has been removed, and the `MsgRegisterPointer` handler now always fails with `ErrRegisterPointerDeprecated` (`MsgRegisterPointer is deprecated`); the wrapper wasm (`cwerc20.wasm`/`cwerc721.wasm`/`cwerc1155.wasm`) is no longer shipped or instantiated at genesis. CW wrappers registered before the retirement remain live and readable — their registry entries, versions, and queries are unchanged, and `AssociateContractAddress` still gives such a wrapper an EVM address — but no new ones can be created.
 
 ---
 

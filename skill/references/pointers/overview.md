@@ -27,8 +27,9 @@ Each smart contract is limited to **one** associated pointer contract. This:
 | CW20 contract | ERC20 pointer | `CW20` |
 | CW721 contract | ERC721 pointer | `CW721` |
 | Native denom (e.g., factory/...) | ERC20 pointer | `NATIVE` |
-| ERC20 contract | CW20 pointer | `ERC20` |
-| ERC721 contract | CW721 pointer | `ERC721` |
+| Native denom (e.g., factory/...) | ERC20 pointer | `NATIVE` |
+
+> **ERC→CW pointers are retired.** ERC20/721/1155 tokens could once be given a CosmWasm wrapper (CW20/CW721/CW1155) via `MsgRegisterPointer` / the `seid tx evm register-cw-pointer` CLI command. That command has been removed and the handler now always returns `ErrRegisterPointerDeprecated` — you can no longer register a CW wrapper for an ERC token, and the wrapper wasm is no longer shipped. Wrappers registered before the retirement remain live and readable: their registry entries, versions, and queries are unchanged, and `AssociateContractAddress` still gives them an EVM address. Only the CW20/CW721/NATIVE → EVM-pointer directions below are still registrable.
 
 ## Registering Pointers via CLI
 

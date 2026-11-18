@@ -234,6 +234,10 @@ seid tx evm call-precompile <precompile-name> <method> [args...]
 
 Available precompile names: `distribution`, `json`, `p256`, `staking`. See [EVM Precompiles](https://docs.sei.io/evm/precompiles) for method signatures.
 
+
+
+> **No built-in WSEI deploy command.** The `seid tx evm deploy-wsei` subcommand (with flags `--from`, `--gas-fee-cap`, `--gas-limit`, `--evm-rpc`, `--nonce`) has been removed, along with its embedded WSEI (Wrapped Sei) contract artifacts. There is no `seid` command to deploy a Wrapped Sei ERC20 contract. To deploy a Wrapped Sei contract, compile and deploy your own bytecode via `seid tx evm deploy <path-to-binary> --from <name>` or external EVM tooling.
+
 ## Node Start (`seid start`)
 
 ### `--freeze-height`

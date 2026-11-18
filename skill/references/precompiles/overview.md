@@ -21,7 +21,7 @@ Precompiles are fixed-address contracts deployed by the Sei protocol that expose
 | Oracle | `0x0000000000000000000000000000000000001008` | ❌ Retired (shut off July 2026) — queries revert; use a third-party oracle |
 | IBC | `0x0000000000000000000000000000000000001009` | **Do not use** — IBC is disabled in both directions; `transfer` cannot succeed |
 | PointerView | `0x000000000000000000000000000000000000100A` | Query pointer registrations |
-| Pointer | `0x000000000000000000000000000000000000100B` | Register pointer contracts |
+| Pointer | `0x000000000000000000000000000000000000100B` | ❌ Retired — EVM pointer creation is disabled; `addNativePointer`/`addCW20Pointer`/`addCW721Pointer`/`addCW1155Pointer` all revert with `pointer precompile is retired; EVM pointer creation is disabled` |
 | Solo | `0x000000000000000000000000000000000000100C` | Claim/migrate legacy CW20 and CW721 tokens to EVM |
 | Auth | `0x000000000000000000000000000000000000100D` | Query accounts, account numbers, auth params (v6.7+) |
 | Authz | `0x000000000000000000000000000000000000100E` | Query authz grants (v6.7+) |

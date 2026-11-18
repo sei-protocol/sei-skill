@@ -245,28 +245,32 @@ To move native SEI, factory tokens, or existing `ibc/...` denoms between the EVM
 
 ## Pointer Precompile (`0x100B`)
 
-Register pointer contracts to bridge EVM ↔ Cosmos tokens. See [pointers/overview.md](../pointers/overview.md) for the full workflow.
+**This precompile is retired — EVM pointer creation is disabled.** The precompile stays registered at `0x100B` with its original ABI so the four creation selectors still decode, but every call reverts with `pointer precompile is retired; EVM pointer creation is disabled`. No pointer of any kind can be created. See [pointers/overview.md](../pointers/overview.md) for context.
 
 ```solidity
 interface IPointer {
-    // Create an ERC20 pointer for a CW20 contract
+    // ALL of these now revert with:
+    //   "pointer precompile is retired; EVM pointer creation is disabled"
     function addCW20Pointer(string memory cwAddr) external returns (address ret);
-
-    // Create an ERC721 pointer for a CW721 contract
     function addCW721Pointer(string memory cwAddr) external returns (address ret);
-
-    // Create an ERC1155 pointer for a CW1155 contract
     function addCW1155Pointer(string memory cwAddr) external returns (address ret);
-
-    // Create an ERC20 pointer for a native Cosmos denom (the denom must have bank metadata;
-    // otherwise its pointer can only be set by governance proposal)
     function addNativePointer(string memory token) external returns (address ret);
 }
 ```
 
-The ABI marks these methods `payable`, but every one rejects a non-zero `msg.value`. The precompile only creates EVM-side pointers (ERC pointers for CW tokens, plus native-denom pointers); there are no `register*` methods and no CW-wrapper registration through it.
+These methods formerly created EVM-side pointers (ERC pointers for CW tokens, plus native-denom pointers); they no longer do. Transactions that previously created pointers now revert.
 
-The reverse direction — creating a CosmWasm wrapper (CW20/CW721/CW1155) around an ERC20/721/1155 token — has been retired. The `seid tx evm register-cw-pointer [pointer type] [erc address]` CLI subcommand has been removed, and the `MsgRegisterPointer` handler now always fails with `ErrRegisterPointerDeprecated` (`MsgRegisterPointer is deprecated`); the wrapper wasm (`cwerc20.wasm`/`cwerc721.wasm`/`cwerc1155.wasm`) is no longer shipped or instantiated at genesis. CW wrappers registered before the retirement remain live and readable — their registry entries, versions, and queries are unchanged, and `AssociateContractAddress` still gives such a wrapper an EVM address — but no new ones can be created.
+All associated tooling has been removed as well:
+
+- The `seid tx evm register-evm-pointer CW20|CW721|CW1155|NATIVE <addr>` CLI subcommand is removed.
+- The `seid tx evm call-precompile pointer addNativePointer <name>` path is removed.
+- The `seid query evm pointer NATIVE|CW20|CW721|CW1155 <name/addr>` query commands are removed.
+- The `seid tx evm add-cw-erc20-pointer ...` governance proposal command is removed, along with all pointer-related governance proposal types (`AddERCNativePointer`, `AddERCCW20/721/1155Pointer`, `AddCWERC20/721/1155Pointer`, `AddERCNativePointerProposalV2`). Those proposal types still decode (gov keeps a proposal in state once its vote has ended) but every one refuses both submission and execution with `pointer governance proposals are deprecated`.
+- The built-in pointer Solidity contracts (`CW20ERC20Pointer`, `CW721ERC721Pointer`, `CW1155ERC1155Pointer`, `NativeSeiTokensERC20`) and their precompile interfaces have been removed from the contracts source.
+
+The reverse direction — creating a CosmWasm wrapper (CW20/CW721/CW1155) around an ERC20/721/1155 token — was already retired: the `MsgRegisterPointer` handler always fails with `ErrRegisterPointerDeprecated` (`MsgRegisterPointer is deprecated`).
+
+**Pointers registered before the retirement remain live and readable** — their registry entries, versions, and queries are unchanged, `AssociateContractAddress` still gives such a wrapper an EVM address, and the PointerView precompile (`0x100A`) still returns them — but no new ones of any kind can be created.
 
 ---
 

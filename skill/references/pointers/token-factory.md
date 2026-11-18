@@ -86,37 +86,36 @@ seid tx bank set-denom-metadata \
   --fees 20000usei
 ```
 
-## Register an ERC20 Pointer (Make Token Visible in MetaMask)
+## ERC20 Pointer Creation Is Disabled
 
-After creating your native token, register an ERC20 pointer so EVM wallets can see and interact with it:
+EVM pointer creation has been retired. The `seid tx evm register-evm-pointer NATIVE ...` command has been removed, and any transaction that attempts to create a pointer (including via the pointer precompile at `0x000000000000000000000000000000000000100b`) now reverts with:
 
-```bash
-seid tx evm register-evm-pointer NATIVE factory/sei1abc.../MYTOKEN \
-  --from <YOUR_KEY> \
-  --chain-id atlantic-2 \
-  --node https://rpc-testnet.sei-apis.com \
-  --fees 40000usei
+```
+pointer precompile is retired; EVM pointer creation is disabled
 ```
 
-This creates an ERC20 contract at a deterministic address that MetaMask and other EVM wallets recognize. Users can:
-- View the token balance in MetaMask
-- Send/receive via standard ERC20 `transfer()`
-- Use in any ERC20-compatible DeFi protocol
+You can no longer register a new ERC20 pointer for a native TokenFactory denom. Pointers that were registered before the retirement remain live and readable — their registry entries, versions, and lookups are unchanged — but no new pointer of any kind can be created, and existing pointer versions can no longer be advanced.
 
-## Query Pointer Address
+The following have all been removed:
+- `seid tx evm register-evm-pointer CW20|CW721|CW1155|NATIVE <addr>`
+- `seid tx evm call-precompile pointer addNativePointer <name>`
+- `seid tx evm add-cw-erc20-pointer ...` (governance proposal)
+- `seid query evm pointer NATIVE|CW20|CW721|CW1155 <name/addr>`
+- The pointer governance proposal types (`AddERCNativePointer`, `AddERCCW20/721/1155Pointer`, `AddCWERC20/721/1155Pointer`, `AddERCNativePointerProposalV2`), which now refuse both submission and execution.
 
-```bash
-# Get the ERC20 pointer address for your native token
-seid q evm pointer NATIVE factory/sei1abc.../MYTOKEN \
-  --node https://rpc-testnet.sei-apis.com
-```
+## Query an Existing Pointer Address
 
-Or via the PointerView precompile:
+The `seid query evm pointer` CLI command has been removed. Read a previously registered pointer through the PointerView precompile instead (lookups never revert — an unregistered denom returns `(0x0, 0, false)`):
+
 ```typescript
 const [pointerAddress, version, exists] = await pointerView.getNativePointer(
   "factory/sei1abc.../MYTOKEN"
 );
-console.log("ERC20 pointer at:", pointerAddress);
+if (exists) {
+  console.log("ERC20 pointer at:", pointerAddress);
+} else {
+  console.log("No pointer registered for this denom (creation is disabled).");
+}
 ```
 
 

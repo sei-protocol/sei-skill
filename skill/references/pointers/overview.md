@@ -26,71 +26,25 @@ Each smart contract is limited to **one** associated pointer contract. This:
 |---|---|---|
 | CW20 contract | ERC20 pointer | `CW20` |
 | CW721 contract | ERC721 pointer | `CW721` |
+| CW1155 contract | ERC1155 pointer | `CW1155` |
 | Native denom (e.g., factory/...) | ERC20 pointer | `NATIVE` |
-| Native denom (e.g., factory/...) | ERC20 pointer | `NATIVE` |
 
-> **ERC→CW pointers are retired.** ERC20/721/1155 tokens could once be given a CosmWasm wrapper (CW20/CW721/CW1155) via `MsgRegisterPointer` / the `seid tx evm register-cw-pointer` CLI command. That command has been removed and the handler now always returns `ErrRegisterPointerDeprecated` — you can no longer register a CW wrapper for an ERC token, and the wrapper wasm is no longer shipped. Wrappers registered before the retirement remain live and readable: their registry entries, versions, and queries are unchanged, and `AssociateContractAddress` still gives them an EVM address. Only the CW20/CW721/NATIVE → EVM-pointer directions below are still registrable.
+> **EVM pointer creation is retired.** The EVM pointer precompile (`0x…100b`) is retired and EVM pointer creation is now disabled. Any transaction that previously created a pointer now reverts with `pointer precompile is retired; EVM pointer creation is disabled`. None of the directions in this table can be registered any more — in either direction. Pointers (and CW wrappers) registered before the retirement remain live and readable: their registry entries, versions, and queries are unchanged, and `AssociateContractAddress` still gives them an EVM address.
 
-## Registering Pointers via CLI
+> **ERC→CW pointers are also retired.** ERC20/721/1155 tokens could once be given a CosmWasm wrapper (CW20/CW721/CW1155) via `MsgRegisterPointer`. That handler now always returns `ErrRegisterPointerDeprecated`, and the wrapper wasm is no longer shipped.
 
-```bash
-# Register an ERC20 pointer for a CW20 contract
-seid tx evm register-evm-pointer CW20 <CW20_CONTRACT_ADDRESS> \
-  --from <KEY_NAME> \
-  --chain-id atlantic-2 \
-  --node https://rpc-testnet.sei-apis.com \
-  --fees 40000usei
+## Registering Pointers — Removed
 
-# Register an ERC721 pointer for a CW721 contract
-seid tx evm register-evm-pointer CW721 <CW721_CONTRACT_ADDRESS> \
-  --from <KEY_NAME> \
-  --chain-id atlantic-2 \
-  --node https://rpc-testnet.sei-apis.com \
-  --fees 40000usei
+Pointer registration is no longer possible. The following have all been removed:
 
-# Register an ERC20 pointer for a native denom (e.g., factory/sei1.../mytoken)
-seid tx evm register-evm-pointer NATIVE <DENOM> \
-  --from <KEY_NAME> \
-  --chain-id atlantic-2 \
-  --node https://rpc-testnet.sei-apis.com \
-  --fees 40000usei
+- The `seid tx evm register-evm-pointer CW20|CW721|CW1155|NATIVE <addr>` CLI command.
+- The `seid tx evm call-precompile pointer addNativePointer <name>` CLI path.
+- The `seid tx evm add-cw-erc20-pointer ...` governance-proposal CLI command.
+- All pointer-related governance proposal types (`AddERCNativePointer`, `AddERCCW20/721/1155Pointer`, `AddCWERC20/721/1155Pointer`, `AddERCNativePointerProposalV2`) — submission and execution both refuse with `pointer governance proposals are deprecated`.
+- The pointer precompile creation methods (`addNativePointer`, `addCW20Pointer`, `addCW721Pointer`, `addCW1155Pointer`) at `0x…100b` — the address stays registered with its ABI so the selectors still decode, but every call reverts with `pointer precompile is retired; EVM pointer creation is disabled`.
+- The built-in pointer Solidity contract sources (`CW20ERC20Pointer`, `CW721ERC721Pointer`, `CW1155ERC1155Pointer`, `NativeSeiTokensERC20`) and their precompile interfaces.
 
-# Register a CW20 pointer for an ERC20 contract
-seid tx evm register-cosmos-pointer ERC20 <ERC20_ADDRESS> \
-  --from <KEY_NAME> \
-  --chain-id atlantic-2 \
-  --node https://rpc-testnet.sei-apis.com \
-  --fees 40000usei
-```
-
-## Registering Pointers via Solidity
-
-For programmatic registration (e.g., in a factory contract):
-
-```solidity
-pragma solidity ^0.8.28;
-
-interface IPointer {
-    // The ABI marks these payable, but a non-zero msg.value reverts.
-    function addNativePointer(string memory token) external returns (address ret);
-    function addCW20Pointer(string memory cwAddr) external returns (address ret);
-    function addCW721Pointer(string memory cwAddr) external returns (address ret);
-    function addCW1155Pointer(string memory cwAddr) external returns (address ret);
-}
-
-contract TokenFactory {
-    address constant POINTER = 0x000000000000000000000000000000000000100B;
-
-    function createTokenWithPointer(string memory denom) external {
-        // Register ERC20 pointer for an existing native denom. The denom must have bank
-        // metadata; otherwise its pointer can only be set by governance proposal.
-        address pointerAddr = IPointer(POINTER).addNativePointer(denom);
-        emit PointerCreated(denom, pointerAddr);
-    }
-
-    event PointerCreated(string denom, address pointer);
-}
-```
+There is no supported way to create a new pointer of any kind. Do not call the removed CLI commands or the precompile `add*` methods — they will fail. Only querying existing pointers (below) still works.
 
 ## Querying Existing Pointers
 

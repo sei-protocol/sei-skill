@@ -416,7 +416,7 @@ seidb evm-logical-digest --backend flatkv|memiavl|composite --db-dir <dir> --hei
 | `--list-limit` | | Inspect mode: maximum pairs to print with `--list`; `<=0` means unlimited | `1000` |
 | `--details` | | Inspect list mode: include backend-specific version metadata | `false` |
 | `--find-hash` | | 32-byte hex per-entry hash to hunt for; every entry whose `sha256(len(key)||key||len(val)||val)` matches is printed as `FOUND-HASH` | — |
-| `--json` | | Emit the digest or inspect report as one JSON object on stdout (narration goes to stderr), for scheduled digest checks | `false` |
+| `--json` | | Emit the digest or inspect report as one JSON object on stdout (narration goes to stderr), for scheduled digest checks (sei-chain#4255) | `false` |
 
 Notes:
 - The per-bucket accumulator is an order-independent XOR of `sha256(len(key)||key||len(val)||val)`, so it does not matter that flatkv iterates in pebble global order while memiavl is scanned by leaf index.

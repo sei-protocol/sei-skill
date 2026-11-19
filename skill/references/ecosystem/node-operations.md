@@ -155,6 +155,29 @@ ss-keep-recent = 100000             # Keep last 100k blocks
 ss-prune-interval = 600
 ```
 
+
+---
+
+## Receipt-store reward percentiles (`receipt-store.rs-reward-percentiles`)
+
+Controls the per-block gas-weighted reward percentiles computed and stored alongside each block's receipts. These are what the EVM-only (giga) RPC server's `eth_feeHistory` reward rows and `eth_gasPrice` congestion escalation read from.
+
+```toml
+[receipt-store]
+# Gas-weighted eth_feeHistory reward percentiles stored per block.
+# Applies ONLY when rs-backend = "littidx".
+# Each entry must be in [0, 100], with no duplicates.
+# An empty list ([]) defaults to [0, 10, 20, 25, 30, 50, 75, 90, 100].
+rs-reward-percentiles = []
+```
+
+- **littidx backend only.** The pebble backend does not group receipts by block and records no block stats; `eth_feeHistory`/`eth_gasPrice` callers fall back to recomputing from receipts.
+- **Validation (startup fails if violated):** each entry must be within `[0, 100]`, there must be no duplicates, and the list must be 100 entries or fewer.
+- **Empty default:** an empty list (`[]`) applies the built-in default `[0, 10, 20, 25, 30, 50, 75, 90, 100]`.
+- **Read through the AppOptions/viper key** `receipt-store.rs-reward-percentiles`. Settable via a comma- or whitespace-separated environment-variable string (e.g. `0,50,100`) in addition to a TOML float array.
+- A requested `eth_feeHistory` percentile not covered by the stored set is recomputed from that block's receipts rather than approximated.
+
+
 ---
 
 ## SeiDB storage, RocksDB, and Giga

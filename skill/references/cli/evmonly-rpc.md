@@ -17,6 +17,79 @@ JSON-RPC surface. All other `eth_*` methods return JSON-RPC method-not-found.
 
 - `eth_getCode` — returns the current committed contract code at an address.
 
+- `eth_feeHistory` — returns `gasUsedRatio`, `baseFeePerGas`, and reward
+  percentiles for a range of blocks (see below).
+- `eth_gasPrice` — returns a suggested gas price (see below).
+
+## `eth_feeHistory`
+
+Signature: `eth_feeHistory(blockCount, lastBlock, rewardPercentiles) -> FeeHistoryResult`.
+
+Returns, for the `blockCount` blocks ending at `lastBlock`:
+
+- `oldestBlock` — the oldest block covered by the response.
+- `gasUsedRatio` — per-block `TotalGasUsed / gasLimit`, one entry per block.
+- `baseFeePerGas` — **always zero on giga** (giga's base fee is fixed at zero).
+  Carries one more entry than `gasUsedRatio`: the projected fee for the block
+  after `lastBlock`, also zero.
+- `reward` — present only when `rewardPercentiles` is non-empty. One row per
+  block, one entry per requested percentile, holding that block's
+  gas-weighted priority-fee reward at that percentile.
+
+Constraints and behaviour:
+
+- `blockCount` is capped at **1024**; a larger request is silently clamped. A
+  `blockCount` below 1 returns an empty result (`oldestBlock` 0, empty
+  `gasUsedRatio`).
+- `rewardPercentiles` must be **strictly ascending** and each value in
+  **[0, 100]**; otherwise the call errors with
+  `invalid reward percentiles: must be ascending and between 0 and 100`. The
+  list length must be 100 or fewer.
+- `lastBlock` accepts block tags (`latest`, `safe`, `finalized`, `pending` all
+  resolve to the latest committed block; `earliest` resolves to the oldest
+  retained height) or an explicit height. An explicit height above the latest
+  committed block errors (`not yet available`).
+- Pruned/unavailable heights below the retention floor are skipped;
+  `oldestBlock` reflects the earliest retained height actually returned.
+- An empty (zero-transaction) block returns `0` gasUsedRatio and `0` reward
+  for every requested percentile.
+
+Which reward percentiles a block can answer from cache is governed by the
+`receipt-store.rs-reward-percentiles` config (littidx backend; empty defaults
+to `[0, 10, 20, 25, 30, 50, 75, 90, 100]`). A requested percentile not covered
+by the stored set is recomputed from the block's receipts.
+
+### Fetch fee history via JSON-RPC
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_feeHistory","params":["0x4","latest",[25,50,75]]}'
+```
+
+## `eth_gasPrice`
+
+Signature: `eth_gasPrice() -> hexutil.Big`.
+
+Returns a suggested gas price:
+
+- Base suggestion is a **10% margin over the admission floor** (the minimum
+  effective gas price the application admits a transaction at): `floor * 110 / 100`.
+- When the latest committed block is **congested** — `gasUsedRatio` strictly
+  exceeds **80%** — and that block's **median (50th-percentile) reward** is at
+  or above the margin, the median reward is returned instead.
+- A block exactly at 80% is not congested. If the median reward is below the
+  margin, or no percentile was stored for the congested block, the suggestion
+  falls back to the margin.
+
+### Fetch the suggested gas price via JSON-RPC
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_gasPrice","params":[]}'
+```
+
 ## `eth_getCode`
 
 Signature: `eth_getCode(address, blockNumberOrHash) -> hexutil.Bytes`.

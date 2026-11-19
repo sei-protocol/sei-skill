@@ -102,6 +102,44 @@ curl -s http://127.0.0.1:8545 \
   -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBlockTransactionCountByHash","params":["0xYOUR_BLOCK_HASH"]}'
 ```
 
+
+## `eth_getTransactionByBlockNumberAndIndex` and `eth_getTransactionByBlockHashAndIndex`
+
+Fetch the transaction at a given index within a finalized block (#4345, v6.8.0).
+Each returns exactly the entry the full-transaction `eth_getBlockByNumber` /
+`eth_getBlockByHash` lists at that index.
+
+- `eth_getTransactionByBlockNumberAndIndex(number, index)` — resolves the block
+  the same way as `eth_getBlockByNumber`: `latest`, `safe`, `finalized`, and
+  `pending` all map to the latest committed block, `earliest` to the oldest
+  retained height, or an explicit height. Returns `null` for a zero/negative or
+  future height, or when `index` is past the end of the block (including an
+  index beyond `int` range, or an empty block at index `0`). Errors for a
+  pruned height (and surfaces any other backend failure).
+- `eth_getTransactionByBlockHashAndIndex(hash, index)` — resolves the block the
+  same way as `eth_getBlockByHash`. Returns `null` for an unknown hash or when
+  `index` is past the end of the block.
+
+`index` is a hex quantity (e.g. `0x0`, `0x1`). The returned transaction's
+`blockNumber` and `transactionIndex` come from the listing block itself, so a
+replayed transaction whose stored receipt belongs to an earlier block still
+reports this block's number and index here.
+
+### Fetch a transaction by block and index via JSON-RPC
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionByBlockNumberAndIndex","params":["latest","0x1"]}'
+```
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getTransactionByBlockHashAndIndex","params":["0xYOUR_BLOCK_HASH","0x0"]}'
+```
+
+
 <!-- The intro above states no fee-estimation, gas-estimation, call, log, or
 WebSocket subscription method exists; this is now out of date: eth_estimateGas
 and eth_getLogs are supported on the EVM-only surface, and eth_gasPrice /

@@ -98,6 +98,45 @@ function redelegateWithAuthorization(
 
 The full interface (also `validator`, `validatorDelegations`, `unbondingDelegation`, `redelegations`, `historicalInfo`, `pool`, `params`, `createValidator`, `editValidator`) is in sei-chain at `precompiles/staking/Staking.sol`.
 
+
+> **Query methods run on a branched context.** Like the Distribution query methods, every non-transaction (view) method on the Staking precompile now runs on a cache context, so any incidental state writes (e.g. `pool` creating a missing module account) are discarded and never persisted (sei-chain#3767).
+>
+> **`redelegations` filter constraint.** `redelegations(delegator, srcValidator, dstValidator, nextKey)` only accepts three filter combinations; any other combination reverts with `"unsupported redelegations filter"`:
+> - `delegator`, `srcValidator` and `dstValidator` all set
+> - `srcValidator` alone (`delegator` and `dstValidator` empty)
+> - `delegator` alone (`srcValidator` and `dstValidator` empty)
+>
+> In particular `delegator`+`srcValidator` (without `dstValidator`), `delegator`+`dstValidator`, `dstValidator` alone, and no filter at all all revert.
+
+<!-- notes: validateRedelegationsFilter and the branched-context behaviour were added in both precompiles/staking/staking.go and the legacy v68 copy precompiles/staking/legacy/v68/staking.go; IsTransaction now distinguishes mutating methods from views to decide when to branch the context. -->
+
+
+### Redelegations Query — Supported Filters
+
+```solidity
+// Get redelegations (paginated). The filter arguments are validated: only certain
+// combinations are honoured by the staking querier; any other combination reverts
+// with "unsupported redelegations filter".
+function redelegations(
+    string memory delegator,     // delegator address, or "" when filtering by srcValidator alone
+    string memory srcValidator,  // source validator, or "" when filtering by delegator alone
+    string memory dstValidator,  // destination validator, set only together with delegator and srcValidator
+    bytes memory nextKey
+) external view returns (RedelegationsResponse memory response);
+```
+
+Exactly one of these combinations is permitted; anything else reverts with `unsupported redelegations filter`:
+
+| delegator | srcValidator | dstValidator | Result |
+|---|---|---|---|
+| set | set | set | OK — redelegations from src to dst for that delegator |
+| empty | set | empty | OK — all redelegations from that source validator |
+| set | empty | empty | OK — all redelegations of that delegator |
+| any other combination | | | reverts: `unsupported redelegations filter` |
+
+For example, delegator + srcValidator (without dstValidator), delegator + dstValidator, dstValidator alone, or no filter at all all revert.
+
+
 ### Events
 
 ```solidity

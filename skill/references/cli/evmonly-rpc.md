@@ -76,6 +76,32 @@ wscat -c ws://127.0.0.1:8546 \
 - `eth_getLogs` — returns event logs matching a filter over a block range
   (#4308). Now available on the EVM-only Giga RPC.
 
+
+- `eth_getBlockTransactionCountByNumber` — returns the number of transactions
+  in a finalized block by number as a hex count (#4345, v6.8.0). Resolves the
+  block the same way as `eth_getBlockByNumber`: `latest`, `safe`, `finalized`,
+  and `pending` all map to the latest committed block, `earliest` to the oldest
+  retained height, or an explicit height. Returns `null` for a zero/negative or
+  future height; errors for a pruned height. An empty (zero-transaction) block
+  returns `0x0`, not `null`.
+- `eth_getBlockTransactionCountByHash` — returns the number of transactions in
+  a finalized block by hash as a hex count (#4345, v6.8.0). Resolves the block
+  the same way as `eth_getBlockByHash`. Returns `null` for an unknown hash.
+
+### Fetch the block transaction count via JSON-RPC
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBlockTransactionCountByNumber","params":["latest"]}'
+```
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBlockTransactionCountByHash","params":["0xYOUR_BLOCK_HASH"]}'
+```
+
 <!-- The intro above states no fee-estimation, gas-estimation, call, log, or
 WebSocket subscription method exists; this is now out of date: eth_estimateGas
 and eth_getLogs are supported on the EVM-only surface, and eth_gasPrice /

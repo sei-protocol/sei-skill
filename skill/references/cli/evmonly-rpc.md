@@ -251,6 +251,52 @@ curl -s http://127.0.0.1:8545 \
   -d '{"jsonrpc":"2.0","id":1,"method":"eth_getCode","params":["0xYOUR_CONTRACT_ADDRESS","latest"]}'
 ```
 
+
+## `eth_getStorageAt`
+
+Signature: `eth_getStorageAt(address, storageKey, blockNumberOrHash) -> hexutil.Bytes`.
+
+Returns the 32-byte value at a contract storage slot from the current committed
+EVM state, matching go-ethereum semantics (#4388 is the EVM-only addition).
+
+Block parameter handling:
+
+- Accepts `latest`, `safe`, `finalized`, and `pending`. All four read the
+  current committed EVM state, because Sei has instant finality.
+- An explicit block number, a block hash, or `earliest` returns the same
+  historical-state error as `eth_getBalance`/`eth_getCode` (`historical state
+  is not supported by EVM-only RPC`).
+
+Storage-key semantics:
+
+- The slot key is a hex number of **at most 32 bytes**. A `0x`/`0X` prefix is
+  optional; odd-length values are left-padded to a full byte, and the whole
+  key is then left-padded to 32 bytes. An empty key (`0x`) is slot zero.
+- A non-hex key fails with `hex string invalid`; a doubled prefix (e.g.
+  `0x0X1`) is also treated as invalid hex. A key longer than 32 bytes fails
+  with `hex string too long, want at most 32 bytes`.
+- An **unset slot** — including any slot of an address with no contract —
+  returns 32 zero bytes (`0x0000…0000`), not `null` or `0x`, as go-ethereum
+  does.
+
+### Read contract storage with `cast storage`
+
+```sh
+cast storage \
+  --rpc-url http://127.0.0.1:8545 \
+  0xYOUR_CONTRACT_ADDRESS \
+  0
+```
+
+### Fetch a storage slot via JSON-RPC
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getStorageAt","params":["0xYOUR_CONTRACT_ADDRESS","0x0","latest"]}'
+```
+
+
 ## `eth_getBalance`
 
 Signature: `eth_getBalance(address, blockNumberOrHash)`.

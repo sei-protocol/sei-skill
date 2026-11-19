@@ -14,6 +14,45 @@ JSON-RPC surface. All other `eth_*` methods return JSON-RPC method-not-found.
   pending or unknown hash returns `null`.
 - `eth_getBalance` — returns the current committed EVM balance.
 
+
+- `eth_getCode` — returns the current committed contract code at an address.
+
+## `eth_getCode`
+
+Signature: `eth_getCode(address, blockNumberOrHash) -> hexutil.Bytes`.
+
+Returns the contract code at the address from the current committed EVM state,
+matching go-ethereum semantics.
+
+Block parameter handling:
+
+- Accepts `latest`, `safe`, `finalized`, and `pending`. All four read the
+  current committed EVM state, because Sei has instant finality.
+- An explicit block number, a block hash, or `earliest` returns the same
+  historical-state error as `eth_getBalance` (`historical state is not
+  supported by EVM-only RPC`).
+
+Code semantics:
+
+- An address with no code — including an EOA or an address that was never
+  touched — returns `0x` (empty bytes), not `null`, as go-ethereum does.
+
+### Fetch contract code with `cast code`
+
+```sh
+cast code \
+  --rpc-url http://127.0.0.1:8545 \
+  0xYOUR_CONTRACT_ADDRESS
+```
+
+### Fetch code via JSON-RPC
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getCode","params":["0xYOUR_CONTRACT_ADDRESS","latest"]}'
+```
+
 ## `eth_getBalance`
 
 Signature: `eth_getBalance(address, blockNumberOrHash)`.

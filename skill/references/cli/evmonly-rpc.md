@@ -5,11 +5,59 @@ JSON-RPC surface. All other `eth_*` methods return JSON-RPC method-not-found.
 
 ## Supported methods
 
+
+## WebSocket endpoint and `eth_subscribe("newHeads")`
+
+The EVM-only JSON-RPC is served over **both** HTTP and WebSocket. The HTTP
+listener binds `giga.execution.evm_rpc_port` (default 8545); the WebSocket
+listener binds `giga.execution.evm_ws_port` (default 8546). Both must be in
+`1..65535` and `evm_ws_port` must differ from `evm_rpc_port`, or the node
+refuses to start.
+
+- The WebSocket listener serves the **same** JSON-RPC methods as the HTTP
+  listener, plus the WebSocket-only `eth_subscribe`/`eth_unsubscribe` flow.
+- Upgrades are accepted from **any `Origin`** header (WebSocket is exempt from
+  the browser same-origin policy), and concurrent WebSocket connections are
+  bounded to **2000**.
+- Plain (non-upgraded) HTTP requests to the WebSocket listener, and
+  `eth_subscribe` over the HTTP listener, are rejected
+  (`notifications not supported`).
+
+`eth_subscribe("newHeads")` pushes **one Ethereum header per executed block**,
+starting from the block after the subscription is created. Each header carries
+the block's `number`, `hash`, `gasUsed`, `gasLimit`, `timestamp`, etc.
+
+**Requires Autobahn execution.** On nodes that do not execute blocks through
+Autobahn the subscription is unavailable and fails with
+`newHeads subscriptions require Autobahn execution`.
+
+### Subscribe to new heads via `cast`
+
+```sh
+cast subscribe \
+  --rpc-url ws://127.0.0.1:8546 \
+  newHeads
+```
+
+### Subscribe to new heads via JSON-RPC over WebSocket
+
+```sh
+wscat -c ws://127.0.0.1:8546 \
+  -x '{"jsonrpc":"2.0","id":1,"method":"eth_subscribe","params":["newHeads"]}'
+```
+
+
 - `eth_sendRawTransaction` — submit a signed raw EVM transaction. Used by
   `sei-load` and `cast publish`. Because there is no chain ID, nonce,
-  fee-estimation, gas-estimation, call, log, or WebSocket subscription method,
-  raw transactions must supply chain ID, nonce, gas limit, and gas price
-  offline.
+  fee-estimation, gas-estimation, or call method, raw transactions must supply
+  chain ID, nonce, gas limit, and gas price offline.
+- `eth_subscribe("newHeads")` — WebSocket-only subscription that pushes one
+  Ethereum header per executed block (#4345, v6.8.0). Delivered over the
+  EVM-only WebSocket listener (default port 8546, configured by
+  `giga.execution.evm_ws_port`), **not** the HTTP listener on 8545. Requires
+  Autobahn execution; on non-Autobahn nodes the subscription errors with
+  `newHeads subscriptions require Autobahn execution`. Over plain HTTP it
+  returns `notifications not supported`.
 - `eth_getTransactionReceipt` — returns a finalized receipt. A lookup for a
   pending or unknown hash returns `null`.
 - `eth_getBalance` — returns the current committed EVM balance.

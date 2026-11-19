@@ -229,7 +229,7 @@ interface ICosmWasm {
 }
 ```
 
-`execute_batch` is still in the ABI but has been disabled since v6.7 ([sei-chain#4074](https://github.com/sei-protocol/sei-chain/pull/4074)); calls revert with `wasmd execute_batch is disabled`. Use one `execute` call per message.
+`execute_batch` is still in the ABI but has been disabled ([sei-chain#4066](https://github.com/sei-protocol/sei-chain/pull/4066)); calls revert with `wasmd execute_batch is disabled`. Use one `execute` call per message.
 
 ---
 

@@ -21,6 +21,19 @@ JSON-RPC surface. All other `eth_*` methods return JSON-RPC method-not-found.
   percentiles for a range of blocks (see below).
 - `eth_gasPrice` — returns a suggested gas price (see below).
 
+
+- `eth_estimateGas` — estimates the gas a transaction would consume, built on
+  the existing estimation libraries (#4325). Now available on the EVM-only Giga
+  RPC.
+- `eth_getLogs` — returns event logs matching a filter over a block range
+  (#4308). Now available on the EVM-only Giga RPC.
+
+<!-- The intro above states no fee-estimation, gas-estimation, call, log, or
+WebSocket subscription method exists; this is now out of date: eth_estimateGas
+and eth_getLogs are supported on the EVM-only surface, and eth_gasPrice /
+eth_feeHistory already provide fee estimation. Only call and WebSocket
+subscription methods remain unavailable. -->
+
 ## `eth_feeHistory`
 
 Signature: `eth_feeHistory(blockCount, lastBlock, rewardPercentiles) -> FeeHistoryResult`.

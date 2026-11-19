@@ -204,6 +204,38 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
   The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules.
 - **Giga Executor** (`[giga_executor] enabled`) is a *separate* feature — an evmone-based EVM interpreter for throughput. Don't conflate it with Giga Storage.
 
+
+
+---
+
+## `[giga]` app.toml section
+
+A `[giga]` section in `app.toml` is honored on the Autobahn node ([sei-chain#4323](https://github.com/sei-protocol/sei-chain/pull/4323)). It carries Giga-specific node settings read by the Autobahn executor path; place it as its own top-level `[giga]` table in `app.toml`.
+
+```toml
+[giga]
+# Giga-specific settings honored on the Autobahn node.
+```
+
+- Distinct from `[giga_executor]` (the evmone interpreter toggle) and from the SeiDB SC FlatKV routing (`[state-commit]` keys) — do not conflate the three.
+
+---
+
+## Node config from `sei.toml` (ConfigManager)
+
+ConfigManager sources node configuration from a node's `sei.toml` file ([sei-chain#4043](https://github.com/sei-protocol/sei-chain/pull/4043), [#4045](https://github.com/sei-protocol/sei-chain/pull/4045)). `sei.toml` lives alongside the other config files under `$HOME/.sei/config/`, and ConfigManager reads it to resolve node section settings in addition to the established `app.toml` / `config.toml` / `client.toml`.
+
+```
+$HOME/.sei/config/
+├── app.toml
+├── config.toml
+├── client.toml
+├── sei.toml                  # ConfigManager node sections
+├── genesis.json
+├── node_key.json
+└── priv_validator_key.json
+```
+
 > Minimum gas price, block gas limit, and SSTORE/storage gas are governance-adjustable — confirm live values at https://docs.sei.io/evm/differences-with-ethereum, and set `minimum-gas-prices` at or above the mainnet floor (`0usei` is local-dev only).
 
 

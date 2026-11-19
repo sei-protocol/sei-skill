@@ -370,6 +370,30 @@ make install
 sudo systemctl restart seid
 ```
 
+
+---
+
+## v6.8 Upgrade: Oracle Module Removal (one-way)
+
+The v6.8 upgrade ([sei-chain#4319](https://github.com/sei-protocol/sei-chain/pull/4319)) removes the oracle module — its store, keeper, param subspace, protobuf schema, wasm query route, and tooling are deleted. Only the oracle `Msg` types remain decodable so historical blocks still trace. The change is **app-hash breaking at the upgrade height**, and the oracle store is dropped via `StoreUpgrades.Deleted`.
+
+### Operator actions
+
+- **Upgrade to v6.8 at the scheduled plan height.** An unupgraded (v6.7) binary has no `v6.8` upgrade handler and **halts at the plan height** with `UPGRADE "v6.8" NEEDED` rather than advancing — build and stage the v6.8 binary before the halt height as with any governance upgrade.
+- **Downgrade to v6.7 is impossible after migration.** Once v6.8 has run and deleted the oracle store, a v6.7 binary **panics on reopen** (missing `store "oracle"`). Do not roll back the binary after the upgrade height; restore from a pre-upgrade backup if you must return to v6.7.
+- The migration deletes the oracle store and removes the oracle module version from the version map. No oracle genesis state is exported after the upgrade.
+
+### Post-upgrade behavior
+
+- Oracle CLI is gone: `seid q oracle ...` returns `unknown command "oracle"`.
+- Oracle gRPC/REST query and Msg endpoints are removed; a raw store query against `oracle` returns `no such store: oracle` (no longer the old deprecation error).
+- The CosmWasm `oracle` query route is removed — contracts hitting it now get an unknown route.
+- Oracle transactions submitted after the upgrade are rejected **before fees are charged** (previously rejected but still charged a fee and consumed a sequence number).
+
+### Tooling module lists
+
+The `oracle` entry is removed from all tooling module lists — `scripts/dump_app_state_for_height.sh`, the seidb `AllModules` list, and the iaviewer helpers. Scripts and iaviewer invocations that iterate the module list no longer include `oracle`; remove any hardcoded `oracle` references in your own dump/inspect wrappers after upgrading.
+
 ---
 
 ## Freeze Height (`--freeze-height` / `freeze-height`)

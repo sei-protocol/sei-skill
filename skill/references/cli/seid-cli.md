@@ -177,6 +177,11 @@ Supported types:
 
 Note: `pointee` does not support `CW1155` or `ERC1155`.
 
+
+### Oracle Module Removed
+
+The oracle module has been removed behind the v6.8 upgrade ([sei-chain#4319](https://github.com/sei-protocol/sei-chain/pull/4319)): its CLI commands, store, protobuf schema, REST/gRPC endpoints, and CosmWasm query route are gone. `seid q oracle ...` now returns `unknown command "oracle"`, and store queries against the deleted store return `no such store: oracle`. Only the oracle `Msg` types remain decodable so historical blocks still trace; oracle transactions submitted after the upgrade are rejected before any fee is charged. The `oracle` module no longer appears in any tooling module list (`dump_app_state_for_height.sh`, `seidb` `AllModules`, iaviewer helpers).
+
 ### Transaction Lookup
 
 ```bash

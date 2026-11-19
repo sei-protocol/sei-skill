@@ -18,7 +18,7 @@ Precompiles are fixed-address contracts deployed by the Sei protocol that expose
 | Staking | `0x0000000000000000000000000000000000001005` | Delegate/undelegate/redelegate SEI |
 | Governance | `0x0000000000000000000000000000000000001006` | Vote, submit proposals, deposit |
 | Distribution | `0x0000000000000000000000000000000000001007` | Claim staking rewards |
-| Oracle | `0x0000000000000000000000000000000000001008` | ❌ Retired (shut off July 2026) — queries revert; use a third-party oracle |
+| Oracle | `0x0000000000000000000000000000000000001008` | ❌ Dead — the underlying oracle module was removed at the v6.8 upgrade (sei-chain#4319): its store, keeper, gRPC/REST endpoints, CLI (`seid q oracle …` → `unknown command "oracle"`), and the CosmWasm `oracle` query route are all gone. Oracle data is no longer served on-chain; use a third-party oracle |
 | IBC | `0x0000000000000000000000000000000000001009` | **Do not use** — IBC is disabled in both directions; `transfer` cannot succeed |
 | PointerView | `0x000000000000000000000000000000000000100A` | Query pointer registrations |
 | Pointer | `0x000000000000000000000000000000000000100B` | ❌ Retired — EVM pointer creation is disabled; `addNativePointer`/`addCW20Pointer`/`addCW721Pointer`/`addCW1155Pointer` all revert with `pointer precompile is retired; EVM pointer creation is disabled` |

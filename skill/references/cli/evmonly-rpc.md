@@ -140,6 +140,66 @@ curl -s http://127.0.0.1:8545 \
 ```
 
 
+
+## `eth_getBlockReceipts`
+
+Signature: `eth_getBlockReceipts(blockNumberOrHash) -> []receipt`.
+
+Returns the receipts stored for a finalized block, in transaction index order.
+
+Block selector handling:
+
+- Accepts an explicit height, a block tag, or a block hash.
+- The tags `latest`, `safe`, `finalized`, and `pending` all resolve to the
+  latest block whose receipts are **indexed** — not necessarily the committed
+  head. When the committed head is ahead of the last indexed block, a tag
+  resolves to the last indexed height.
+- `earliest` resolves to the oldest retained height.
+- An empty (zero-transaction) block returns an **empty list** (`[]`), not `null`.
+
+Null-vs-error semantics:
+
+- Returns `null` for an unknown block hash, a zero/negative or future height,
+  or a height whose receipts are not yet indexed.
+- Errors for a **pruned** height or pruned receipts (`eth_getBlockReceipts
+  block receipts are pruned`), and when the call supplies no block selector
+  (`eth_getBlockReceipts requires a block number or hash`, returned as
+  invalid-params / JSON-RPC code `-32602`). Any other backend failure is
+  surfaced as an error.
+
+Which receipts are listed:
+
+- Only the receipts **stored for that block** are listed. A rejected
+  transaction that produced no receipt is skipped.
+- A replayed (repeated) transaction keeps its receipt at the block where it
+  first executed, so it is listed under that original block and not under the
+  block where it was replayed.
+- Each listed receipt equals what `eth_getTransactionReceipt` returns for that
+  transaction hash.
+
+### Fetch block receipts with `cast`
+
+```sh
+cast block-receipts \
+  --rpc-url http://127.0.0.1:8545 \
+  latest
+```
+
+### Fetch block receipts via JSON-RPC
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBlockReceipts","params":["latest"]}'
+```
+
+```sh
+curl -s http://127.0.0.1:8545 \
+  -H 'Content-Type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"eth_getBlockReceipts","params":["0xYOUR_BLOCK_HASH"]}'
+```
+
+
 <!-- The intro above states no fee-estimation, gas-estimation, call, log, or
 WebSocket subscription method exists; this is now out of date: eth_estimateGas
 and eth_getLogs are supported on the EVM-only surface, and eth_gasPrice /

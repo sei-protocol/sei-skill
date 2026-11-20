@@ -279,21 +279,27 @@ curl -s http://127.0.0.1:8545 \
 
 Signature: `eth_getCode(address, blockNumberOrHash) -> hexutil.Bytes`.
 
-Returns the contract code at the address from the current committed EVM state,
-matching go-ethereum semantics.
+Returns the contract code at the address in the committed EVM state after the
+selected block, matching go-ethereum semantics.
 
-Block parameter handling:
+Block parameter handling (#4388, v6.8.0):
 
 - Accepts `latest`, `safe`, `finalized`, and `pending`. All four read the
   current committed EVM state, because Sei has instant finality.
-- An explicit block number, a block hash, or `earliest` returns the same
-  historical-state error as `eth_getBalance` (`historical state is not
-  supported by EVM-only RPC`).
+- An **explicit block height** reads the code after that block, and `earliest`
+  reads block 0. A past height is served from the EVM state store, so it
+  requires a node that keeps state history (a full node, not a validator), and
+  fails once that height has been pruned.
+- A **block hash**, or no block number or hash at all, returns
+  `state queries by block hash are not supported by EVM-only RPC`
+  (`errBlockHashUnsupported`). A height **above the current head** returns
+  `block is above the latest block`.
 
 Code semantics:
 
-- An address with no code — including an EOA or an address that was never
-  touched — returns `0x` (empty bytes), not `null`, as go-ethereum does.
+- An address with no code at the selected block — including an EOA or an
+  address that was never touched — returns `0x` (empty bytes), not `null`, as
+  go-ethereum does.
 
 ### Fetch contract code with `cast code`
 
@@ -319,13 +325,17 @@ Signature: `eth_getStorageAt(address, storageKey, blockNumberOrHash) -> hexutil.
 Returns the 32-byte value at a contract storage slot from the current committed
 EVM state, matching go-ethereum semantics (#4388 is the EVM-only addition).
 
-Block parameter handling:
+Block parameter handling (#4388, v6.8.0):
 
 - Accepts `latest`, `safe`, `finalized`, and `pending`. All four read the
   current committed EVM state, because Sei has instant finality.
-- An explicit block number, a block hash, or `earliest` returns the same
-  historical-state error as `eth_getBalance`/`eth_getCode` (`historical state
-  is not supported by EVM-only RPC`).
+- An explicit block height reads the storage slot in the committed EVM state
+  **after that block**, and `earliest` reads block 0. A past height is served
+  from the EVM state store, so it needs a node that keeps one (a full node, not
+  a validator), and fails once that height is pruned.
+- A **block hash** returns an error (`state queries by block hash are not
+  supported by EVM-only RPC`), and a height **above the current head** returns
+  `block is above the latest block`.
 
 Storage-key semantics:
 
@@ -365,9 +375,15 @@ Block parameter handling:
 
 - Accepts `latest`, `safe`, `finalized`, and `pending`. All four read the
   current committed EVM state, because Sei has instant finality.
-- Explicit block numbers (including `earliest`) and block hashes return an
-  error — historical EVM-only state is not supported (`historical state is not
-  supported by EVM-only RPC`).
+- Accepts an explicit block height (`--block`): reads the balance after that
+  block, served from the EVM state store. This requires a node that keeps
+  state history (a full node, not a validator), and fails once that height is
+  pruned (`the EVM state after block N is not held by this node`).
+- `earliest` reads block 0.
+- A block hash returns `state queries by block hash are not supported by
+  EVM-only RPC`; a height above the current head returns `block is above the
+  latest block`; a negative/unsupported tag returns `block tag is not
+  supported by EVM-only RPC`.
 
 Balance semantics:
 
@@ -379,6 +395,15 @@ Balance semantics:
 ```sh
 cast balance \
   --rpc-url http://127.0.0.1:8545 \
+  0x000000000000000000000000000000000000dEaD
+```
+
+At a past height:
+
+```sh
+cast balance \
+  --rpc-url http://127.0.0.1:8545 \
+  --block 100 \
   0x000000000000000000000000000000000000dEaD
 ```
 

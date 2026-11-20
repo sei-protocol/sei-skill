@@ -318,7 +318,6 @@ Both fields are read through the AppOptions/viper keys `evm.trace_allowed_tracer
 | `26656` | TCP | P2P — must be open to join the network |
 | `26657` | TCP | Tendermint RPC |
 | `1317` | TCP | Cosmos REST API |
-| `9090` | TCP | gRPC |
 | `8545` | TCP | EVM JSON-RPC (HTTP) |
 | `8546` | TCP | EVM JSON-RPC (WebSocket) |
 | `26660` | TCP | Prometheus metrics (disabled by default) |
@@ -438,7 +437,6 @@ To serve historical EVM JSON-RPC from frozen nodes behind one endpoint, put [fro
 ### Validation constraints (startup fails if violated)
 
 - `freeze-height` **cannot be combined with `halt-height` or `halt-time`**.
-- `--freeze-height` **cannot be used with grpc-only mode**.
 - **Full nodes only** — not supported in validator or seed mode (`mode = "validator"` / `mode = "seed"` in `config.toml`).
 - **Not supported with Autobahn** (fails if `autobahn-config-file` is set).
 - Must **not exceed `MaxInt64`** (`9223372036854775807`).

@@ -259,7 +259,6 @@ seid start --freeze-height <uint64>
 Constraints:
 - Must not exceed `MaxInt64`.
 - Cannot be combined with `--halt-height`/`halt-height` or `--halt-time`/`halt-time`.
-- Cannot be combined with grpc-only mode (`--grpc-only`).
 - State sync is disabled under freeze mode and falls back to block sync.
 - Full nodes only: not supported in validator or seed mode, or with Autobahn.
 - The target height must not be below the chain's initial height, and the application, block store, and state store must not have reached it yet — otherwise the node refuses to start.

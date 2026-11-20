@@ -29,7 +29,8 @@ Public, community, and paid RPC endpoints for Sei. Use this as the source of tru
 | `https://evm-rpc.sei-apis.com` | EVM JSON-RPC | Primary EVM endpoint |
 | `https://rpc.sei-apis.com` | Cosmos Tendermint RPC | Native Cosmos RPC |
 | `https://rest.sei-apis.com` | Cosmos REST/LCD | Cosmos SDK REST |
-| `grpcs://grpc.sei-apis.com:443` | Cosmos gRPC | High-performance native |
+
+> **Cosmos gRPC removed:** `seid` no longer runs the Cosmos gRPC (port 9090) or gRPC-Web (port 9091) servers — the `[grpc]` and `[grpc-web]` config sections are gone and no gRPC endpoint is served. The former `grpcs://grpc.sei-apis.com:443` endpoint no longer serves native gRPC. Query over Cosmos REST/LCD (`https://rest.sei-apis.com`) or Tendermint RPC (`https://rpc.sei-apis.com`) instead.
 
 ### Community (free)
 

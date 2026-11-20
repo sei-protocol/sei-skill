@@ -105,6 +105,12 @@ STAKING.delegate{value: 1 ether}(validatorAddr);
 **Cause**: Calling a precompile from a contract without `payable` when the precompile requires value.  
 **Fix**: Ensure the calling function is `payable` and forwards `msg.value`.
 
+
+
+### `pointer precompile is retired; EVM pointer creation is disabled`
+**Cause**: EVM pointer creation has been retired. The pointer precompile at `0x…100b` stays registered so its `addNativePointer`, `addCW20Pointer`, `addCW721Pointer`, and `addCW1155Pointer` selectors still decode, but every call now reverts with this reason. The removed `seid tx evm register-evm-pointer`, `seid tx evm call-precompile pointer addNativePointer`, `seid tx evm add-cw-erc20-pointer`, and the pointer governance proposals (`AddERCNativePointer`/`AddERCNativePointerProposalV2`, `AddERCCW20/721/1155Pointer`, `AddCWERC20/721/1155Pointer`) all fail the same way — proposals now return `ErrPointerProposalDeprecated`.  
+**Fix**: None — there is no retry, flag, or workaround that re-enables creation. Do not attempt to create a new pointer of any kind. Pointers registered before the retirement remain live and readable: their registry entries, versions, and `seid query evm pointer`-equivalent lookups (via the pointerview precompile at `0x…100A`) are unchanged, and their deployed ERC20/721/1155 contracts keep working. Only creation of new pointers is disabled.
+
 ### `JSON precompile: path not found`
 **Cause**: `extractAs*` function given a JSON path that doesn't exist in the input.  
 **Fix**: Validate JSON structure before passing to precompile. Use try/catch.

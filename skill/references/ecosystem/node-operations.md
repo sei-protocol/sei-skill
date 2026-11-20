@@ -155,6 +155,29 @@ ss-keep-recent = 100000             # Keep last 100k blocks
 ss-prune-interval = 600
 ```
 
+
+---
+
+## Receipt-store reward percentiles (`receipt-store.rs-reward-percentiles`)
+
+Controls the per-block gas-weighted reward percentiles computed and stored alongside each block's receipts. These are what the EVM-only (giga) RPC server's `eth_feeHistory` reward rows and `eth_gasPrice` congestion escalation read from.
+
+```toml
+[receipt-store]
+# Gas-weighted eth_feeHistory reward percentiles stored per block.
+# Applies ONLY when rs-backend = "littidx".
+# Each entry must be in [0, 100], with no duplicates.
+# An empty list ([]) defaults to [0, 10, 20, 25, 30, 50, 75, 90, 100].
+rs-reward-percentiles = []
+```
+
+- **littidx backend only.** The pebble backend does not group receipts by block and records no block stats; `eth_feeHistory`/`eth_gasPrice` callers fall back to recomputing from receipts.
+- **Validation (startup fails if violated):** each entry must be within `[0, 100]`, there must be no duplicates, and the list must be 100 entries or fewer.
+- **Empty default:** an empty list (`[]`) applies the built-in default `[0, 10, 20, 25, 30, 50, 75, 90, 100]`.
+- **Read through the AppOptions/viper key** `receipt-store.rs-reward-percentiles`. Settable via a comma- or whitespace-separated environment-variable string (e.g. `0,50,100`) in addition to a TOML float array.
+- A requested `eth_feeHistory` percentile not covered by the stored set is recomputed from that block's receipts rather than approximated.
+
+
 ---
 
 ## SeiDB storage, RocksDB, and Giga
@@ -180,6 +203,51 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 
   The migration is staged: `migrate_evm` drains EVM data in the background and settles at `evm_migrated`; later modes migrate the remaining modules.
 - **Giga Executor** (`[giga_executor] enabled`) is a *separate* feature — an evmone-based EVM interpreter for throughput. Don't conflate it with Giga Storage.
+
+
+### `seidb` CLI from the Docker image
+
+The official Docker image now builds and ships the `seidb` tool binary at `/usr/bin/seidb` alongside `seid` ([sei-chain#4323 build change](https://github.com/sei-protocol/sei-chain)). Container users no longer need to build it separately — run it directly:
+
+```bash
+docker run --rm -v $HOME/.sei:/root/.sei <sei-image> seidb --help
+```
+
+- `seidb` is pure Go — it is built with `CGO_ENABLED=0` and does not link `libwasmvm`, so it runs standalone in the container.
+- Use it for SeiDB State Store / State Commit inspection and maintenance tasks against the node's data directory (mount `$HOME/.sei` into the container).
+- Note the post-v6.8 tooling change: `oracle` has been removed from the seidb `AllModules` list, so module-iterating subcommands no longer include it.
+
+
+
+---
+
+## `[giga]` app.toml section
+
+A `[giga]` section in `app.toml` is honored on the Autobahn node ([sei-chain#4323](https://github.com/sei-protocol/sei-chain/pull/4323)). It carries Giga-specific node settings read by the Autobahn executor path; place it as its own top-level `[giga]` table in `app.toml`.
+
+```toml
+[giga]
+# Giga-specific settings honored on the Autobahn node.
+```
+
+- Distinct from `[giga_executor]` (the evmone interpreter toggle) and from the SeiDB SC FlatKV routing (`[state-commit]` keys) — do not conflate the three.
+
+---
+
+## Node config from `sei.toml` (ConfigManager)
+
+ConfigManager sources node configuration from a node's `sei.toml` file ([sei-chain#4043](https://github.com/sei-protocol/sei-chain/pull/4043), [#4045](https://github.com/sei-protocol/sei-chain/pull/4045)). `sei.toml` lives alongside the other config files under `$HOME/.sei/config/`, and ConfigManager reads it to resolve node section settings in addition to the established `app.toml` / `config.toml` / `client.toml`.
+
+```
+$HOME/.sei/config/
+├── app.toml
+├── config.toml
+├── client.toml
+├── sei.toml                  # ConfigManager node sections
+├── genesis.json
+├── node_key.json
+└── priv_validator_key.json
+```
 
 > Minimum gas price, block gas limit, and SSTORE/storage gas are governance-adjustable — confirm live values at https://docs.sei.io/evm/differences-with-ethereum, and set `minimum-gas-prices` at or above the mainnet floor (`0usei` is local-dev only).
 
@@ -250,7 +318,6 @@ Both fields are read through the AppOptions/viper keys `evm.trace_allowed_tracer
 | `26656` | TCP | P2P — must be open to join the network |
 | `26657` | TCP | Tendermint RPC |
 | `1317` | TCP | Cosmos REST API |
-| `9090` | TCP | gRPC |
 | `8545` | TCP | EVM JSON-RPC (HTTP) |
 | `8546` | TCP | EVM JSON-RPC (WebSocket) |
 | `26660` | TCP | Prometheus metrics (disabled by default) |
@@ -315,6 +382,30 @@ make install
 sudo systemctl restart seid
 ```
 
+
+---
+
+## v6.8 Upgrade: Oracle Module Removal (one-way)
+
+The v6.8 upgrade ([sei-chain#4319](https://github.com/sei-protocol/sei-chain/pull/4319)) removes the oracle module — its store, keeper, param subspace, protobuf schema, wasm query route, and tooling are deleted. Only the oracle `Msg` types remain decodable so historical blocks still trace. The change is **app-hash breaking at the upgrade height**, and the oracle store is dropped via `StoreUpgrades.Deleted`.
+
+### Operator actions
+
+- **Upgrade to v6.8 at the scheduled plan height.** An unupgraded (v6.7) binary has no `v6.8` upgrade handler and **halts at the plan height** with `UPGRADE "v6.8" NEEDED` rather than advancing — build and stage the v6.8 binary before the halt height as with any governance upgrade.
+- **Downgrade to v6.7 is impossible after migration.** Once v6.8 has run and deleted the oracle store, a v6.7 binary **panics on reopen** (missing `store "oracle"`). Do not roll back the binary after the upgrade height; restore from a pre-upgrade backup if you must return to v6.7.
+- The migration deletes the oracle store and removes the oracle module version from the version map. No oracle genesis state is exported after the upgrade.
+
+### Post-upgrade behavior
+
+- Oracle CLI is gone: `seid q oracle ...` returns `unknown command "oracle"`.
+- Oracle gRPC/REST query and Msg endpoints are removed; a raw store query against `oracle` returns `no such store: oracle` (no longer the old deprecation error).
+- The CosmWasm `oracle` query route is removed — contracts hitting it now get an unknown route.
+- Oracle transactions submitted after the upgrade are rejected **before fees are charged** (previously rejected but still charged a fee and consumed a sequence number).
+
+### Tooling module lists
+
+The `oracle` entry is removed from all tooling module lists — `scripts/dump_app_state_for_height.sh`, the seidb `AllModules` list, and the iaviewer helpers. Scripts and iaviewer invocations that iterate the module list no longer include `oracle`; remove any hardcoded `oracle` references in your own dump/inspect wrappers after upgrading.
+
 ---
 
 ## Freeze Height (`--freeze-height` / `freeze-height`)
@@ -346,7 +437,6 @@ To serve historical EVM JSON-RPC from frozen nodes behind one endpoint, put [fro
 ### Validation constraints (startup fails if violated)
 
 - `freeze-height` **cannot be combined with `halt-height` or `halt-time`**.
-- `--freeze-height` **cannot be used with grpc-only mode**.
 - **Full nodes only** — not supported in validator or seed mode (`mode = "validator"` / `mode = "seed"` in `config.toml`).
 - **Not supported with Autobahn** (fails if `autobahn-config-file` is set).
 - Must **not exceed `MaxInt64`** (`9223372036854775807`).

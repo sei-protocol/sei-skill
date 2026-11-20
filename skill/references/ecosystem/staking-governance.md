@@ -253,6 +253,14 @@ seid tx gov submit-proposal software-upgrade v5.9.0 \
 
 ### Expedited Proposal (Fast-Track)
 
+
+
+> **App-hash-breaking upgrades delete state (e.g. v6.8).** The v6.8 upgrade removes the `oracle` module and **deletes its store** at the upgrade height via `StoreUpgrades.Deleted`, also removing the oracle module version from the version map. This is app-hash breaking at the plan height. Operational consequences a software-upgrade proposal implies:
+> - Unupgraded (v6.7) binaries **halt** at the plan height instead of producing a divergent block.
+> - A v6.7 binary **cannot reopen** a database already migrated by v6.8 — it panics on the missing oracle store. Downgrade past v6.8 is impossible once migration has run; back up data before upgrading.
+> - After v6.8, oracle commands are gone (`seid q oracle ...` returns `unknown command "oracle"`) and store queries for oracle return `no such store: oracle`. Only oracle `Msg` types remain decodable so historical blocks still trace; oracle transactions submitted after the upgrade are rejected **without charging a fee** (`ErrDeprecated`).
+
+
 ```bash
 seid tx gov submit-proposal software-upgrade emergency-patch \
   --upgrade-height 20100000 \

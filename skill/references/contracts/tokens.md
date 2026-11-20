@@ -97,11 +97,13 @@ USDC on Sei is a native ERC20 — no pointer or bridging step needed.
 
 | Legacy | Recommended |
 |---|---|
-| CW20 token | ERC20 token + optional pointer |
-| CW721 NFT | ERC721 NFT + optional pointer |
-| Native denom | Native denom + ERC20 pointer (TokenFactory) |
+| CW20 token | ERC20 token |
+| CW721 NFT | ERC721 NFT |
+| Native denom | Native denom (TokenFactory) |
 
-For existing CW20/CW721 tokens: register an ERC20/ERC721 pointer to make them accessible in EVM wallets while migrating. See [pointers/overview.md](../pointers/overview.md).
+> **EVM pointer creation is disabled.** The pointer precompile is retired, and transactions that previously created pointers now revert with `pointer precompile is retired; EVM pointer creation is disabled`. The CLI commands and governance proposals that registered pointers have been removed (`seid tx evm register-evm-pointer`, `seid tx evm call-precompile pointer addNativePointer`, `seid query evm pointer`, `seid tx evm add-cw-erc20-pointer`, and the `AddERC*/AddCW*Pointer` proposal types).
+
+For existing CW20/CW721 tokens there is **no longer any way to create a new pointer** to make them accessible in EVM wallets — new tokens should be deployed natively as ERC20/ERC721. Only pointers registered before the retirement remain live and readable.
 
 ## Native Denoms
 

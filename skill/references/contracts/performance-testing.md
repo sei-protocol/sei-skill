@@ -118,6 +118,41 @@ Source: https://github.com/sei-protocol/sei-chain/tree/main/loadtest
 
 You don't need to fork it. Build your own loadtest in TypeScript with viem (above) — same shape, easier to iterate.
 
+
+
+### evmonly-loadtest
+
+`giga/evmonly/cmd/evmonly-loadtest` is a standalone binary that feeds synthetic blocks to the EVM-only executor through the disk-backed Giga state and receipt stores (no Cosmos SDK state, mempool, or RPC).
+
+Build it:
+
+```bash
+make build-evmonly-loadtest
+```
+
+This writes `./build/evmonly-loadtest`. `go run ./giga/evmonly/cmd/evmonly-loadtest` is equivalent when you don't want a binary.
+
+Run a bounded prebuilt test:
+
+```bash
+./build/evmonly-loadtest --blocks=1000 --txs-per-block=1000
+```
+
+**`--storage-dir`** sets the GigaStorageManager home directory:
+
+- Empty (default) → a temporary directory is used and removed on exit.
+- A set path is created if missing and is **kept** after the run.
+
+```bash
+./build/evmonly-loadtest \
+  --blocks=1000 \
+  --txs-per-block=1000 \
+  --storage-dir=/tmp/evmonly-storage
+```
+
+Note: a second run against an already-populated `--storage-dir` will fail at genesis commit — point each kept run at a fresh (empty or non-existent) directory.
+
+
 ## Common bottlenecks discovered by load testing
 
 | Symptom | Likely cause | Fix |

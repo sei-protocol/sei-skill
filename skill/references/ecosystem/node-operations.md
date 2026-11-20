@@ -104,7 +104,7 @@ A provider snapshot is a third-party archive of another node's `data/` and `wasm
 - The node **cannot verify the historical State Store (SS) data** in a snapshot at all.
 - State sync, by contrast, verifies the restored state against the app hash in a block header that the light client has verified.
 
-Recommend state sync. Suggest a provider snapshot only when state sync cannot do the job — for example, an archive node, which needs history that state sync does not restore — and always say that it requires trusting the provider. For the restore procedure, link https://docs.sei.io/node/snapshot.
+Recommend state sync. Suggest a provider snapshot only when state sync cannot do the job — for example, an archive node, which needs history that state sync does not restore — and always say that it requires trusting the provider. For an archive node, the snapshot itself must be an archive (unpruned) snapshot: a snapshot keeps the source node's pruning, so restoring a pruned one and then turning pruning off cannot bring back the missing history. For the restore procedure, link https://docs.sei.io/node/snapshot.
 
 ---
 

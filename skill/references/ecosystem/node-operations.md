@@ -47,13 +47,13 @@ seid init <YOUR_MONIKER> --chain-id pacific-1
 # seid init <YOUR_MONIKER> --chain-id pacific-1 --mode validator
 ```
 
-> **Never start from genesis on a live network** — it panics with `integer divide by zero`. Bootstrap via state sync (below) or a snapshot.
+> **Never start from genesis on a live network** — it panics with `integer divide by zero`. Bootstrap via state sync (below). A provider snapshot is a fallback that requires trusting the provider — see Provider Snapshots below.
 
 ---
 
 ## State Sync (Recommended for Fast Bootstrap)
 
-State sync fetches a recent snapshot instead of replaying all history — reduces sync from days to minutes.
+State sync fetches a recent snapshot instead of replaying all history — reduces sync from days to minutes. It is the only officially supported bootstrap method for Sei Mainnet.
 
 ### Automated State Sync
 
@@ -93,6 +93,18 @@ sudo systemctl start seid
 State sync peers:
 - **Mainnet (pacific-1)**: `https://rpc.sei-apis.com:443` or `https://sei-rpc.polkachu.com:443`
 - **Testnet (atlantic-2)**: `https://rpc-testnet.sei-apis.com:443`
+
+---
+
+## Provider Snapshots (Trust Required)
+
+A provider snapshot is a third-party archive of another node's `data/` and `wasm/` directories, extracted into `$HOME/.sei`.
+
+- Restoring one **requires trusting the provider**. A malicious or compromised provider can corrupt a snapshot in ways that are not immediately detectable.
+- The node **cannot verify the historical State Store (SS) data** in a snapshot at all.
+- State sync, by contrast, verifies the restored state against the app hash in a block header that the light client has verified.
+
+Recommend state sync. Suggest a provider snapshot only when state sync cannot do the job — for example, an archive node, which needs history that state sync does not restore — and always say that it requires trusting the provider. For the restore procedure, link https://docs.sei.io/node/snapshot.
 
 ---
 

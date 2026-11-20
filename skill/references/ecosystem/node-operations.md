@@ -205,6 +205,19 @@ SeiDB has two layers: **State Commit (SC)** — a memiavl Merkle tree that holds
 - **Giga Executor** (`[giga_executor] enabled`) is a *separate* feature — an evmone-based EVM interpreter for throughput. Don't conflate it with Giga Storage.
 
 
+### `seidb` CLI from the Docker image
+
+The official Docker image now builds and ships the `seidb` tool binary at `/usr/bin/seidb` alongside `seid` ([sei-chain#4323 build change](https://github.com/sei-protocol/sei-chain)). Container users no longer need to build it separately — run it directly:
+
+```bash
+docker run --rm -v $HOME/.sei:/root/.sei <sei-image> seidb --help
+```
+
+- `seidb` is pure Go — it is built with `CGO_ENABLED=0` and does not link `libwasmvm`, so it runs standalone in the container.
+- Use it for SeiDB State Store / State Commit inspection and maintenance tasks against the node's data directory (mount `$HOME/.sei` into the container).
+- Note the post-v6.8 tooling change: `oracle` has been removed from the seidb `AllModules` list, so module-iterating subcommands no longer include it.
+
+
 
 ---
 

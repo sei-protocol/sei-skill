@@ -323,6 +323,9 @@ For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a walle
 
 `seidb` is the SeiDB maintenance/analysis tool (built from `sei-db/tools/cmd/seidb`). Use it for inspecting on-disk state stores — not for chain queries. The commands below cover FlatKV analysis and hash-log inspection. As of v6.7.0 the fourth FlatKV bucket is named `misc` (it was `legacy` in v6.6).
 
+
+> **Shipped in the Docker image.** The official Docker image now builds and ships `seidb` at `/usr/bin/seidb` alongside `/usr/bin/seid`, so container users already have it and do not need a separate build (sei-chain Dockerfile). `seidb` is pure Go — it builds with `CGO_ENABLED=0` and does not link libwasmvm. Outside the container, build it from source with `CGO_ENABLED=0 go build -o seidb ./sei-db/tools/cmd/seidb`.
+
 ### dump-flatkv
 
 Iterates a FlatKV store and dumps every physical `(key, value)` pair into per-bucket files, one file per bucket, formatted to match `dump-iavl` so the same diff tooling works on both.

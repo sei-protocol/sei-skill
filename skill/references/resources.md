@@ -123,7 +123,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 
 | Resource | URL |
 |---|---|
-| Polkachu snapshots | https://polkachu.com/tendermint_snapshots/sei |
+| Polkachu snapshots (⚠️ third-party — restoring one requires trusting the provider; prefer state sync) | https://polkachu.com/tendermint_snapshots/sei |
 | NodeJumper | https://nodejumper.io/sei |
 | State sync (testnet) | https://rpc-testnet.sei-apis.com |
 

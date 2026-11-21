@@ -141,6 +141,7 @@ The following methods are also **registered but explicitly unsupported** on Sei 
 |---|---|
 | `eth_syncing` | `eth_syncing is not supported on Sei EVM RPC` |
 | `eth_newPendingTransactionFilter` | `eth_newPendingTransactionFilter is not supported on Sei EVM RPC` |
+| `eth_getProof` | `eth_getProof is not supported yet on Sei EVM RPC; please reach out to the Sei team if you need this endpoint` |
 | `debug_getRawBlock` | `debug_getRawBlock is not supported on Sei EVM RPC` |
 | `debug_getRawHeader` | `debug_getRawHeader is not supported on Sei EVM RPC` |
 | `debug_getRawReceipts` | `debug_getRawReceipts is not supported on Sei EVM RPC` |

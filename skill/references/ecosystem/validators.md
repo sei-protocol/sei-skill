@@ -261,6 +261,8 @@ Key metrics to monitor:
 | `tendermint_p2p_peers` | < 5 peers |
 | `process_resident_memory_bytes` | > 80% available RAM |
 
+`tendermint_p2p_peers` counts live connections. Since v6.7.2 ([sei-chain#4514](https://github.com/sei-protocol/sei-chain/pull/4514)) seid also exports `tendermint_p2p_known_addresses`: every distinct peer with a known address, connected or learned via PEX. It is useful for watching address-book growth, but it is not a connection count, so don't alert on it like `tendermint_p2p_peers`. The `/net_info` RPC made the same split in v6.7.2 ([sei-chain#4500](https://github.com/sei-protocol/sei-chain/pull/4500)): `n_peers` now counts connected peers, while `peers` still lists every known address.
+
 ### Grafana Dashboard
 
 Import the community Sei validator Grafana dashboard (search "Sei Validator" on grafana.com) and point it to your Prometheus endpoint.

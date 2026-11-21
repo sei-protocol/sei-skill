@@ -14,8 +14,9 @@ description: Network information for Sei mainnet and testnet — chain IDs, RPC 
 | EVM RPC | `https://evm-rpc.sei-apis.com` | `https://evm-rpc-testnet.sei-apis.com` |
 | Cosmos RPC | `https://rpc.sei-apis.com` | `https://rpc-testnet.sei-apis.com` |
 | REST/LCD | `https://rest.sei-apis.com` | `https://rest-testnet.sei-apis.com` |
-| gRPC | `https://grpc.sei-apis.com` | `https://grpc-testnet.sei-apis.com` |
 | WebSocket (EVM) | `wss://evm-ws.sei-apis.com` | `wss://evm-ws-testnet.sei-apis.com` |
+
+> **No Cosmos gRPC endpoint:** seid no longer runs the Cosmos gRPC or gRPC-Web servers (ports 9090/9091 are gone, along with the `[grpc]` and `[grpc-web]` config sections). Query the node over REST/LCD (`rest.sei-apis.com`) or Cosmos RPC (`rpc.sei-apis.com`) instead. Clients that previously used `grpc.sei-apis.com` must migrate to REST or Tendermint RPC.
 | Explorer | https://seiscan.io | https://testnet.seiscan.io |
 | Faucet | N/A | https://atlantic-2.app.sei.io/faucet |
 

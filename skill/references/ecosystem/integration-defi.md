@@ -240,7 +240,7 @@ Pointer addresses are deterministic from the underlying CW20 denom. See [pointer
 
 ## Sei-specific notes
 
-- **WSEI** (wrapped SEI) plays the role of WETH. Verify the canonical WSEI address via [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/ecosystem-contracts).
+- **WSEI** (wrapped SEI) plays the role of WETH. It is an already-deployed ecosystem contract — verify the canonical WSEI address via [docs.sei.io ecosystem contracts](https://docs.sei.io/evm/ecosystem-contracts). There is no CLI deployment path for it: the `seid tx evm deploy-wsei` subcommand and its bundled WSEI contract artifacts have been removed. To get WSEI, call `deposit()` (or send SEI) on the already-deployed WSEI contract — do not attempt to deploy your own.
 - **Native SEI** uses 18 decimals (not 6 like Cosmos-side `usei` micro-denom — that's a Cosmos-side concept; EVM sees 18 decimals).
 - **Atomic batching**: account abstraction (see [contracts/account-abstraction.md](../contracts/account-abstraction.md)) lets users do approve+swap in one user op without a separate approval tx.
 - **Liquidation latency**: 400ms blocks make liquidation MEV competitive; bots can react within 1-2 blocks.

@@ -177,6 +177,11 @@ Supported types:
 
 Note: `pointee` does not support `CW1155` or `ERC1155`.
 
+
+### Oracle Module Removed
+
+The oracle module has been removed behind the v6.8 upgrade ([sei-chain#4319](https://github.com/sei-protocol/sei-chain/pull/4319)): its CLI commands, store, protobuf schema, REST/gRPC endpoints, and CosmWasm query route are gone. `seid q oracle ...` now returns `unknown command "oracle"`, and store queries against the deleted store return `no such store: oracle`. Only the oracle `Msg` types remain decodable so historical blocks still trace; oracle transactions submitted after the upgrade are rejected before any fee is charged. The `oracle` module no longer appears in any tooling module list (`dump_app_state_for_height.sh`, `seidb` `AllModules`, iaviewer helpers).
+
 ### Transaction Lookup
 
 ```bash
@@ -234,6 +239,10 @@ seid tx evm call-precompile <precompile-name> <method> [args...]
 
 Available precompile names: `distribution`, `json`, `p256`, `staking`. See [EVM Precompiles](https://docs.sei.io/evm/precompiles) for method signatures.
 
+
+
+> **No built-in WSEI deploy command.** The `seid tx evm deploy-wsei` subcommand (with flags `--from`, `--gas-fee-cap`, `--gas-limit`, `--evm-rpc`, `--nonce`) has been removed, along with its embedded WSEI (Wrapped Sei) contract artifacts. There is no `seid` command to deploy a Wrapped Sei ERC20 contract. To deploy a Wrapped Sei contract, compile and deploy your own bytecode via `seid tx evm deploy <path-to-binary> --from <name>` or external EVM tooling.
+
 ## Node Start (`seid start`)
 
 ### `--freeze-height`
@@ -250,7 +259,6 @@ seid start --freeze-height <uint64>
 Constraints:
 - Must not exceed `MaxInt64`.
 - Cannot be combined with `--halt-height`/`halt-height` or `--halt-time`/`halt-time`.
-- Cannot be combined with grpc-only mode (`--grpc-only`).
 - State sync is disabled under freeze mode and falls back to block sync.
 - Full nodes only: not supported in validator or seed mode, or with Autobahn.
 - The target height must not be below the chain's initial height, and the application, block store, and state store must not have reached it yet — otherwise the node refuses to start.
@@ -313,6 +321,9 @@ For writes: sign first, then submit via `eth_sendRawTransaction`. Prefer a walle
 ## seidb Tool
 
 `seidb` is the SeiDB maintenance/analysis tool (built from `sei-db/tools/cmd/seidb`). Use it for inspecting on-disk state stores — not for chain queries. The commands below cover FlatKV analysis and hash-log inspection. As of v6.7.0 the fourth FlatKV bucket is named `misc` (it was `legacy` in v6.6).
+
+
+> **Shipped in the Docker image.** The official Docker image now builds and ships `seidb` at `/usr/bin/seidb` alongside `/usr/bin/seid`, so container users already have it and do not need a separate build (sei-chain Dockerfile). `seidb` is pure Go — it builds with `CGO_ENABLED=0` and does not link libwasmvm. Outside the container, build it from source with `CGO_ENABLED=0 go build -o seidb ./sei-db/tools/cmd/seidb`.
 
 ### dump-flatkv
 
@@ -416,7 +427,7 @@ seidb evm-logical-digest --backend flatkv|memiavl|composite --db-dir <dir> --hei
 | `--list-limit` | | Inspect mode: maximum pairs to print with `--list`; `<=0` means unlimited | `1000` |
 | `--details` | | Inspect list mode: include backend-specific version metadata | `false` |
 | `--find-hash` | | 32-byte hex per-entry hash to hunt for; every entry whose `sha256(len(key)||key||len(val)||val)` matches is printed as `FOUND-HASH` | — |
-| `--json` | | Emit the digest or inspect report as one JSON object on stdout (narration goes to stderr), for scheduled digest checks | `false` |
+| `--json` | | Emit the digest or inspect report as one JSON object on stdout (narration goes to stderr), for scheduled digest checks (sei-chain#4255) | `false` |
 
 Notes:
 - The per-bucket accumulator is an order-independent XOR of `sha256(len(key)||key||len(val)||val)`, so it does not matter that flatkv iterates in pebble global order while memiavl is scanned by leaf index.

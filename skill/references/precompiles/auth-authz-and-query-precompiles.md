@@ -72,7 +72,6 @@ Interface `IUpgrade`. Methods:
 
 - `currentPlan()` → `Plan{string name, int64 height, string info}` — returns a zero-valued plan when none is scheduled.
 - `appliedPlan(string name)` → `int64 height` — block height the named upgrade was applied, `0` if never applied (no error).
-- `upgradedConsensusState(int64 lastHeight)` → `bytes consensusState` — empty bytes if none stored (no error).
 - `moduleVersions(string moduleName)` → `ModuleVersion[]{string name, uint64 version}` — empty `moduleName` returns all modules; a specific name returns one entry and reverts if the module is unknown.
 
 ## Example (ethers.js v6)

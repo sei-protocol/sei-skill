@@ -44,7 +44,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 | Network | Faucet |
 |---|---|
 | Testnet (atlantic-2) | https://atlantic-2.app.sei.io/faucet |
-| Testnet Discord | https://discord.gg/sei |
+| Testnet Discord | https://discord.gg/mCJU2ReWxe |
 
 ## Developer Tools
 
@@ -131,7 +131,7 @@ Additional RPC providers: https://docs.sei.io/learn/rpc-providers
 
 | Channel | URL |
 |---|---|
-| Discord | https://discord.gg/sei |
+| Discord | https://discord.gg/mCJU2ReWxe |
 | Telegram (Tech Chat) | https://t.me/+KZdhZ1eE-G01NmZk |
 | X / Twitter | https://x.com/SeiNetwork |
 | Developer Forum | https://forum.sei.io |

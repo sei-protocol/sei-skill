@@ -11,7 +11,7 @@ Sei uses **delegated proof-of-stake (dPoS)**:
 - Token holders delegate to validators, who sign blocks
 - Delegators earn proportional rewards from gas fees and genesis unlocks
 - **No slashing of funds** — jailed validators lose rewards but not stake
-- Unbonding period: **21 days**
+- Unbonding period: **7 days**
 
 ---
 
@@ -41,7 +41,7 @@ seid q staking delegations $(seid keys show mykey -a) \
 ## Undelegation (Unbonding)
 
 ```bash
-# Undelegate — starts 21-day unbonding period
+# Undelegate — starts 7-day unbonding period
 seid tx staking unbond <VALIDATOR_ADDRESS> 500000usei \
   --from mykey \
   --chain-id pacific-1 \
@@ -55,7 +55,7 @@ seid q staking unbonding-delegation $(seid keys show mykey -a) sei1valoper...abc
 
 **During unbonding**:
 - Tokens are locked (not earning rewards, not transferable)
-- After 21 days they return to your wallet automatically
+- After 7 days they return to your wallet automatically
 
 ## Redelegation
 
@@ -71,7 +71,7 @@ seid tx staking redelegate <SRC_VALIDATOR> <DST_VALIDATOR> 500000usei \
 
 **Redelegation rules**:
 - Instant move — no unbonding wait
-- Destination validator cannot be re-redelegated for 21 days
+- Destination validator cannot be re-redelegated for 7 days
 - Max 7 simultaneous redelegations per account
 
 ---

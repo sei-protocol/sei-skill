@@ -246,7 +246,7 @@ console.log("Delegated 10 SEI to", validator);
 const usei = 10_000_000n; // 10 SEI = 10,000,000 usei
 const tx = await staking.undelegate(validator, usei);
 await tx.wait(1);
-// Unbonding period: 21 days
+// Unbonding period: 7 days
 ```
 
 > **Precision note:** `delegate` uses `msg.value` (18 decimal wei); `undelegate` and `redelegate` take amounts in usei (6 decimals). This asymmetry is intentional — match the precompile signature exactly.
@@ -332,7 +332,7 @@ contract LiquidStakingVault is ERC20 {
 
 ## Key Notes
 
-- **Unbonding period**: 21 days — users cannot access undelegated tokens during this period
+- **Unbonding period**: 7 days — users cannot access undelegated tokens during this period. Don't hardcode it: read `params().unbondingTime` (seconds) from the Staking precompile, and use each entry's `completionTime`, since entries created before SIP-7 lowered it from 21 days keep their 21-day completion time.
 - **Slashing**: validators can be slashed for downtime or double-signing; delegators share in slashing proportionally
 - **Rewards**: rewards accrue each block; claim anytime via Distribution precompile
 - **Validator addresses**: use `seivaloper1...` bech32 format for all validator address parameters

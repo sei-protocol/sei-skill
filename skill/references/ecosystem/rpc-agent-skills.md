@@ -200,7 +200,7 @@ Undelegates SEI from a validator.
 // Amount in USEI (6 decimals), NOT wei
 // 1 SEI = 1_000_000 usei
 await STAKING.undelegate(validatorAddress, amountInUsei);
-// Unbonding period: 21 days
+// Unbonding period: 7 days
 ```
 
 ---
